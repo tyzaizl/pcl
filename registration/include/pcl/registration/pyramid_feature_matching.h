@@ -38,8 +38,7 @@
  *
  */
 
-#ifndef PCL_PYRAMID_FEATURE_MATCHING_H_
-#define PCL_PYRAMID_FEATURE_MATCHING_H_
+#pragma once
 
 #include <pcl/pcl_base.h>
 #include <pcl/point_representation.h>
@@ -70,9 +69,10 @@ namespace pcl
     public:
       using PCLBase<PointFeature>::input_;
 
-      typedef boost::shared_ptr<PyramidFeatureHistogram<PointFeature> > Ptr;
-      typedef Ptr PyramidFeatureHistogramPtr;
-      typedef boost::shared_ptr<const pcl::PointRepresentation<PointFeature> > FeatureRepresentationConstPtr;
+      using Ptr = boost::shared_ptr<PyramidFeatureHistogram<PointFeature> >;
+      using ConstPtr = boost::shared_ptr<const PyramidFeatureHistogram<PointFeature>>;
+      using PyramidFeatureHistogramPtr = Ptr;
+      using FeatureRepresentationConstPtr = boost::shared_ptr<const pcl::PointRepresentation<PointFeature> >;
 
 
       /** \brief Empty constructor that instantiates the feature representation variable */
@@ -119,7 +119,7 @@ namespace pcl
       isComputed () { return is_computed_; }
 
       /** \brief Static method for comparing two pyramid histograms that returns a floating point value between 0 and 1,
-       * representing the similiarity between the feature sets on which the two pyramid histograms are based.
+       * representing the similarity between the feature sets on which the two pyramid histograms are based.
        * \param pyramid_a Pointer to the first pyramid to be compared (needs to be computed already).
        * \param pyramid_b Pointer to the second pyramid to be compared (needs to be computed already).
        */
@@ -129,7 +129,7 @@ namespace pcl
 
 
     private:
-      size_t nr_dimensions, nr_levels, nr_features;
+      std::size_t nr_dimensions, nr_levels, nr_features;
       std::vector<std::pair<float, float> > dimension_range_input_, dimension_range_target_;
       FeatureRepresentationConstPtr feature_representation_;
       bool is_computed_;
@@ -155,8 +155,8 @@ namespace pcl
        * \param level the level in the pyramid
        */
       inline unsigned int&
-      at (std::vector<size_t> &access,
-          size_t &level);
+      at (std::vector<std::size_t> &access,
+          std::size_t &level);
 
       /** \brief Access the pyramid bin given a feature vector and the pyramid level
        * \param feature the feature in vectorized form
@@ -164,20 +164,16 @@ namespace pcl
        */
       inline unsigned int&
       at (std::vector<float> &feature,
-          size_t &level);
+          std::size_t &level);
 
       /** \brief Structure for representing a single pyramid histogram level */
       struct PyramidFeatureHistogramLevel
       {
-        PyramidFeatureHistogramLevel () :
-          hist (), 
-          bins_per_dimension (),
-          bin_step ()
+        PyramidFeatureHistogramLevel () 
         {
         }
 
-        PyramidFeatureHistogramLevel (std::vector<size_t> &a_bins_per_dimension, std::vector<float> &a_bin_step) : 
-          hist (), 
+        PyramidFeatureHistogramLevel (std::vector<std::size_t> &a_bins_per_dimension, std::vector<float> &a_bin_step) : 
           bins_per_dimension (a_bins_per_dimension),
           bin_step (a_bin_step)
         {
@@ -188,7 +184,7 @@ namespace pcl
         initializeHistogramLevel ();
 
         std::vector<unsigned int> hist;
-        std::vector<size_t> bins_per_dimension;
+        std::vector<std::size_t> bins_per_dimension;
         std::vector<float> bin_step;
       };
       std::vector<PyramidFeatureHistogramLevel> hist_levels;
@@ -198,5 +194,3 @@ namespace pcl
 #ifdef PCL_NO_PRECOMPILE
 #include <pcl/registration/impl/pyramid_feature_matching.hpp>
 #endif
-
-#endif    // PCL_PYRAMID_FEATURE_MATCHING_H_

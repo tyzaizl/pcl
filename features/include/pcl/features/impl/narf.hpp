@@ -70,7 +70,7 @@ inline void Narf::copyToNarf36(Narf36& narf36) const
   //const float* descriptor2_ptr = other.getDescriptor();
   //float ret = 0;
   //for (int i=0; i<descriptor_size_; ++i) {
-    //float diff = fabsf(*(descriptor2_ptr++) - *(descriptor1_ptr++));
+    //float diff = std::abs(*(descriptor2_ptr++) - *(descriptor1_ptr++));
     //if (diff < middle_value)
     //{
       //diff = diff*normalization_factor1;
@@ -81,7 +81,7 @@ inline void Narf::copyToNarf36(Narf36& narf36) const
     //{
       //diff = (diff - middle_value)*normalization_factor2;
       //diff = 0.5f + 0.5f*diff;
-      ////diff = 0.5f + 0.5f*sqrtf(diff);
+      ////diff = 0.5f + 0.5f*std::sqrt(diff);
       ////diff = 0.5f + 0.5f*powf(diff, 0.3f);
     //}
     //ret += diff;
@@ -98,7 +98,7 @@ inline void Narf::copyToNarf36(Narf36& narf36) const
   //const float* descriptor2_ptr = other.getDescriptor();
   //float ret = 0;
   //for (int i=0; i<descriptor_size_; ++i) {
-    //ret += (std::min)(max_diff_between_cells, fabsf(*(descriptor2_ptr++) - *(descriptor1_ptr++)));
+    //ret += (std::min)(max_diff_between_cells, std::abs(*(descriptor2_ptr++) - *(descriptor1_ptr++)));
   //}
   //ret /= descriptor_size_*max_diff_between_cells;
   //return ret;

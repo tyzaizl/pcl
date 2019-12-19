@@ -34,8 +34,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef PCL_POINT_CLOUD_IMAGE_EXTRACTORS_H_
-#define PCL_POINT_CLOUD_IMAGE_EXTRACTORS_H_
+
+#pragma once
 
 #include <pcl/point_cloud.h>
 #include <pcl/PCLImage.h>
@@ -78,13 +78,15 @@ namespace pcl
     class PointCloudImageExtractor
     {
       public:
-        typedef pcl::PointCloud<PointT> PointCloud;
+        using PointCloud = pcl::PointCloud<PointT>;
 
-        typedef boost::shared_ptr<PointCloudImageExtractor<PointT> > Ptr;
-        typedef boost::shared_ptr<const PointCloudImageExtractor<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<PointCloudImageExtractor<PointT> >;
+        using ConstPtr = boost::shared_ptr<const PointCloudImageExtractor<PointT> >;
 
         /** \brief Constructor. */
-        PointCloudImageExtractor () {}
+        PointCloudImageExtractor ()
+        : paint_nans_with_black_ (false)
+        {}
 
         /** \brief Destructor. */
         virtual ~PointCloudImageExtractor () {}
@@ -94,8 +96,29 @@ namespace pcl
           * \param[out] image the output image
           * \return true if the operation was successful, false otherwise
           */
+        bool
+        extract (const PointCloud& cloud, pcl::PCLImage& image) const;
+
+        /** \brief Set a flag that controls if image pixels corresponding to
+          * NaN (infinite) points should be painted black.
+          */
+        inline void
+        setPaintNaNsWithBlack (bool flag)
+        {
+          paint_nans_with_black_ = flag;
+        }
+
+      protected:
+
+        /** \brief Implementation of the extract() function, has to be
+          * implemented in deriving classes.
+          */
         virtual bool
-        extract (const PointCloud& cloud, pcl::PCLImage& image) const = 0;
+        extractImpl (const PointCloud& cloud, pcl::PCLImage& image) const = 0;
+
+        /// A flag that controls if image pixels corresponding to NaN (infinite)
+        /// points should be painted black.
+        bool paint_nans_with_black_;
     };
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -107,11 +130,11 @@ namespace pcl
     template <typename PointT>
     class PointCloudImageExtractorWithScaling : public PointCloudImageExtractor<PointT>
     {
-      typedef typename PointCloudImageExtractor<PointT>::PointCloud PointCloud;
+      using PointCloud = typename PointCloudImageExtractor<PointT>::PointCloud;
 
       public:
-        typedef boost::shared_ptr<PointCloudImageExtractorWithScaling<PointT> > Ptr;
-        typedef boost::shared_ptr<const PointCloudImageExtractorWithScaling<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<PointCloudImageExtractorWithScaling<PointT> >;
+        using ConstPtr = boost::shared_ptr<const PointCloudImageExtractorWithScaling<PointT> >;
 
         /** \brief Different scaling methods.
           * <ul>
@@ -144,15 +167,7 @@ namespace pcl
         }
 
         /** \brief Destructor. */
-        virtual ~PointCloudImageExtractorWithScaling () {}
-
-        /** \brief Obtain the image from the given cloud.
-          * \param[in] cloud organized point cloud to extract image from
-          * \param[out] image the output image
-          * \return true if the operation was successful, false otherwise
-          */
-        virtual bool
-        extract (const PointCloud& cloud, pcl::PCLImage& image) const;
+        ~PointCloudImageExtractorWithScaling () {}
 
         /** \brief Set scaling method. */
         inline void
@@ -170,6 +185,9 @@ namespace pcl
 
       protected:
 
+        bool
+        extractImpl (const PointCloud& cloud, pcl::PCLImage& image) const override;
+
         std::string field_name_;
         ScalingMethod scaling_method_;
         float scaling_factor_;
@@ -184,26 +202,22 @@ namespace pcl
     template <typename PointT>
     class PointCloudImageExtractorFromNormalField : public PointCloudImageExtractor<PointT>
     {
-      typedef typename PointCloudImageExtractor<PointT>::PointCloud PointCloud;
+      using PointCloud = typename PointCloudImageExtractor<PointT>::PointCloud;
 
       public:
-        typedef boost::shared_ptr<PointCloudImageExtractorFromNormalField<PointT> > Ptr;
-        typedef boost::shared_ptr<const PointCloudImageExtractorFromNormalField<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<PointCloudImageExtractorFromNormalField<PointT> >;
+        using ConstPtr = boost::shared_ptr<const PointCloudImageExtractorFromNormalField<PointT> >;
 
         /** \brief Constructor. */
         PointCloudImageExtractorFromNormalField () {}
 
         /** \brief Destructor. */
-        virtual ~PointCloudImageExtractorFromNormalField () {}
+        ~PointCloudImageExtractorFromNormalField () {}
 
-        /** \brief Obtain the color image from the given cloud.
-          * The cloud should contain "normal" field.
-          * \param[in] cloud organized point cloud to extract image from
-          * \param[out] image the output image
-          * \return true if the operation was successful, false otherwise
-          */
-        virtual bool
-        extract (const PointCloud& cloud, pcl::PCLImage& img) const;
+      protected:
+
+        bool
+        extractImpl (const PointCloud& cloud, pcl::PCLImage& img) const override;
     };
 
     //////////////////////////////////////////////////////////////////////////////////////
@@ -215,55 +229,52 @@ namespace pcl
     template <typename PointT>
     class PointCloudImageExtractorFromRGBField : public PointCloudImageExtractor<PointT>
     {
-      typedef typename PointCloudImageExtractor<PointT>::PointCloud PointCloud;
+      using PointCloud = typename PointCloudImageExtractor<PointT>::PointCloud;
 
       public:
-        typedef boost::shared_ptr<PointCloudImageExtractorFromRGBField<PointT> > Ptr;
-        typedef boost::shared_ptr<const PointCloudImageExtractorFromRGBField<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<PointCloudImageExtractorFromRGBField<PointT> >;
+        using ConstPtr = boost::shared_ptr<const PointCloudImageExtractorFromRGBField<PointT> >;
 
         /** \brief Constructor. */
         PointCloudImageExtractorFromRGBField () {}
 
         /** \brief Destructor. */
-        virtual ~PointCloudImageExtractorFromRGBField () {}
+        ~PointCloudImageExtractorFromRGBField () {}
 
-        /** \brief Obtain the color image from the given cloud.
-          * The cloud should contain either "rgb" or "rgba" field.
-          * \param[in] cloud organized point cloud to extract image from
-          * \param[out] image the output image
-          * \return true if the operation was successful, false otherwise
-          */
-        virtual bool
-        extract (const PointCloud& cloud, pcl::PCLImage& img) const;
+      protected:
+
+        bool
+        extractImpl (const PointCloud& cloud, pcl::PCLImage& img) const override;
     };
 
     //////////////////////////////////////////////////////////////////////////////////////
     /** \brief Image Extractor which uses the data present in the "label" field to produce
       * either monochrome or RGB image where different labels correspond to different
-      * colors. In the monochrome case colors are shades of gray, in the RGB case the
-      * colors are generated randomly.
+      * colors.
+      * See the documentation for ColorMode to learn about available coloring options.
       * \author Sergey Alexandrov
       * \ingroup io
       */
     template <typename PointT>
     class PointCloudImageExtractorFromLabelField : public PointCloudImageExtractor<PointT>
     {
-      typedef typename PointCloudImageExtractor<PointT>::PointCloud PointCloud;
+      using PointCloud = typename PointCloudImageExtractor<PointT>::PointCloud;
 
       public:
-        typedef boost::shared_ptr<PointCloudImageExtractorFromLabelField<PointT> > Ptr;
-        typedef boost::shared_ptr<const PointCloudImageExtractorFromLabelField<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<PointCloudImageExtractorFromLabelField<PointT> >;
+        using ConstPtr = boost::shared_ptr<const PointCloudImageExtractorFromLabelField<PointT> >;
 
-        /** \brief Different modes for color mapping.
-          * <ul>
-          *   <li><b>COLORS_MONO</b> - shades of gray (according to label id).</li>
-          *   <li><b>COLORS_RGB_RANDOM</b> - randomly generated RGB colors.</li>
-          * </ul>
-          */
+        /** \brief Different modes for color mapping. */
         enum ColorMode
         {
+          /// Shades of gray (according to label id)
+          /// \note Labels using more than 16 bits will cause problems
           COLORS_MONO,
+          /// Randomly generated RGB colors
           COLORS_RGB_RANDOM,
+          /// Fixed RGB colors from the [Glasbey lookup table](http://fiji.sc/Glasbey),
+          /// assigned in the ascending order of label id
+          COLORS_RGB_GLASBEY,
         };
 
         /** \brief Constructor. */
@@ -273,17 +284,7 @@ namespace pcl
         }
 
         /** \brief Destructor. */
-        virtual ~PointCloudImageExtractorFromLabelField () {}
-
-        /** \brief Obtain the label image from the given cloud.
-          * The cloud should contain "label" field.
-          * \note Labels using more than 16 bits will cause problems in COLORS_MONO mode.
-          * \param[in] cloud organized point cloud to extract image from
-          * \param[out] image the output image
-          * \return true if the operation was successful, false otherwise
-          */
-        virtual bool
-        extract (const PointCloud& cloud, pcl::PCLImage& img) const;
+        ~PointCloudImageExtractorFromLabelField () {}
 
         /** \brief Set color mapping mode. */
         inline void
@@ -291,6 +292,14 @@ namespace pcl
         {
           color_mode_ = color_mode;
         }
+
+      protected:
+
+        bool
+        extractImpl (const PointCloud& cloud, pcl::PCLImage& img) const override;
+
+        // Members derived from the base class
+        using PointCloudImageExtractor<PointT>::paint_nans_with_black_;
 
       private:
 
@@ -306,15 +315,15 @@ namespace pcl
     template <typename PointT>
     class PointCloudImageExtractorFromZField : public PointCloudImageExtractorWithScaling<PointT>
     {
-      typedef typename PointCloudImageExtractor<PointT>::PointCloud PointCloud;
-      typedef typename PointCloudImageExtractorWithScaling<PointT>::ScalingMethod ScalingMethod;
+      using PointCloud = typename PointCloudImageExtractor<PointT>::PointCloud;
+      using ScalingMethod = typename PointCloudImageExtractorWithScaling<PointT>::ScalingMethod;
 
       public:
-        typedef boost::shared_ptr<PointCloudImageExtractorFromZField<PointT> > Ptr;
-        typedef boost::shared_ptr<const PointCloudImageExtractorFromZField<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<PointCloudImageExtractorFromZField<PointT> >;
+        using ConstPtr = boost::shared_ptr<const PointCloudImageExtractorFromZField<PointT> >;
 
         /** \brief Constructor.
-          * \param[i] scaling_factor a scaling factor to apply to each depth value (default 10000)
+          * \param[in] scaling_factor a scaling factor to apply to each depth value (default 10000)
           */
         PointCloudImageExtractorFromZField (const float scaling_factor = 10000)
           : PointCloudImageExtractorWithScaling<PointT> ("z", scaling_factor)
@@ -322,7 +331,7 @@ namespace pcl
         }
 
         /** \brief Constructor.
-          * \param[i] scaling_method a scaling method to use
+          * \param[in] scaling_method a scaling method to use
           */
         PointCloudImageExtractorFromZField (const ScalingMethod scaling_method)
           : PointCloudImageExtractorWithScaling<PointT> ("z", scaling_method)
@@ -330,7 +339,7 @@ namespace pcl
         }
 
         /** \brief Destructor. */
-        virtual ~PointCloudImageExtractorFromZField () {}
+        ~PointCloudImageExtractorFromZField () {}
 
       protected:
         // Members derived from the base class
@@ -348,15 +357,15 @@ namespace pcl
     template <typename PointT>
     class PointCloudImageExtractorFromCurvatureField : public PointCloudImageExtractorWithScaling<PointT>
     {
-      typedef typename PointCloudImageExtractor<PointT>::PointCloud PointCloud;
-      typedef typename PointCloudImageExtractorWithScaling<PointT>::ScalingMethod ScalingMethod;
+      using PointCloud = typename PointCloudImageExtractor<PointT>::PointCloud;
+      using ScalingMethod = typename PointCloudImageExtractorWithScaling<PointT>::ScalingMethod;
 
       public:
-        typedef boost::shared_ptr<PointCloudImageExtractorFromCurvatureField<PointT> > Ptr;
-        typedef boost::shared_ptr<const PointCloudImageExtractorFromCurvatureField<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<PointCloudImageExtractorFromCurvatureField<PointT> >;
+        using ConstPtr = boost::shared_ptr<const PointCloudImageExtractorFromCurvatureField<PointT> >;
 
         /** \brief Constructor.
-          * \param[i] scaling_method a scaling method to use (default SCALING_FULL_RANGE)
+          * \param[in] scaling_method a scaling method to use (default SCALING_FULL_RANGE)
           */
         PointCloudImageExtractorFromCurvatureField (const ScalingMethod scaling_method = PointCloudImageExtractorWithScaling<PointT>::SCALING_FULL_RANGE)
           : PointCloudImageExtractorWithScaling<PointT> ("curvature", scaling_method)
@@ -364,7 +373,7 @@ namespace pcl
         }
 
         /** \brief Constructor.
-          * \param[i] scaling_factor a scaling factor to apply to each curvature value
+          * \param[in] scaling_factor a scaling factor to apply to each curvature value
           */
         PointCloudImageExtractorFromCurvatureField (const float scaling_factor)
           : PointCloudImageExtractorWithScaling<PointT> ("curvature", scaling_factor)
@@ -372,7 +381,7 @@ namespace pcl
         }
 
         /** \brief Destructor. */
-        virtual ~PointCloudImageExtractorFromCurvatureField () {}
+        ~PointCloudImageExtractorFromCurvatureField () {}
 
       protected:
         // Members derived from the base class
@@ -390,15 +399,15 @@ namespace pcl
     template <typename PointT>
     class PointCloudImageExtractorFromIntensityField : public PointCloudImageExtractorWithScaling<PointT>
     {
-      typedef typename PointCloudImageExtractor<PointT>::PointCloud PointCloud;
-      typedef typename PointCloudImageExtractorWithScaling<PointT>::ScalingMethod ScalingMethod;
+      using PointCloud = typename PointCloudImageExtractor<PointT>::PointCloud;
+      using ScalingMethod = typename PointCloudImageExtractorWithScaling<PointT>::ScalingMethod;
 
       public:
-        typedef boost::shared_ptr<PointCloudImageExtractorFromIntensityField<PointT> > Ptr;
-        typedef boost::shared_ptr<const PointCloudImageExtractorFromIntensityField<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<PointCloudImageExtractorFromIntensityField<PointT> >;
+        using ConstPtr = boost::shared_ptr<const PointCloudImageExtractorFromIntensityField<PointT> >;
 
         /** \brief Constructor.
-          * \param[i] scaling_method a scaling method to use (default SCALING_NO)
+          * \param[in] scaling_method a scaling method to use (default SCALING_NO)
           */
         PointCloudImageExtractorFromIntensityField (const ScalingMethod scaling_method = PointCloudImageExtractorWithScaling<PointT>::SCALING_NO)
           : PointCloudImageExtractorWithScaling<PointT> ("intensity", scaling_method)
@@ -406,7 +415,7 @@ namespace pcl
         }
 
         /** \brief Constructor.
-          * \param[i] scaling_factor a scaling factor to apply to each intensity value
+          * \param[in] scaling_factor a scaling factor to apply to each intensity value
           */
         PointCloudImageExtractorFromIntensityField (const float scaling_factor)
           : PointCloudImageExtractorWithScaling<PointT> ("intensity", scaling_factor)
@@ -414,7 +423,7 @@ namespace pcl
         }
 
         /** \brief Destructor. */
-        virtual ~PointCloudImageExtractorFromIntensityField () {}
+        ~PointCloudImageExtractorFromIntensityField () {}
 
       protected:
         // Members derived from the base class
@@ -427,5 +436,3 @@ namespace pcl
 }
 
 #include <pcl/io/impl/point_cloud_image_extractors.hpp>
-
-#endif  //#ifndef PCL_POINT_CLOUD_IMAGE_EXTRACTORS_H_

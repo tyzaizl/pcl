@@ -36,8 +36,7 @@
  * $Id$
  */
 
-#ifndef PCL_OUTOFCORE_ITERATOR_BASE_H_
-#define PCL_OUTOFCORE_ITERATOR_BASE_H_
+#pragma once
 
 #include <iterator>
 
@@ -52,7 +51,7 @@ namespace pcl
   namespace outofcore
   {
     /** \brief Abstract octree iterator class
-     *  \note This class is based on the octree_iterator written by Julius Kammerl adapted to the outofcore octree. The interface is very similar, but it does \b not inherit the \ref pcl_octree iterator base.
+     *  \note This class is based on the octree_iterator written by Julius Kammerl adapted to the outofcore octree. The interface is very similar, but it does \b not inherit the \ref pcl::octree iterator base.
      *  \ingroup outofcore
      *  \author Stephen Fox (foxstephend@gmail.com)
      */
@@ -64,17 +63,17 @@ namespace pcl
                                                        const OutofcoreOctreeBaseNode<ContainerT, PointT>&>/*Reference type*/
     {
       public:
-        typedef typename pcl::outofcore::OutofcoreOctreeBase<ContainerT, PointT> OctreeDisk;
-        typedef typename pcl::outofcore::OutofcoreOctreeBaseNode<ContainerT, PointT> OctreeDiskNode;
+        using OctreeDisk = pcl::outofcore::OutofcoreOctreeBase<ContainerT, PointT>;
+        using OctreeDiskNode = pcl::outofcore::OutofcoreOctreeBaseNode<ContainerT, PointT>;
         
-        typedef typename pcl::outofcore::OutofcoreOctreeBase<ContainerT, PointT>::BranchNode BranchNode;
-        typedef typename pcl::outofcore::OutofcoreOctreeBase<ContainerT, PointT>::LeafNode LeafNode;
+        using BranchNode = typename pcl::outofcore::OutofcoreOctreeBase<ContainerT, PointT>::BranchNode;
+        using LeafNode = typename pcl::outofcore::OutofcoreOctreeBase<ContainerT, PointT>::LeafNode;
 
-        typedef typename OctreeDisk::OutofcoreNodeType OutofcoreNodeType;
+        using OutofcoreNodeType = typename OctreeDisk::OutofcoreNodeType;
 
         explicit
         OutofcoreIteratorBase (OctreeDisk& octree_arg) 
-          : octree_ (octree_arg), currentNode_ (NULL)
+          : octree_ (octree_arg), currentNode_ (nullptr)
         {
           reset ();
         }
@@ -155,5 +154,3 @@ namespace pcl
 #endif
   }
 }
-
-#endif //PCL_OUTOFCORE_ITERATOR_BASE_H_

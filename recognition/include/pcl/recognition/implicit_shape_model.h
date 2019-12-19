@@ -33,14 +33,14 @@
  *
  */
 
-#ifndef	PCL_IMPLICIT_SHAPE_MODEL_H_
-#define	PCL_IMPLICIT_SHAPE_MODEL_H_
+#pragma once
 
 #include <vector>
 #include <fstream>
 #include <limits>
 #include <Eigen/src/Core/Matrix.h>
 #include <pcl/pcl_base.h>
+#include <pcl/pcl_macros.h>
 #include <pcl/point_types.h>
 #include <pcl/point_representation.h>
 #include <pcl/features/feature.h>
@@ -49,13 +49,11 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/search/search.h>
 #include <pcl/kdtree/kdtree.h>
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/kdtree/impl/kdtree_flann.hpp>
 
 namespace pcl
 {
   /** \brief This struct is used for storing peak. */
-  struct ISMPeak
+  struct EIGEN_ALIGN16 ISMPeak
   {
     /** \brief Point were this peak is located. */
     PCL_ADD_POINT4D;
@@ -66,8 +64,8 @@ namespace pcl
     /** \brief Determines which class this peak belongs. */
     int class_id;
 
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  } EIGEN_ALIGN16;
+    PCL_MAKE_ALIGNED_OPERATOR_NEW
+  };
 
   namespace features
   {
@@ -77,6 +75,9 @@ namespace pcl
     class PCL_EXPORTS ISMVoteList
     {
       public:
+
+        using Ptr = boost::shared_ptr<ISMVoteList<PointT> >;
+        using ConstPtr = boost::shared_ptr<const ISMVoteList<PointT>>;
 
         /** \brief Empty constructor with member variables initialization. */
         ISMVoteList ();
@@ -104,6 +105,7 @@ namespace pcl
           * \param[out] out_peaks it will contain the strongest peaks
           * \param[in] in_class_id class of interest for which peaks are evaluated
           * \param[in] in_non_maxima_radius non maxima supression radius. The shapes radius is recommended for this value.
+          * \param in_sigma
           */
         void
         findStrongestPeaks (std::vector<ISMPeak, Eigen::aligned_allocator<ISMPeak> > &out_peaks, int in_class_id, double in_non_maxima_radius, double in_sigma);
@@ -157,6 +159,9 @@ namespace pcl
       */
     struct PCL_EXPORTS ISMModel
     {
+      using Ptr = boost::shared_ptr<ISMModel>;
+      using ConstPtr = boost::shared_ptr<const ISMModel>;
+
       /** \brief Simple constructor that initializes the structure. */
       ISMModel ();
 
@@ -219,7 +224,7 @@ namespace pcl
       /** \brief Stores descriptors dimension. */
       unsigned int descriptors_dimension_;
 
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      PCL_MAKE_ALIGNED_OPERATOR_NEW
     };
   }
 
@@ -241,7 +246,9 @@ namespace pcl
     {
       public:
 
-        typedef boost::shared_ptr<pcl::features::ISMModel> ISMModelPtr;
+        using ISMModelPtr = pcl::features::ISMModel::Ptr;
+        using Feature = pcl::Feature<PointT, pcl::Histogram<FeatureSize>>;
+        using FeaturePtr = typename Feature::Ptr;
 
       protected:
 
@@ -275,7 +282,7 @@ namespace pcl
 
         /** \brief This structure is used for determining the end of the
           * k-means clustering process. */
-        typedef struct PCL_EXPORTS TC
+        struct PCL_EXPORTS TermCriteria
         {
           enum
           {
@@ -288,7 +295,7 @@ namespace pcl
             * \param[in] max_count defines the max number of iterations
             * \param[in] epsilon defines the desired accuracy
             */
-          TC(int type, int max_count, float epsilon) :
+          TermCriteria(int type, int max_count, float epsilon) :
             type_ (type),
             max_count_ (max_count),
             epsilon_ (epsilon) {};
@@ -306,7 +313,7 @@ namespace pcl
 
           /** \brief Defines the accuracy for k-means clustering. */
           float epsilon_;
-        } TermCriteria;
+        };
 
         /** \brief Structure for storing the visual word. */
         struct PCL_EXPORTS VisualWordStat
@@ -356,7 +363,7 @@ namespace pcl
         void
         setTrainingClasses (const std::vector<unsigned int>& training_classes);
 
-        /** \brief This method returns the coresponding cloud of normals for every training point cloud. */
+        /** \brief This method returns the corresponding cloud of normals for every training point cloud. */
         std::vector<typename pcl::PointCloud<NormalT>::Ptr>
         getTrainingNormals ();
 
@@ -377,7 +384,7 @@ namespace pcl
         setSamplingSize (float sampling_size);
 
         /** \brief Returns the current feature estimator used for extraction of the descriptors. */
-        boost::shared_ptr<pcl::Feature<PointT, pcl::Histogram<FeatureSize> > >
+        FeaturePtr
         getFeatureEstimator ();
 
         /** \brief Changes the feature estimator.
@@ -385,7 +392,7 @@ namespace pcl
           * Note that it must be fully initialized and configured.
           */
         void
-        setFeatureEstimator (boost::shared_ptr<pcl::Feature<PointT, pcl::Histogram<FeatureSize> > > feature);
+        setFeatureEstimator (FeaturePtr feature);
 
         /** \brief Returns the number of clusters used for descriptor clustering. */
         unsigned int
@@ -404,7 +411,7 @@ namespace pcl
         /** \brief This method allows to set the value of sigma used for calculating the learned weights for every single class.
           * \param[in] training_sigmas new sigmas for every class. If you want these values to be computed automatically,
           * just pass the empty array. The automatic regime calculates the maximum distance between the objects points and takes 10% of
-          * this value as recomended in the article. If there are several objects of the same class,
+          * this value as recommended in the article. If there are several objects of the same class,
           * then it computes the average maximum distance and takes 10%. Note that each class has its own sigma value.
           */
         void
@@ -425,7 +432,7 @@ namespace pcl
 
         /** \brief This method performs training and forms a visual vocabulary. It returns a trained model that
           * can be saved to file for later usage.
-          * \param[out] model trained model
+          * \param[out] trained_model trained model
           */
         bool
         trainISM (ISMModelPtr& trained_model);
@@ -434,10 +441,10 @@ namespace pcl
           * and returns the list of votes.
           * \param[in] model trained model which will be used for searching the objects
           * \param[in] in_cloud input cloud that need to be investigated
-          * \param[in] in_normals cloud of normals coresponding to the input cloud
+          * \param[in] in_normals cloud of normals corresponding to the input cloud
           * \param[in] in_class_of_interest class which we are looking for
           */
-        boost::shared_ptr<pcl::features::ISMVoteList<PointT> >
+        typename pcl::features::ISMVoteList<PointT>::Ptr
         findObjects (ISMModelPtr model, typename pcl::PointCloud<PointT>::Ptr in_cloud, typename pcl::PointCloud<Normal>::Ptr in_normals, int in_class_of_interest);
 
       protected:
@@ -454,7 +461,7 @@ namespace pcl
         /** \brief This method performs descriptor clustering.
           * \param[in] histograms descriptors to cluster
           * \param[out] labels it contains labels for each descriptor
-          * \param[out] cluster_centers stores the centers of clusters
+          * \param[out] clusters_centers stores the centers of clusters
           */
         bool
         clusterDescriptors (std::vector< pcl::Histogram<FeatureSize> >& histograms, Eigen::MatrixXi& labels, Eigen::MatrixXf& clusters_centers);
@@ -467,7 +474,6 @@ namespace pcl
 
         /** \brief This function forms a visual vocabulary and evaluates weights
           * described in [Knopp et al., 2010, (5)].
-          * \param[in] classes classes that we want to learn
           * \param[in] locations array containing description of each keypoint: its position, which cloud belongs
           * and expected direction to center
           * \param[in] labels labels that were obtained during k-means clustering
@@ -520,7 +526,6 @@ namespace pcl
 
         /** \brief This method estimates features for the given point cloud.
           * \param[in] sampled_point_cloud sampled point cloud for which the features must be computed
-          * \param[in] point_cloud original point cloud
           * \param[in] normal_cloud normals for the original point cloud
           * \param[out] feature_cloud it will store the computed histograms (features) for the given cloud
           */
@@ -566,9 +571,9 @@ namespace pcl
           * \param[out] center it will the contain generated center
           */
         void
-        generateRandomCenter (const std::vector<Eigen::Vector2f>& boxes, Eigen::VectorXf& center);
+        generateRandomCenter (const std::vector<Eigen::Vector2f, Eigen::aligned_allocator<Eigen::Vector2f> >& boxes, Eigen::VectorXf& center);
 
-        /** \brief Computes the square distance beetween two vectors.
+        /** \brief Computes the square distance between two vectors.
           * \param[in] vec_1 first vector
           * \param[in] vec_2 second vector
           */
@@ -599,7 +604,7 @@ namespace pcl
         float sampling_size_;
 
         /** \brief Stores the feature estimator. */
-        boost::shared_ptr<pcl::Feature<PointT, pcl::Histogram<FeatureSize> > > feature_estimator_;
+        typename Feature::Ptr feature_estimator_;
 
         /** \brief Number of clusters, is used for clustering descriptors during the training. */
         unsigned int number_of_clusters_;
@@ -626,5 +631,3 @@ POINT_CLOUD_REGISTER_POINT_STRUCT (pcl::ISMPeak,
   (float, density, ism_density)
   (float, class_id, ism_class_id)
 )
-
-#endif  //#ifndef PCL_IMPLICIT_SHAPE_MODEL_H_

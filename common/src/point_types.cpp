@@ -71,6 +71,13 @@ namespace pcl
   }
 
   std::ostream&
+  operator << (std::ostream& os, const Intensity32u& p)
+  {
+    os << "( " << p.intensity << " )";
+    return (os);
+  }
+
+  std::ostream&
   operator << (std::ostream& os, const PointXYZI& p)
   {
     os << "(" << p.x << "," << p.y << "," << p.z << " - " << p.intensity << ")";
@@ -115,7 +122,11 @@ namespace pcl
   std::ostream& 
   operator << (std::ostream& os, const PointXYZRGBL& p)
   {
-    os << "(" << p.x << "," << p.y << "," << p.z << " - " << p.r << "," << p.g << "," << p.b << " - " << p.label << ")";
+    os << "(" << p.x << "," << p.y << "," << p.z << " - "
+      << static_cast<int>(p.r) << ","
+      << static_cast<int>(p.g) << ","
+      << static_cast<int>(p.b) << " - "
+      << p.label << ")";
     return (os);
   }
 
@@ -178,7 +189,11 @@ namespace pcl
   std::ostream& 
   operator << (std::ostream& os, const PointXYZRGBNormal& p)
   {
-    os << "(" << p.x << "," << p.y << "," << p.z << " - " << p.rgb << " - " << p.normal[0] << "," << p.normal[1] << "," << p.normal[2] << " - " << p.r << ", " << p.g << ", " << p.b << " - " << p.curvature << ")";
+    os << "(" << p.x << "," << p.y << "," << p.z << " - "<< p.rgb << " - " << p.normal[0] << "," << p.normal[1] << "," << p.normal[2] << " - "
+      << static_cast<int>(p.r) << ", "
+      << static_cast<int>(p.g) << ", "
+      << static_cast<int>(p.b) << " - "
+      << p.curvature << ")";
     return (os);
   }
 
@@ -186,6 +201,13 @@ namespace pcl
   operator << (std::ostream& os, const PointXYZINormal& p)
   {
     os << "(" << p.x << "," << p.y << "," << p.z << " - " << p.intensity << " - " << p.normal[0] << "," << p.normal[1] << "," << p.normal[2] << " - " << p.curvature << ")";
+    return (os);
+  }
+
+  std::ostream&
+  operator << (std::ostream& os, const PointXYZLNormal& p)
+  {
+    os << "(" << p.x << "," << p.y << "," << p.z << " - " << p.label << " - " << p.normal[0] << "," << p.normal[1] << "," << p.normal[2] << " - " << p.curvature << ")";
     return (os);
   }
 
@@ -282,8 +304,18 @@ namespace pcl
   {
     for (int i = 0; i < 9; ++i)
     os << (i == 0 ? "(" : "") << p.rf[i] << (i < 8 ? ", " : ")");
-    for (size_t i = 0; i < 1980; ++i)
+    for (std::size_t i = 0; i < 1980; ++i)
       os << (i == 0 ? "(" : "") << p.descriptor[i] << (i < 1979 ? ", " : ")");
+    return (os);
+  }
+
+  std::ostream& 
+  operator << (std::ostream& os, const UniqueShapeContext1960& p)
+  {
+    for (int i = 0; i < 9; ++i)
+    os << (i == 0 ? "(" : "") << p.rf[i] << (i < 8 ? ", " : ")");
+    for (std::size_t i = 0; i < 1960; ++i)
+      os << (i == 0 ? "(" : "") << p.descriptor[i] << (i < 1959 ? ", " : ")");
     return (os);
   }
 
@@ -292,7 +324,7 @@ namespace pcl
   {
     for (int i = 0; i < 9; ++i)
     os << (i == 0 ? "(" : "") << p.rf[i] << (i < 8 ? ", " : ")");
-    for (size_t i = 0; i < 352; ++i)
+    for (std::size_t i = 0; i < 352; ++i)
     os << (i == 0 ? "(" : "") << p.descriptor[i] << (i < 351 ? ", " : ")");
     return (os);
   }
@@ -302,7 +334,7 @@ namespace pcl
   {
     for (int i = 0; i < 9; ++i)
     os << (i == 0 ? "(" : "") << p.rf[i] << (i < 8 ? ", " : ")");
-    for (size_t i = 0; i < 1344; ++i)
+    for (std::size_t i = 0; i < 1344; ++i)
     os << (i == 0 ? "(" : "") << p.descriptor[i] << (i < 1343 ? ", " : ")");
     return (os);
   }
@@ -350,11 +382,35 @@ namespace pcl
     return (os);
   }
 
+  std::ostream&
+  operator << (std::ostream& os, const GASDSignature512& p)
+  {
+    for (int i = 0; i < 512; ++i)
+      os << (i == 0 ? "(" : "") << p.histogram[i] << (i < 511 ? ", " : ")");
+    return (os);
+  }
+
+  std::ostream&
+  operator << (std::ostream& os, const GASDSignature984& p)
+  {
+    for (int i = 0; i < 984; ++i)
+      os << (i == 0 ? "(" : "") << p.histogram[i] << (i < 983 ? ", " : ")");
+    return (os);
+  }
+
+  std::ostream&
+  operator << (std::ostream& os, const GASDSignature7992& p)
+  {
+    for (int i = 0; i < 7992; ++i)
+      os << (i == 0 ? "(" : "") << p.histogram[i] << (i < 7991 ? ", " : ")");
+    return (os);
+  }
+
   std::ostream& 
   operator << (std::ostream& os, const GFPFHSignature16& p)
   {
-    for (int i = 0; i < p.descriptorSize (); ++i)
-    os << (i == 0 ? "(" : "") << p.histogram[i] << (i < (p.descriptorSize () - 1) ? ", " : ")");
+    for (int i = 0; i < pcl::GFPFHSignature16::descriptorSize (); ++i)
+    os << (i == 0 ? "(" : "") << p.histogram[i] << (i < (pcl::GFPFHSignature16::descriptorSize () - 1) ? ", " : ")");
     return (os);
   }
 
@@ -391,15 +447,24 @@ namespace pcl
   std::ostream& 
   operator << (std::ostream& os, const PointSurfel& p)
   {
-    const unsigned char* rgba_ptr = reinterpret_cast<const unsigned char*>(&p.rgba);
     os <<
     "(" << p.x << "," << p.y << "," << p.z << " - " <<
     p.normal_x << "," << p.normal_y << "," << p.normal_z << " - "
-    << static_cast<int>(*rgba_ptr) << ","
-    << static_cast<int>(*(rgba_ptr+1)) << ","
-    << static_cast<int>(*(rgba_ptr+2)) << ","
-    << static_cast<int>(*(rgba_ptr+3)) << " - " <<
+    << static_cast<int>(p.r) << ","
+    << static_cast<int>(p.g) << ","
+    << static_cast<int>(p.b) << ","
+    << static_cast<int>(p.a) << " - " <<
     p.radius << " - " << p.confidence << " - " << p.curvature << ")";
     return (os);
   }
+
+  std::ostream& 
+  operator << (std::ostream& os, const PointDEM& p)
+  {
+    os << "(" << p.x << "," << p.y << "," << p.z << " - " 
+       << p.intensity << " - " << p.intensity_variance << " - " 
+       << p.height_variance << ")";
+    return (os);
+  }
+
 }

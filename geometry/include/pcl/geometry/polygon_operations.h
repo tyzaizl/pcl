@@ -37,8 +37,7 @@
  *
  */
 
-#ifndef PCL_GEOMETRY_POLYGON_OPERATORS_H
-#define PCL_GEOMETRY_POLYGON_OPERATORS_H
+#pragma once
 
 #include "planar_polygon.h"
 #include <pcl/point_cloud.h>
@@ -57,6 +56,7 @@ namespace pcl
     * \param [in] polygon input polygon
     * \param [out] approx_polygon approximate polygon
     * \param [in] threshold maximum allowed distance of an input vertex to an output edge
+    * \param refine
     * \param [in] closed whether it is a closed polygon or a polyline
     * \author Suat Gedikli <gedikli@willowgarage.com>
     */
@@ -68,4 +68,3 @@ namespace pcl
 } // namespace pcl
 
 #include "impl/polygon_operations.hpp"
-#endif // PCL_GEOMETRY_POLYGON_OPERATORS_H=======

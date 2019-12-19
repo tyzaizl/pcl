@@ -88,11 +88,11 @@ compute (const PointCloud<PointNormal>::Ptr &input, pcl::PolygonMesh &output,
   print_highlight (stderr, "Computing ");
 
   PointCloud<PointNormal>::Ptr cloud (new PointCloud<PointNormal> ());
-  for (size_t i = 0; i < input->size (); ++i)
-    if (pcl_isfinite (input->points[i].x))
+  for (std::size_t i = 0; i < input->size (); ++i)
+    if (std::isfinite (input->points[i].x))
       cloud->push_back (input->points[i]);
 
-  cloud->width = static_cast<uint32_t> (cloud->size ());
+  cloud->width = static_cast<std::uint32_t> (cloud->size ());
   cloud->height = 1;
   cloud->is_dense = true;
 
@@ -104,7 +104,7 @@ compute (const PointCloud<PointNormal>::Ptr &input, pcl::PolygonMesh &output,
 
   gpt.reconstruct (output);
 
-  print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%zu", output.polygons.size ()); print_info (" polygons]\n");
+  print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%lu", output.polygons.size ()); print_info (" polygons]\n");
 }
 
 void
@@ -116,7 +116,7 @@ saveCloud (const std::string &filename, const pcl::PolygonMesh &output)
   print_highlight ("Saving "); print_value ("%s ", filename.c_str ());
   saveVTKFile (filename, output);
 
-  print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%zu", output.polygons.size ()); print_info (" polygons]\n");
+  print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%lu", output.polygons.size ()); print_info (" polygons]\n");
 }
 
 /* ---[ */

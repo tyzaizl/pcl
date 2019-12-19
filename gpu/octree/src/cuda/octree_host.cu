@@ -40,6 +40,7 @@
 #include "internal.hpp"
 #include "utils/boxutils.hpp"
 
+#include<algorithm>
 #include<limits>
 
 using namespace pcl::gpu;
@@ -88,14 +89,14 @@ void pcl::device::OctreeImpl::internalDownload()
 
 namespace 
 {
-    int getBitsNum(int interger)
+    int getBitsNum(int integer)
     {
         int count = 0;
-        while(interger > 0)
+        while(integer > 0)
         {
-            if (interger & 1)
+            if (integer & 1)
                 ++count;
-            interger>>=1;
+            integer>>=1;
         }
         return count;
     } 
@@ -143,7 +144,7 @@ namespace
 
 }
 
-void pcl::device::OctreeImpl::radiusSearchHost(const PointType& query, float radius, vector<int>& out, int max_nn) const
+void pcl::device::OctreeImpl::radiusSearchHost(const PointType& query, float radius, std::vector<int>& out, int max_nn) const
 {            
     out.clear();  
 
@@ -176,7 +177,7 @@ void pcl::device::OctreeImpl::radiusSearchHost(const PointType& query, float rad
             end = beg + min<int>((int)out.size() + end - beg, max_nn) - (int)out.size();
 
             out.insert(out.end(), host_octree.indices.begin() + beg, host_octree.indices.begin() + end);
-            if (out.size() == (size_t)max_nn)
+            if (out.size() == (std::size_t)max_nn)
                 return;
 
             ++iterator;
@@ -209,7 +210,7 @@ void pcl::device::OctreeImpl::radiusSearchHost(const PointType& query, float rad
                 if (dist2 < radius * radius)
                     out.push_back(index);
 
-                if (out.size() == (size_t)max_nn)
+                if (out.size() == (std::size_t)max_nn)
                     return;
             }               
             ++iterator;               

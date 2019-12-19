@@ -105,7 +105,6 @@ pcl::HarrisKeypoint2D<PointInT, PointOutT, IntensityT>::computeSecondMomentMatri
   
   int x = static_cast<int> (index % input_->width);
   int y = static_cast<int> (index / input_->width);
-  unsigned count = 0;
   // indices        0   1   2
   // coefficients: ixix  ixiy  iyiy
   memset (coefficients, 0, sizeof (float) * 3);
@@ -238,13 +237,12 @@ pcl::HarrisKeypoint2D<PointInT, PointOutT, IntensityT>::detectKeypoints (PointCl
   if (!nonmax_)
   {
     output = *response_;
-    for (size_t i = 0; i < response_->size (); ++i)
+    for (std::size_t i = 0; i < response_->size (); ++i)
       keypoints_indices_->indices.push_back (i);
   }
   else
   {    
-    std::sort (indices_->begin (), indices_->end (), 
-               boost::bind (&HarrisKeypoint2D::greaterIntensityAtIndices, this, _1, _2));
+    std::sort (indices_->begin (), indices_->end (), [this] (int p1, int p2) { return greaterIntensityAtIndices (p1, p2); });
     float threshold = threshold_ * response_->points[indices_->front ()].intensity;
     output.clear ();
     output.reserve (response_->size());
@@ -254,7 +252,7 @@ pcl::HarrisKeypoint2D<PointInT, PointOutT, IntensityT>::detectKeypoints (PointCl
     const int occupency_map_size (occupency_map.size ());
 
 #ifdef _OPENMP
-#pragma omp parallel for shared (output, occupency_map) private (width, height) num_threads(threads_)   
+#pragma omp parallel for shared (output, occupency_map) firstprivate (width, height) num_threads(threads_)
 #endif
     for (int i = 0; i < occupency_map_size; ++i)
     {
@@ -282,7 +280,7 @@ pcl::HarrisKeypoint2D<PointInT, PointOutT, IntensityT>::detectKeypoints (PointCl
     //   refineCorners (output);
 
     output.height = 1;
-    output.width = static_cast<uint32_t> (output.size());
+    output.width = static_cast<std::uint32_t> (output.size());
   }
 
   // we don not change the denseness
@@ -337,7 +335,7 @@ pcl::HarrisKeypoint2D<PointInT, PointOutT, IntensityT>::responseNoble (PointClou
 #ifdef _OPENMP
 #pragma omp parallel for shared (output) private (covar) num_threads(threads_)
 #endif
-  for (size_t index = 0; index < output_size; ++index)
+  for (int index = 0; index < output_size; ++index)
   {
     PointOutT &out_point = output.points [index];
     const PointInT &in_point = input_->points [index];
@@ -373,7 +371,7 @@ pcl::HarrisKeypoint2D<PointInT, PointOutT, IntensityT>::responseLowe (PointCloud
 #ifdef _OPENMP
 #pragma omp parallel for shared (output) private (covar) num_threads(threads_)
 #endif
-  for (size_t index = 0; index < output_size; ++index)      
+  for (int index = 0; index < output_size; ++index)      
   {
     PointOutT &out_point = output.points [index];
     const PointInT &in_point = input_->points [index];
@@ -409,7 +407,7 @@ pcl::HarrisKeypoint2D<PointInT, PointOutT, IntensityT>::responseTomasi (PointClo
 #ifdef _OPENMP
 #pragma omp parallel for shared (output) private (covar) num_threads(threads_)
 #endif
-  for (size_t index = 0; index < output_size; ++index)
+  for (int index = 0; index < output_size; ++index)
   {
     PointOutT &out_point = output.points [index];
     const PointInT &in_point = input_->points [index];
@@ -458,7 +456,7 @@ pcl::HarrisKeypoint2D<PointInT, PointOutT, IntensityT>::responseTomasi (PointClo
 //       tree_->radiusSearch (corner, search_radius_, nn_indices, nn_dists);
 //       for (std::vector<int>::const_iterator iIt = nn_indices.begin(); iIt != nn_indices.end(); ++iIt)
 //       {
-//         if (!pcl_isfinite (normals_->points[*iIt].normal_x))
+//         if (!std::isfinite (normals_->points[*iIt].normal_x))
 //           continue;
 
 //         nnT = normals_->points[*iIt].getNormalVector3fMap () * normals_->points[*iIt].getNormalVector3fMap ().transpose();

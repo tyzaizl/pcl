@@ -35,19 +35,21 @@
  *
  */
 
-#ifndef PCL_REGISTRATION_VISUALIZER_H_
-#define PCL_REGISTRATION_VISUALIZER_H_
+#pragma once
 
 // PCL
 #include <pcl/registration/registration.h>
 #include <pcl/visualization/pcl_visualizer.h>
 
+#include <mutex>
+#include <thread>
+
 namespace pcl
 {
   /** \brief @b RegistrationVisualizer represents the base class for rendering
-   * the intermediate positions ocupied by the source point cloud during it's registration
+   * the intermediate positions occupied by the source point cloud during it's registration
    * to the target point cloud. A registration algorithm is considered as input and
-   * it's covergence is rendered.
+   * it's convergence is rendered.
    * \author Gheorghe Lisca
    * \ingroup visualization
    */
@@ -58,23 +60,17 @@ namespace pcl
     public:
       /** \brief Empty constructor. */
       RegistrationVisualizer () : 
-        viewer_ (),
-        viewer_thread_ (),
-        registration_method_name_ (),
         update_visualizer_ (),
         first_update_flag_ (),
         cloud_source_ (),
         cloud_target_ (),
-        visualizer_updating_mutex_ (),
         cloud_intermediate_ (),
-        cloud_intermediate_indices_ (),
-        cloud_target_indices_ (),
         maximum_displayed_correspondences_ (0)
       {}
 
       /** \brief Set the registration algorithm whose intermediate steps will be rendered.
        * The method creates the local callback function pcl::RegistrationVisualizer::update_visualizer_ and
-       * binds it to the local biffers update function pcl::RegistrationVisualizer::updateIntermediateCloud().
+       * binds it to the local buffers update function pcl::RegistrationVisualizer::updateIntermediateCloud().
        * The local callback function pcl::RegistrationVisualizer::update_visualizer_ is then linked to
        * the pcl::Registration::update_visualizer_ callback function.
        * \param registration represents the registration method whose intermediate steps will be rendered.
@@ -82,13 +78,16 @@ namespace pcl
       bool
       setRegistration (pcl::Registration<PointSource, PointTarget> &registration)
       {
-        // Update the name of the registration method to be desplayed
+        // Update the name of the registration method to be displayed
         registration_method_name_ = registration.getClassName();
 
-        // Create the local callback function and bind it to the local function resposable for updating
+        // Create the local callback function and bind it to the local function responsible for updating
         // the local buffers
-        update_visualizer_ = boost::bind (&RegistrationVisualizer<PointSource, PointTarget>::updateIntermediateCloud,
-                                          this, _1, _2, _3, _4);
+        update_visualizer_ = [this] (const pcl::PointCloud<PointSource>& cloud_src, const std::vector<int>& indices_src,
+                                     const pcl::PointCloud<PointTarget>& cloud_tgt, const std::vector<int>& indices_tgt)
+        {
+          updateIntermediateCloud (cloud_src, indices_src, cloud_tgt, indices_tgt);
+        };
 
         // Register the local callback function to the registration algorithm callback function
         registration.registerVisualizationCallback (this->update_visualizer_);
@@ -117,19 +116,19 @@ namespace pcl
       /** \brief Updates visualizer local buffers cloud_intermediate, cloud_intermediate_indices, cloud_target_indices with
        * the newest registration intermediate results.
        * \param cloud_src represents the initial source point cloud
-       * \param indices_src represents the incices of the intermediate source points used for the estimation of rigid transformation
+       * \param indices_src represents the indices of the intermediate source points used for the estimation of rigid transformation
        * \param cloud_tgt represents the target point cloud
-       * \param indices_tgt represents the incices of the target points used for the estimation of rigid transformation
+       * \param indices_tgt represents the indices of the target points used for the estimation of rigid transformation
        */
       void
       updateIntermediateCloud (const pcl::PointCloud<PointSource> &cloud_src, const std::vector<int> &indices_src,
                                const pcl::PointCloud<PointTarget> &cloud_tgt, const std::vector<int> &indices_tgt);
 
-      /** \brief Set maximum number of corresponcence lines whch will be rendered. */
+      /** \brief Set maximum number of correspondence lines which will be rendered. */
       inline void
       setMaximumDisplayedCorrespondences (const int maximum_displayed_correspondences)
       {
-        // This method is usualy called form other thread than visualizer thread
+        // This method is usually called form other thread than visualizer thread
         // therefore same visualizer_updating_mutex_ will be used
 
         // Lock maximum_displayed_correspondences_
@@ -142,21 +141,21 @@ namespace pcl
         visualizer_updating_mutex_.unlock();
       }
 
-      /** \brief Return maximum number of corresponcence lines which are rendered. */
-      inline size_t
+      /** \brief Return maximum number of correspondence lines which are rendered. */
+      inline std::size_t
       getMaximumDisplayedCorrespondences()
       {
         return maximum_displayed_correspondences_;
       }
 
     private:
-      /** \brief Initialize and run the visualization loop. This function will be runned in the internal thread viewer_thread_ */
+      /** \brief Initialize and run the visualization loop. This function will run in the internal thread viewer_thread_ */
       void
       runDisplay ();
 
       /** \brief Return the string obtained by concatenating a root_name and an id */
       inline std::string
-      getIndexedName (std::string &root_name, size_t &id)
+      getIndexedName (std::string &root_name, std::size_t &id)
       {
         std::stringstream id_stream_;
         id_stream_ << id;
@@ -165,16 +164,16 @@ namespace pcl
       }
 
       /** \brief The registration viewer. */
-      boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer_;
+      pcl::visualization::PCLVisualizer::Ptr viewer_;
 
       /** \brief The thread running the runDisplay() function. */
-      boost::thread viewer_thread_;
+      std::thread viewer_thread_;
 
       /** \brief The name of the registration method whose intermediate results are rendered. */
       std::string registration_method_name_;
 
       /** \brief Callback function linked to pcl::Registration::update_visualizer_ */
-      boost::function<void
+      std::function<void
       (const pcl::PointCloud<PointSource> &cloud_src, const std::vector<int> &indices_src, const pcl::PointCloud<
           PointTarget> &cloud_tgt, const std::vector<int> &indices_tgt)> update_visualizer_;
 
@@ -187,8 +186,8 @@ namespace pcl
       /** \brief The local buffer for target point cloud. */
       pcl::PointCloud<PointTarget> cloud_target_;
 
-      /** \brief The mutex used for the sincronization of updating and rendering of the local buffers. */
-      boost::mutex visualizer_updating_mutex_;
+      /** \brief The mutex used for the synchronization of updating and rendering of the local buffers. */
+      std::mutex visualizer_updating_mutex_;
 
       /** \brief The local buffer for intermediate point cloud obtained during registration process. */
       pcl::PointCloud<PointSource> cloud_intermediate_;
@@ -200,11 +199,9 @@ namespace pcl
       std::vector<int> cloud_target_indices_;
 
       /** \brief The maximum number of displayed correspondences. */
-      size_t maximum_displayed_correspondences_;
+      std::size_t maximum_displayed_correspondences_;
 
     };
 }
 
 #include <pcl/visualization/impl/registration_visualizer.hpp>
-
-#endif  //#ifndef PCL_REGISTRATION_VISUALIZER_H_

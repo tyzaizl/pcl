@@ -37,8 +37,8 @@
  * $Id$
  *
  */
-#ifndef PCL_REGISTRATION_TRANSFORMATION_VALIDATION_H_
-#define PCL_REGISTRATION_TRANSFORMATION_VALIDATION_H_
+
+#pragma once
 
 #include <pcl/correspondence.h>
 #include <pcl/features/feature.h>
@@ -68,17 +68,17 @@ namespace pcl
     class TransformationValidation
     {
       public:
-        typedef Eigen::Matrix<Scalar, 4, 4> Matrix4;
-        typedef boost::shared_ptr<TransformationValidation<PointSource, PointTarget, Scalar> > Ptr;
-        typedef boost::shared_ptr<const TransformationValidation<PointSource, PointTarget, Scalar> > ConstPtr;
+        using Matrix4 = Eigen::Matrix<Scalar, 4, 4>;
+        using Ptr = boost::shared_ptr<TransformationValidation<PointSource, PointTarget, Scalar> >;
+        using ConstPtr = boost::shared_ptr<const TransformationValidation<PointSource, PointTarget, Scalar> >;
 
-        typedef pcl::PointCloud<PointSource> PointCloudSource;
-        typedef typename PointCloudSource::Ptr PointCloudSourcePtr;
-        typedef typename PointCloudSource::ConstPtr PointCloudSourceConstPtr;
+        using PointCloudSource = pcl::PointCloud<PointSource>;
+        using PointCloudSourcePtr = typename PointCloudSource::Ptr;
+        using PointCloudSourceConstPtr = typename PointCloudSource::ConstPtr;
 
-        typedef pcl::PointCloud<PointTarget> PointCloudTarget;
-        typedef typename PointCloudTarget::Ptr PointCloudTargetPtr;
-        typedef typename PointCloudTarget::ConstPtr PointCloudTargetConstPtr;
+        using PointCloudTarget = pcl::PointCloud<PointTarget>;
+        using PointCloudTargetPtr = typename PointCloudTarget::Ptr;
+        using PointCloudTargetConstPtr = typename PointCloudTarget::ConstPtr;
 
         TransformationValidation () {};
         virtual ~TransformationValidation () {};
@@ -101,7 +101,7 @@ namespace pcl
         /** \brief Comparator function for deciding which score is better after running the 
           * validation on multiple transforms. Pure virtual.
           *
-          * \note For example, for Euclidean distances smaller is better, for inliers the oposite.
+          * \note For example, for Euclidean distances smaller is better, for inliers the opposite.
           *
           * \param[in] score1 the first value
           * \param[in] score2 the second value
@@ -127,5 +127,3 @@ namespace pcl
     };
   }
 }
-
-#endif    // PCL_REGISTRATION_TRANSFORMATION_VALIDATION_H_

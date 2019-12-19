@@ -45,20 +45,20 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 pcl::modeler::ICPRegistrationWorker::ICPRegistrationWorker(CloudMesh::PointCloudPtr cloud, const QList<CloudMeshItem*>& cloud_mesh_items, QWidget* parent)
   : AbstractWorker(cloud_mesh_items, parent),
-  cloud_(cloud),
+  cloud_(std::move(cloud)),
   x_min_(std::numeric_limits<double>::max()), x_max_(std::numeric_limits<double>::min()),
   y_min_(std::numeric_limits<double>::max()), y_max_(std::numeric_limits<double>::min()),
   z_min_(std::numeric_limits<double>::max()), z_max_(std::numeric_limits<double>::min()),
-  max_correspondence_distance_(NULL),
-  max_iterations_(NULL),
-  transformation_epsilon_(NULL),
-  euclidean_fitness_epsilon_(NULL)
+  max_correspondence_distance_(nullptr),
+  max_iterations_(nullptr),
+  transformation_epsilon_(nullptr),
+  euclidean_fitness_epsilon_(nullptr)
 {
 
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-pcl::modeler::ICPRegistrationWorker::~ICPRegistrationWorker(void)
+pcl::modeler::ICPRegistrationWorker::~ICPRegistrationWorker()
 {
 }
 
@@ -138,7 +138,7 @@ pcl::modeler::ICPRegistrationWorker::processImpl(CloudMeshItem* cloud_mesh_item)
   // Set the euclidean distance difference epsilon (criterion 3)
   icp.setEuclideanFitnessEpsilon (*euclidean_fitness_epsilon_);
 
-  icp.setInputCloud(cloud_mesh_item->getCloudMesh()->getCloud());
+  icp.setInputSource(cloud_mesh_item->getCloudMesh()->getCloud());
   icp.setInputTarget(cloud_);
   pcl::PointCloud<CloudMesh::PointT> result;
   icp.align(result);

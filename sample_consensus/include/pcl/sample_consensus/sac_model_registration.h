@@ -38,9 +38,10 @@
  *
  */
 
-#ifndef PCL_SAMPLE_CONSENSUS_MODEL_REGISTRATION_H_
-#define PCL_SAMPLE_CONSENSUS_MODEL_REGISTRATION_H_
+#pragma once
 
+#include <pcl/pcl_macros.h>
+#include <pcl/pcl_base.h>
 #include <pcl/sample_consensus/eigen.h>
 #include <pcl/sample_consensus/sac_model.h>
 #include <pcl/sample_consensus/model_types.h>
@@ -58,15 +59,18 @@ namespace pcl
   class SampleConsensusModelRegistration : public SampleConsensusModel<PointT>
   {
     public:
+      using SampleConsensusModel<PointT>::model_name_;
       using SampleConsensusModel<PointT>::input_;
       using SampleConsensusModel<PointT>::indices_;
       using SampleConsensusModel<PointT>::error_sqr_dists_;
+      using SampleConsensusModel<PointT>::isModelValid;
 
-      typedef typename SampleConsensusModel<PointT>::PointCloud PointCloud;
-      typedef typename SampleConsensusModel<PointT>::PointCloudPtr PointCloudPtr;
-      typedef typename SampleConsensusModel<PointT>::PointCloudConstPtr PointCloudConstPtr;
+      using PointCloud = typename SampleConsensusModel<PointT>::PointCloud;
+      using PointCloudPtr = typename SampleConsensusModel<PointT>::PointCloudPtr;
+      using PointCloudConstPtr = typename SampleConsensusModel<PointT>::PointCloudConstPtr;
 
-      typedef boost::shared_ptr<SampleConsensusModelRegistration> Ptr;
+      using Ptr = boost::shared_ptr<SampleConsensusModelRegistration<PointT> >;
+      using ConstPtr = boost::shared_ptr<const SampleConsensusModelRegistration<PointT>>;
 
       /** \brief Constructor for base SampleConsensusModelRegistration.
         * \param[in] cloud the input point cloud dataset
@@ -76,12 +80,13 @@ namespace pcl
                                         bool random = false) 
         : SampleConsensusModel<PointT> (cloud, random)
         , target_ ()
-        , indices_tgt_ ()
-        , correspondences_ ()
         , sample_dist_thresh_ (0)
       {
         // Call our own setInputCloud
         setInputCloud (cloud);
+        model_name_ = "SampleConsensusModelRegistration";
+        sample_size_ = 3;
+        model_size_ = 16;
       }
 
       /** \brief Constructor for base SampleConsensusModelRegistration.
@@ -94,22 +99,23 @@ namespace pcl
                                         bool random = false) 
         : SampleConsensusModel<PointT> (cloud, indices, random)
         , target_ ()
-        , indices_tgt_ ()
-        , correspondences_ ()
         , sample_dist_thresh_ (0)
       {
         computeOriginalIndexMapping ();
         computeSampleDistanceThreshold (cloud, indices);
+        model_name_ = "SampleConsensusModelRegistration";
+        sample_size_ = 3;
+        model_size_ = 16;
       }
       
       /** \brief Empty destructor */
-      virtual ~SampleConsensusModelRegistration () {}
+      ~SampleConsensusModelRegistration () {}
 
       /** \brief Provide a pointer to the input dataset
         * \param[in] cloud the const boost shared pointer to a PointCloud message
         */
-      inline virtual void
-      setInputCloud (const PointCloudConstPtr &cloud)
+      inline void
+      setInputCloud (const PointCloudConstPtr &cloud) override
       {
         SampleConsensusModel<PointT>::setInputCloud (cloud);
         computeOriginalIndexMapping ();
@@ -151,7 +157,7 @@ namespace pcl
         */
       bool
       computeModelCoefficients (const std::vector<int> &samples,
-                                Eigen::VectorXf &model_coefficients);
+                                Eigen::VectorXf &model_coefficients) const override;
 
       /** \brief Compute all distances from the transformed points to their correspondences
         * \param[in] model_coefficients the 4x4 transformation matrix
@@ -159,7 +165,7 @@ namespace pcl
         */
       void
       getDistancesToModel (const Eigen::VectorXf &model_coefficients,
-                           std::vector<double> &distances);
+                           std::vector<double> &distances) const override;
 
       /** \brief Select all the points which respect the given model coefficients as inliers.
         * \param[in] model_coefficients the 4x4 transformation matrix
@@ -169,7 +175,7 @@ namespace pcl
       void
       selectWithinDistance (const Eigen::VectorXf &model_coefficients,
                             const double threshold,
-                            std::vector<int> &inliers);
+                            std::vector<int> &inliers) override;
 
       /** \brief Count all the points which respect the given model coefficients as inliers.
         *
@@ -177,9 +183,9 @@ namespace pcl
         * \param[in] threshold maximum admissible distance threshold for determining the inliers from the outliers
         * \return the resultant number of inliers
         */
-      virtual int
+      int
       countWithinDistance (const Eigen::VectorXf &model_coefficients,
-                           const double threshold);
+                           const double threshold) const override;
 
       /** \brief Recompute the 4x4 transformation using the given inlier set
         * \param[in] inliers the data inliers found as supporting the model
@@ -189,47 +195,37 @@ namespace pcl
       void
       optimizeModelCoefficients (const std::vector<int> &inliers,
                                  const Eigen::VectorXf &model_coefficients,
-                                 Eigen::VectorXf &optimized_coefficients);
+                                 Eigen::VectorXf &optimized_coefficients) const override;
 
       void
       projectPoints (const std::vector<int> &,
                      const Eigen::VectorXf &,
-                     PointCloud &, bool = true)
+                     PointCloud &, bool = true) const override
       {
       };
 
       bool
       doSamplesVerifyModel (const std::set<int> &,
                             const Eigen::VectorXf &,
-                            const double)
+                            const double) const override
       {
         return (false);
       }
 
-      /** \brief Return an unique id for this model (SACMODEL_REGISTRATION). */
+      /** \brief Return a unique id for this model (SACMODEL_REGISTRATION). */
       inline pcl::SacModel
-      getModelType () const { return (SACMODEL_REGISTRATION); }
+      getModelType () const override { return (SACMODEL_REGISTRATION); }
 
     protected:
-      /** \brief Check whether a model is valid given the user constraints.
-        * \param[in] model_coefficients the set of model coefficients
-        */
-      inline bool
-      isModelValid (const Eigen::VectorXf &model_coefficients)
-      {
-        // Needs a valid model coefficients
-        if (model_coefficients.size () != 16)
-          return (false);
-
-        return (true);
-      }
+      using SampleConsensusModel<PointT>::sample_size_;
+      using SampleConsensusModel<PointT>::model_size_;
 
       /** \brief Check if a sample of indices results in a good sample of points
         * indices.
         * \param[in] samples the resultant index samples
         */
-      virtual bool
-      isSampleGood (const std::vector<int> &samples) const;
+      bool
+      isSampleGood (const std::vector<int> &samples) const override;
 
       /** \brief Computes an "optimal" sample distance threshold based on the
         * principal directions of the input cloud.
@@ -247,7 +243,7 @@ namespace pcl
         // Check if the covariance matrix is finite or not.
         for (int i = 0; i < 3; ++i)
           for (int j = 0; j < 3; ++j)
-            if (!pcl_isfinite (covariance_matrix.coeffRef (i, j)))
+            if (!std::isfinite (covariance_matrix.coeffRef (i, j)))
               PCL_ERROR ("[pcl::SampleConsensusModelRegistration::computeSampleDistanceThreshold] Covariance matrix has NaN values! Is the input cloud finite?\n");
 
         Eigen::Vector3f eigen_values;
@@ -262,6 +258,7 @@ namespace pcl
       /** \brief Computes an "optimal" sample distance threshold based on the
         * principal directions of the input cloud.
         * \param[in] cloud the const boost shared pointer to a PointCloud message
+        * \param indices
         */
       inline void
       computeSampleDistanceThreshold (const PointCloudConstPtr &cloud,
@@ -275,7 +272,7 @@ namespace pcl
         // Check if the covariance matrix is finite or not.
         for (int i = 0; i < 3; ++i)
           for (int j = 0; j < 3; ++j)
-            if (!pcl_isfinite (covariance_matrix.coeffRef (i, j)))
+            if (!std::isfinite (covariance_matrix.coeffRef (i, j)))
               PCL_ERROR ("[pcl::SampleConsensusModelRegistration::computeSampleDistanceThreshold] Covariance matrix has NaN values! Is the input cloud finite?\n");
 
         Eigen::Vector3f eigen_values;
@@ -303,7 +300,7 @@ namespace pcl
                                       const std::vector<int> &indices_src,
                                       const pcl::PointCloud<PointT> &cloud_tgt,
                                       const std::vector<int> &indices_tgt,
-                                      Eigen::VectorXf &transform);
+                                      Eigen::VectorXf &transform) const;
 
       /** \brief Compute mappings between original indices of the input_/target_ clouds. */
       void
@@ -311,7 +308,7 @@ namespace pcl
       {
         if (!indices_tgt_ || !indices_ || indices_->empty () || indices_->size () != indices_tgt_->size ())
           return;
-        for (size_t i = 0; i < indices_->size (); ++i)
+        for (std::size_t i = 0; i < indices_->size (); ++i)
           correspondences_[(*indices_)[i]] = (*indices_tgt_)[i];
       }
 
@@ -319,7 +316,7 @@ namespace pcl
       PointCloudConstPtr target_;
 
       /** \brief A pointer to the vector of target point indices to use. */
-      boost::shared_ptr <std::vector<int> > indices_tgt_;
+      IndicesPtr indices_tgt_;
 
       /** \brief Given the index in the original point cloud, give the matching original index in the target cloud */
       std::map<int, int> correspondences_;
@@ -327,10 +324,8 @@ namespace pcl
       /** \brief Internal distance threshold used for the sample selection step. */
       double sample_dist_thresh_;
     public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      PCL_MAKE_ALIGNED_OPERATOR_NEW
   };
 }
 
 #include <pcl/sample_consensus/impl/sac_model_registration.hpp>
-
-#endif  //#ifndef PCL_SAMPLE_CONSENSUS_MODEL_REGISTRATION_H_

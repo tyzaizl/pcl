@@ -36,12 +36,11 @@
  * $Id$
  *
  */
+ 
+#pragma once
 
 #include <pcl/pcl_config.h>
 #ifdef HAVE_QHULL
-
-#ifndef PCL_CONCAVE_HULL_H
-#define PCL_CONCAVE_HULL_H
 
 #include <pcl/surface/convex_hull.h>
 
@@ -56,8 +55,8 @@ namespace pcl
   class ConcaveHull : public MeshConstruction<PointInT>
   {
     protected:
-      typedef boost::shared_ptr<ConcaveHull<PointInT> > Ptr;
-      typedef boost::shared_ptr<const ConcaveHull<PointInT> > ConstPtr;
+      using Ptr = boost::shared_ptr<ConcaveHull<PointInT> >;
+      using ConstPtr = boost::shared_ptr<const ConcaveHull<PointInT> >;
 
       using PCLBase<PointInT>::input_;
       using PCLBase<PointInT>::indices_;
@@ -67,9 +66,9 @@ namespace pcl
     public:
       using MeshConstruction<PointInT>::reconstruct;
 
-      typedef pcl::PointCloud<PointInT> PointCloud;
-      typedef typename PointCloud::Ptr PointCloudPtr;
-      typedef typename PointCloud::ConstPtr PointCloudConstPtr;
+      using PointCloud = pcl::PointCloud<PointInT>;
+      using PointCloudPtr = typename PointCloud::Ptr;
+      using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
       /** \brief Empty constructor. */
       ConcaveHull () : alpha_ (0), keep_information_ (false), voronoi_centers_ (), dim_(0)
@@ -77,7 +76,7 @@ namespace pcl
       };
       
       /** \brief Empty destructor */
-      virtual ~ConcaveHull () {}
+      ~ConcaveHull () {}
 
       /** \brief Compute a concave hull for all points given 
         *
@@ -132,10 +131,7 @@ namespace pcl
       {
         keep_information_ = value;
       }
-
-      /** \brief Returns the dimensionality (2 or 3) of the calculated hull. */
-      PCL_DEPRECATED (int getDim () const, "[pcl::ConcaveHull::getDim] This method is deprecated. Please use getDimension () instead.");
-
+      
       /** \brief Returns the dimensionality (2 or 3) of the calculated hull. */
       inline int
       getDimension () const
@@ -155,10 +151,20 @@ namespace pcl
           PCL_ERROR ("[pcl::%s::setDimension] Invalid input dimension specified!\n", getClassName ().c_str ());
       }
 
+      /** \brief Retrieve the indices of the input point cloud that for the convex hull.
+        *
+        * \note Should only be called after reconstruction was performed and if the ConcaveHull is
+        * set to preserve information via setKeepInformation ().
+        *
+        * \param[out] hull_point_indices The indices of the points forming the point cloud
+        */
+      void
+      getHullPointIndices (pcl::PointIndices &hull_point_indices) const;
+
     protected:
       /** \brief Class get name method. */
       std::string
-      getClassName () const
+      getClassName () const override
       {
         return ("ConcaveHull");
       }
@@ -174,11 +180,11 @@ namespace pcl
       performReconstruction (PointCloud &points, 
                              std::vector<pcl::Vertices> &polygons);
 
-      virtual void
-      performReconstruction (PolygonMesh &output);
+      void
+      performReconstruction (PolygonMesh &output) override;
 
-      virtual void
-      performReconstruction (std::vector<pcl::Vertices> &polygons);
+      void
+      performReconstruction (std::vector<pcl::Vertices> &polygons) override;
 
       /** \brief The method accepts facets only if the distance from any vertex to the facet->center 
         * (center of the voronoi cell) is smaller than alpha 
@@ -195,6 +201,9 @@ namespace pcl
       
       /** \brief the dimensionality of the concave hull */
       int dim_;
+
+      /** \brief vector containing the point cloud indices of the convex hull points. */
+      pcl::PointIndices hull_indices_;
   };
 }
 
@@ -202,5 +211,4 @@ namespace pcl
 #include <pcl/surface/impl/concave_hull.hpp>
 #endif
 
-#endif  //#ifndef PCL_CONCAVE_HULL
 #endif

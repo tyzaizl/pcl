@@ -46,60 +46,60 @@
 #include "NCV.hpp"
 
 template<typename TBase> inline __host__ __device__ TBase _pixMaxVal();
-template<> static inline __host__ __device__ Ncv8u _pixMaxVal<Ncv8u>() {return UCHAR_MAX;}
-template<> static inline __host__ __device__ Ncv16u _pixMaxVal<Ncv16u>() {return USHRT_MAX;}
-template<> static inline __host__ __device__ Ncv32u _pixMaxVal<Ncv32u>() {return UINT_MAX;}
-template<> static inline __host__ __device__ Ncv8s _pixMaxVal<Ncv8s>() {return CHAR_MAX;}
-template<> static inline __host__ __device__ Ncv16s _pixMaxVal<Ncv16s>() {return SHRT_MAX;}
-template<> static inline __host__ __device__ Ncv32s _pixMaxVal<Ncv32s>() {return INT_MAX;}
-template<> static inline __host__ __device__ Ncv32f _pixMaxVal<Ncv32f>() {return FLT_MAX;}
-template<> static inline __host__ __device__ Ncv64f _pixMaxVal<Ncv64f>() {return DBL_MAX;}
+template<>  inline __host__ __device__ Ncv8u  _pixMaxVal<Ncv8u>()  {return UCHAR_MAX;}
+template<>  inline __host__ __device__ Ncv16u _pixMaxVal<Ncv16u>() {return USHRT_MAX;}
+template<>  inline __host__ __device__ Ncv32u _pixMaxVal<Ncv32u>() {return  UINT_MAX;}
+template<>  inline __host__ __device__ Ncv8s  _pixMaxVal<Ncv8s>()  {return  SCHAR_MAX;}
+template<>  inline __host__ __device__ Ncv16s _pixMaxVal<Ncv16s>() {return  SHRT_MAX;}
+template<>  inline __host__ __device__ Ncv32s _pixMaxVal<Ncv32s>() {return   INT_MAX;}
+template<>  inline __host__ __device__ Ncv32f _pixMaxVal<Ncv32f>() {return   FLT_MAX;}
+template<>  inline __host__ __device__ Ncv64f _pixMaxVal<Ncv64f>() {return   DBL_MAX;}
 
 template<typename TBase> inline __host__ __device__ TBase _pixMinVal();
-template<> static inline __host__ __device__ Ncv8u _pixMinVal<Ncv8u>() {return 0;}
-template<> static inline __host__ __device__ Ncv16u _pixMinVal<Ncv16u>() {return 0;}
-template<> static inline __host__ __device__ Ncv32u _pixMinVal<Ncv32u>() {return 0;}
-template<> static inline __host__ __device__ Ncv8s _pixMinVal<Ncv8s>() {return CHAR_MIN;}
-template<> static inline __host__ __device__ Ncv16s _pixMinVal<Ncv16s>() {return SHRT_MIN;}
-template<> static inline __host__ __device__ Ncv32s _pixMinVal<Ncv32s>() {return INT_MIN;}
-template<> static inline __host__ __device__ Ncv32f _pixMinVal<Ncv32f>() {return FLT_MIN;}
-template<> static inline __host__ __device__ Ncv64f _pixMinVal<Ncv64f>() {return DBL_MIN;}
+template<>  inline __host__ __device__ Ncv8u  _pixMinVal<Ncv8u>()  {return 0;}
+template<>  inline __host__ __device__ Ncv16u _pixMinVal<Ncv16u>() {return 0;}
+template<>  inline __host__ __device__ Ncv32u _pixMinVal<Ncv32u>() {return 0;}
+template<>  inline __host__ __device__ Ncv8s  _pixMinVal<Ncv8s>()  {return SCHAR_MIN;}
+template<>  inline __host__ __device__ Ncv16s _pixMinVal<Ncv16s>() {return SHRT_MIN;}
+template<>  inline __host__ __device__ Ncv32s _pixMinVal<Ncv32s>() {return INT_MIN;}
+template<>  inline __host__ __device__ Ncv32f _pixMinVal<Ncv32f>() {return FLT_MIN;}
+template<>  inline __host__ __device__ Ncv64f _pixMinVal<Ncv64f>() {return DBL_MIN;}
 
 template<typename Tvec> struct TConvVec2Base;
-template<> struct TConvVec2Base<uchar1> {typedef Ncv8u TBase;};
-template<> struct TConvVec2Base<uchar3> {typedef Ncv8u TBase;};
-template<> struct TConvVec2Base<uchar4> {typedef Ncv8u TBase;};
-template<> struct TConvVec2Base<ushort1> {typedef Ncv16u TBase;};
-template<> struct TConvVec2Base<ushort3> {typedef Ncv16u TBase;};
-template<> struct TConvVec2Base<ushort4> {typedef Ncv16u TBase;};
-template<> struct TConvVec2Base<uint1> {typedef Ncv32u TBase;};
-template<> struct TConvVec2Base<uint3> {typedef Ncv32u TBase;};
-template<> struct TConvVec2Base<uint4> {typedef Ncv32u TBase;};
-template<> struct TConvVec2Base<float1> {typedef Ncv32f TBase;};
-template<> struct TConvVec2Base<float3> {typedef Ncv32f TBase;};
-template<> struct TConvVec2Base<float4> {typedef Ncv32f TBase;};
-template<> struct TConvVec2Base<double1> {typedef Ncv64f TBase;};
-template<> struct TConvVec2Base<double3> {typedef Ncv64f TBase;};
-template<> struct TConvVec2Base<double4> {typedef Ncv64f TBase;};
+template<> struct TConvVec2Base<uchar1>  {using TBase = Ncv8u;};
+template<> struct TConvVec2Base<uchar3>  {using TBase = Ncv8u;};
+template<> struct TConvVec2Base<uchar4>  {using TBase = Ncv8u;};
+template<> struct TConvVec2Base<ushort1> {using TBase = Ncv16u;};
+template<> struct TConvVec2Base<ushort3> {using TBase = Ncv16u;};
+template<> struct TConvVec2Base<ushort4> {using TBase = Ncv16u;};
+template<> struct TConvVec2Base<uint1>   {using TBase = Ncv32u;};
+template<> struct TConvVec2Base<uint3>   {using TBase = Ncv32u;};
+template<> struct TConvVec2Base<uint4>   {using TBase = Ncv32u;};
+template<> struct TConvVec2Base<float1>  {using TBase = Ncv32f;};
+template<> struct TConvVec2Base<float3>  {using TBase = Ncv32f;};
+template<> struct TConvVec2Base<float4>  {using TBase = Ncv32f;};
+template<> struct TConvVec2Base<double1> {using TBase = Ncv64f;};
+template<> struct TConvVec2Base<double3> {using TBase = Ncv64f;};
+template<> struct TConvVec2Base<double4> {using TBase = Ncv64f;};
 
 #define NC(T)       (sizeof(T) / sizeof(TConvVec2Base<T>::TBase))
 
 template<typename TBase, Ncv32u NC> struct TConvBase2Vec;
-template<> struct TConvBase2Vec<Ncv8u, 1> {typedef uchar1 TVec;};
-template<> struct TConvBase2Vec<Ncv8u, 3> {typedef uchar3 TVec;};
-template<> struct TConvBase2Vec<Ncv8u, 4> {typedef uchar4 TVec;};
-template<> struct TConvBase2Vec<Ncv16u, 1> {typedef ushort1 TVec;};
-template<> struct TConvBase2Vec<Ncv16u, 3> {typedef ushort3 TVec;};
-template<> struct TConvBase2Vec<Ncv16u, 4> {typedef ushort4 TVec;};
-template<> struct TConvBase2Vec<Ncv32u, 1> {typedef uint1 TVec;};
-template<> struct TConvBase2Vec<Ncv32u, 3> {typedef uint3 TVec;};
-template<> struct TConvBase2Vec<Ncv32u, 4> {typedef uint4 TVec;};
-template<> struct TConvBase2Vec<Ncv32f, 1> {typedef float1 TVec;};
-template<> struct TConvBase2Vec<Ncv32f, 3> {typedef float3 TVec;};
-template<> struct TConvBase2Vec<Ncv32f, 4> {typedef float4 TVec;};
-template<> struct TConvBase2Vec<Ncv64f, 1> {typedef double1 TVec;};
-template<> struct TConvBase2Vec<Ncv64f, 3> {typedef double3 TVec;};
-template<> struct TConvBase2Vec<Ncv64f, 4> {typedef double4 TVec;};
+template<> struct TConvBase2Vec<Ncv8u, 1>  {using TVec = uchar1;};
+template<> struct TConvBase2Vec<Ncv8u, 3>  {using TVec = uchar3;};
+template<> struct TConvBase2Vec<Ncv8u, 4>  {using TVec = uchar4;};
+template<> struct TConvBase2Vec<Ncv16u, 1> {using TVec = ushort1;};
+template<> struct TConvBase2Vec<Ncv16u, 3> {using TVec = ushort3;};
+template<> struct TConvBase2Vec<Ncv16u, 4> {using TVec = ushort4;};
+template<> struct TConvBase2Vec<Ncv32u, 1> {using TVec = uint1;};
+template<> struct TConvBase2Vec<Ncv32u, 3> {using TVec = uint3;};
+template<> struct TConvBase2Vec<Ncv32u, 4> {using TVec = uint4;};
+template<> struct TConvBase2Vec<Ncv32f, 1> {using TVec = float1;};
+template<> struct TConvBase2Vec<Ncv32f, 3> {using TVec = float3;};
+template<> struct TConvBase2Vec<Ncv32f, 4> {using TVec = float4;};
+template<> struct TConvBase2Vec<Ncv64f, 1> {using TVec = double1;};
+template<> struct TConvBase2Vec<Ncv64f, 3> {using TVec = double3;};
+template<> struct TConvBase2Vec<Ncv64f, 4> {using TVec = double4;};
 
 //TODO: consider using CUDA intrinsics to avoid branching
 template<typename Tin> static inline __host__ __device__ void _TDemoteClampZ(Tin &a, Ncv8u &out) {out = (Ncv8u)CLAMP_0_255(a);};
@@ -114,21 +114,21 @@ template<typename Tin> static inline __host__ __device__ void _TDemoteClampNN(Ti
 template<typename Tin> static inline __host__ __device__ void _TDemoteClampNN(Tin &a, Ncv32f &out) {out = (Ncv32f)a;}
 
 template<typename Tout> inline Tout _pixMakeZero();
-template<> static inline __host__ __device__ uchar1 _pixMakeZero<uchar1>() {return make_uchar1(0);}
-template<> static inline __host__ __device__ uchar3 _pixMakeZero<uchar3>() {return make_uchar3(0,0,0);}
-template<> static inline __host__ __device__ uchar4 _pixMakeZero<uchar4>() {return make_uchar4(0,0,0,0);}
-template<> static inline __host__ __device__ ushort1 _pixMakeZero<ushort1>() {return make_ushort1(0);}
-template<> static inline __host__ __device__ ushort3 _pixMakeZero<ushort3>() {return make_ushort3(0,0,0);}
-template<> static inline __host__ __device__ ushort4 _pixMakeZero<ushort4>() {return make_ushort4(0,0,0,0);}
-template<> static inline __host__ __device__ uint1 _pixMakeZero<uint1>() {return make_uint1(0);}
-template<> static inline __host__ __device__ uint3 _pixMakeZero<uint3>() {return make_uint3(0,0,0);}
-template<> static inline __host__ __device__ uint4 _pixMakeZero<uint4>() {return make_uint4(0,0,0,0);}
-template<> static inline __host__ __device__ float1 _pixMakeZero<float1>() {return make_float1(0.f);}
-template<> static inline __host__ __device__ float3 _pixMakeZero<float3>() {return make_float3(0.f,0.f,0.f);}
-template<> static inline __host__ __device__ float4 _pixMakeZero<float4>() {return make_float4(0.f,0.f,0.f,0.f);}
-template<> static inline __host__ __device__ double1 _pixMakeZero<double1>() {return make_double1(0.);}
-template<> static inline __host__ __device__ double3 _pixMakeZero<double3>() {return make_double3(0.,0.,0.);}
-template<> static inline __host__ __device__ double4 _pixMakeZero<double4>() {return make_double4(0.,0.,0.,0.);}
+template<>  inline __host__ __device__ uchar1 _pixMakeZero<uchar1>() {return make_uchar1(0);}
+template<>  inline __host__ __device__ uchar3 _pixMakeZero<uchar3>() {return make_uchar3(0,0,0);}
+template<>  inline __host__ __device__ uchar4 _pixMakeZero<uchar4>() {return make_uchar4(0,0,0,0);}
+template<>  inline __host__ __device__ ushort1 _pixMakeZero<ushort1>() {return make_ushort1(0);}
+template<>  inline __host__ __device__ ushort3 _pixMakeZero<ushort3>() {return make_ushort3(0,0,0);}
+template<>  inline __host__ __device__ ushort4 _pixMakeZero<ushort4>() {return make_ushort4(0,0,0,0);}
+template<>  inline __host__ __device__ uint1 _pixMakeZero<uint1>() {return make_uint1(0);}
+template<>  inline __host__ __device__ uint3 _pixMakeZero<uint3>() {return make_uint3(0,0,0);}
+template<>  inline __host__ __device__ uint4 _pixMakeZero<uint4>() {return make_uint4(0,0,0,0);}
+template<>  inline __host__ __device__ float1 _pixMakeZero<float1>() {return make_float1(0.f);}
+template<>  inline __host__ __device__ float3 _pixMakeZero<float3>() {return make_float3(0.f,0.f,0.f);}
+template<>  inline __host__ __device__ float4 _pixMakeZero<float4>() {return make_float4(0.f,0.f,0.f,0.f);}
+template<>  inline __host__ __device__ double1 _pixMakeZero<double1>() {return make_double1(0.);}
+template<>  inline __host__ __device__ double3 _pixMakeZero<double3>() {return make_double3(0.,0.,0.);}
+template<>  inline __host__ __device__ double4 _pixMakeZero<double4>() {return make_double4(0.,0.,0.,0.);}
 
 static inline __host__ __device__ uchar1 _pixMake(Ncv8u x) {return make_uchar1(x);}
 static inline __host__ __device__ uchar3 _pixMake(Ncv8u x, Ncv8u y, Ncv8u z) {return make_uchar3(x,y,z);}
@@ -227,7 +227,7 @@ template<typename Tin, typename Tout, typename Tw> struct __pixScale_CN<Tin, Tou
 static __host__ __device__ Tout _pixScale_CN(Tin &pix, Tw w)
 {
     Tout out;
-    typedef typename TConvVec2Base<Tout>::TBase TBout;
+    using TBout = typename TConvVec2Base<Tout>::TBase;
     out.x = (TBout)(pix.x * w);
     return out;
 }};
@@ -236,7 +236,7 @@ template<typename Tin, typename Tout, typename Tw> struct __pixScale_CN<Tin, Tou
 static __host__ __device__ Tout _pixScale_CN(Tin &pix, Tw w)
 {
     Tout out;
-    typedef typename TConvVec2Base<Tout>::TBase TBout;
+    using TBout = typename TConvVec2Base<Tout>::TBase;
     out.x = (TBout)(pix.x * w);
     out.y = (TBout)(pix.y * w);
     out.z = (TBout)(pix.z * w);
@@ -247,7 +247,7 @@ template<typename Tin, typename Tout, typename Tw> struct __pixScale_CN<Tin, Tou
 static __host__ __device__ Tout _pixScale_CN(Tin &pix, Tw w)
 {
     Tout out;
-    typedef typename TConvVec2Base<Tout>::TBase TBout;
+    using TBout = typename TConvVec2Base<Tout>::TBase;
     out.x = (TBout)(pix.x * w);
     out.y = (TBout)(pix.y * w);
     out.z = (TBout)(pix.z * w);
@@ -325,25 +325,25 @@ template<typename Tin, typename Tout> static __host__ __device__ Tout _pixDist(T
 
 
 template <typename T> struct TAccPixWeighted;
-template<> struct TAccPixWeighted<uchar1> {typedef double1 type;};
-template<> struct TAccPixWeighted<uchar3> {typedef double3 type;};
-template<> struct TAccPixWeighted<uchar4> {typedef double4 type;};
-template<> struct TAccPixWeighted<ushort1> {typedef double1 type;};
-template<> struct TAccPixWeighted<ushort3> {typedef double3 type;};
-template<> struct TAccPixWeighted<ushort4> {typedef double4 type;};
-template<> struct TAccPixWeighted<float1> {typedef double1 type;};
-template<> struct TAccPixWeighted<float3> {typedef double3 type;};
-template<> struct TAccPixWeighted<float4> {typedef double4 type;};
+template<> struct TAccPixWeighted<uchar1> {using type = double1;};
+template<> struct TAccPixWeighted<uchar3> {using type = double3;};
+template<> struct TAccPixWeighted<uchar4> {using type = double4;};
+template<> struct TAccPixWeighted<ushort1> {using type = double1;};
+template<> struct TAccPixWeighted<ushort3> {using type = double3;};
+template<> struct TAccPixWeighted<ushort4> {using type = double4;};
+template<> struct TAccPixWeighted<float1> {using type = double1;};
+template<> struct TAccPixWeighted<float3> {using type = double3;};
+template<> struct TAccPixWeighted<float4> {using type = double4;};
 
 template<typename Tfrom> struct TAccPixDist {};
-template<> struct TAccPixDist<uchar1> {typedef Ncv32u type;};
-template<> struct TAccPixDist<uchar3> {typedef Ncv32u type;};
-template<> struct TAccPixDist<uchar4> {typedef Ncv32u type;};
-template<> struct TAccPixDist<ushort1> {typedef Ncv32u type;};
-template<> struct TAccPixDist<ushort3> {typedef Ncv32u type;};
-template<> struct TAccPixDist<ushort4> {typedef Ncv32u type;};
-template<> struct TAccPixDist<float1> {typedef Ncv32f type;};
-template<> struct TAccPixDist<float3> {typedef Ncv32f type;};
-template<> struct TAccPixDist<float4> {typedef Ncv32f type;};
+template<> struct TAccPixDist<uchar1> {using type = Ncv32u;};
+template<> struct TAccPixDist<uchar3> {using type = Ncv32u;};
+template<> struct TAccPixDist<uchar4> {using type = Ncv32u;};
+template<> struct TAccPixDist<ushort1> {using type = Ncv32u;};
+template<> struct TAccPixDist<ushort3> {using type = Ncv32u;};
+template<> struct TAccPixDist<ushort4> {using type = Ncv32u;};
+template<> struct TAccPixDist<float1> {using type = Ncv32f;};
+template<> struct TAccPixDist<float3> {using type = Ncv32f;};
+template<> struct TAccPixDist<float4> {using type = Ncv32f;};
 
 #endif //_ncv_pixel_operations_hpp_

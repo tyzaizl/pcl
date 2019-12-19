@@ -50,7 +50,7 @@ using namespace pcl::console;
 void
 printHelp (int, char **argv)
 {
-  print_error ("Syntax is: %s input.ply output.pcd\n", argv[0]);
+  print_error ("Syntax is: %s [-format 0|1] input.ply output.pcd\n", argv[0]);
 }
 
 bool
@@ -105,7 +105,7 @@ main (int argc, char** argv)
   }
 
   // Command line parsing
-  bool format = 1;
+  bool format = true;
   parse_argument (argc, argv, "-format", format);
   print_info ("PCD output format: "); print_value ("%s\n", (format ? "binary" : "ascii"));
 

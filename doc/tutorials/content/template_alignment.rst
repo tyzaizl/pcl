@@ -15,7 +15,7 @@ We can use the code below to fit a template of a person's face (the blue points)
 The code
 --------
 
-First, download the datasets from `github.com/PointCloudLibrary/data/tree/master/tutorials/template_alignment/ <https://raw.github.com/PointCloudLibrary/data/master/tutorials/template_alignment/>`_
+First, download the datasets from `github.com/PointCloudLibrary/data/tree/master/tutorials/template_alignment/ <https://github.com/PointCloudLibrary/data/tree/master/tutorials/template_alignment>`_
 and extract the files.
 
 Next, copy and paste the following code into your editor and save it as ``template_alignment.cpp`` (or download the source file :download:`here <./sources/template_alignment/template_alignment.cpp>`).
@@ -75,7 +75,7 @@ We start by defining a structure to store the alignment results.  It contains a 
 
 .. note::
 
-   Because we are including an Eigen::Matrix4f in this struct, we need to include the EIGEN_MAKE_ALIGNED_OPERATOR_NEW macro, which will overload the struct's "operator new" so that it will generate 16-bytes-aligned pointers.  If you're curious, you can find more information about this issue `here <http://eigen.tuxfamily.org/api/TopicStructHavingEigenMembers.html>`_.
+   Because we are including an Eigen::Matrix4f in this struct, we need to include the EIGEN_MAKE_ALIGNED_OPERATOR_NEW macro, which will overload the struct's "operator new" so that it will generate 16-bytes-aligned pointers.  If you're curious, you can find more information about this issue `here <http://eigen.tuxfamily.org/dox/group__TopicStructHavingEigenMembers.html>`_. For convenience, there is a redefinition of the macro in pcl_macros.h, aptly named PCL_MAKE_ALIGNED_OPERATOR_NEW which will let us for example call `pcl::make_shared` to create a `shared_ptr` of over-aligned classes.
 
 .. literalinclude:: sources/template_alignment/template_alignment.cpp
    :language: cpp
@@ -133,11 +133,15 @@ Next we load the target cloud (from the filename supplied on the command line).
 
 We then perform a little pre-processing on the data to get it ready for alignment.  The first step is to filter out any background points.  In this example we assume the person we're trying to align to will be less than 1 meter away, so we apply a pass-through filter, filtering on the "z" field (i.e., depth) with limits of 0 to 1.
 
+.. note:: This is application and data dependent. You may need to tune the
+          threshold (or drop this filter entirely) to make it work with your
+          data.
+
 .. literalinclude:: sources/template_alignment/template_alignment.cpp
    :language: cpp
    :lines: 253-260
 
-We also downsample the point cloud with a spacing of 5mm, which reduces the ammount of computation that's required.
+We also downsample the point cloud with a spacing of 5mm, which reduces the amount of computation that's required.
 
 .. literalinclude:: sources/template_alignment/template_alignment.cpp
    :language: cpp

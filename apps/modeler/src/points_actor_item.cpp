@@ -47,7 +47,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 pcl::modeler::PointsActorItem::PointsActorItem(QTreeWidgetItem* parent,
-                                               const boost::shared_ptr<CloudMesh>& cloud_mesh,
+                                               const CloudMesh::Ptr& cloud_mesh,
                                                const vtkSmartPointer<vtkRenderWindow>& render_window)
   :ChannelActorItem(parent, cloud_mesh, render_window, vtkSmartPointer<vtkLODActor>::New(), "Points")
 {
@@ -64,14 +64,9 @@ void
 pcl::modeler::PointsActorItem::initImpl()
 {
   poly_data_->SetPoints(cloud_mesh_->getVtkPoints());
-  poly_data_->Update();
 
   vtkSmartPointer<vtkVertexGlyphFilter> vertex_glyph_filter = vtkSmartPointer<vtkVertexGlyphFilter>::New();
-#if VTK_MAJOR_VERSION <= 5
-  vertex_glyph_filter->AddInput(poly_data_);
-#else
-  vertex_glyph_filter->AddInputData(polydata);
-#endif
+  vertex_glyph_filter->AddInputData (poly_data_);
   vertex_glyph_filter->Update();
 
   vtkSmartPointer<vtkDataSetMapper> mapper = vtkSmartPointer<vtkDataSetMapper>::New();
@@ -88,7 +83,9 @@ pcl::modeler::PointsActorItem::initImpl()
   mapper->SetScalarModeToUsePointData();
   mapper->InterpolateScalarsBeforeMappingOn();
   mapper->ScalarVisibilityOn();
+#if VTK_RENDERING_BACKEND_OPENGL_VERSION < 2
   mapper->ImmediateModeRenderingOff();
+#endif
 
   vtkSmartPointer<vtkLODActor> actor = vtkSmartPointer<vtkLODActor>(dynamic_cast<vtkLODActor*>(actor_.GetPointer()));
   actor->SetMapper(mapper);
@@ -108,8 +105,6 @@ pcl::modeler::PointsActorItem::updateImpl()
   double minmax[2];
   scalars->GetRange(minmax);
   actor_->GetMapper()->SetScalarRange(minmax);
-
-  poly_data_->Update();
 
   return;
 }

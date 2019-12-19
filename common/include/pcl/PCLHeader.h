@@ -1,5 +1,4 @@
-#ifndef PCL_ROSLIB_MESSAGE_HEADER_H
-#define PCL_ROSLIB_MESSAGE_HEADER_H
+#pragma once
 
 #ifdef USE_ROS
    #error USE_ROS setup requires PCL to compile against ROS message headers, which is now deprecated
@@ -15,20 +14,22 @@ namespace pcl
 {
   struct PCLHeader
   {
-    PCLHeader (): seq (0), stamp (), frame_id ()
-    {}
-
-    pcl::uint32_t seq;
-    pcl::uint64_t stamp;
-
+    /** \brief Sequence number */
+    std::uint32_t seq = 0;
+    /** \brief A timestamp associated with the time when the data was acquired
+      *
+      * The value represents microseconds since 1970-01-01 00:00:00 (the UNIX epoch).
+      */
+    std::uint64_t stamp = 0;
+    /** \brief Coordinate frame ID */
     std::string frame_id;
 
-    typedef boost::shared_ptr<PCLHeader> Ptr;
-    typedef boost::shared_ptr<PCLHeader const> ConstPtr;
+    using Ptr = boost::shared_ptr<PCLHeader>;
+    using ConstPtr = boost::shared_ptr<const PCLHeader>;
   }; // struct PCLHeader
 
-  typedef boost::shared_ptr<PCLHeader> HeaderPtr;
-  typedef boost::shared_ptr<PCLHeader const> HeaderConstPtr;
+  using HeaderPtr = PCLHeader::Ptr;
+  using HeaderConstPtr = PCLHeader::ConstPtr;
 
   inline std::ostream& operator << (std::ostream& out, const PCLHeader &h)
   {
@@ -38,7 +39,10 @@ namespace pcl
     return (out);
   }
 
+  inline bool operator== (const PCLHeader &lhs, const PCLHeader &rhs)
+  {
+    return (&lhs == &rhs) ||
+      (lhs.seq == rhs.seq && lhs.stamp == rhs.stamp && lhs.frame_id == rhs.frame_id);
+  }
+
 } // namespace pcl
-
-#endif // PCL_ROSLIB_MESSAGE_HEADER_H
-

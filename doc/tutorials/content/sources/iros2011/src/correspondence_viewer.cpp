@@ -16,7 +16,7 @@ loadPoints (std::string filename)
   PointCloudPtr output (new PointCloud);
   filename.append (".pcd");
   pcl::io::loadPCDFile (filename, *output);
-  pcl::console::print_info ("Loaded %s (%zu points)\n", filename.c_str (), output->size ());
+  pcl::console::print_info ("Loaded %s (%lu points)\n", filename.c_str (), output->size ());
   return (output);
 }
 
@@ -26,7 +26,7 @@ loadKeypoints (std::string filename)
   PointCloudPtr output (new PointCloud);
   filename.append ("_keypoints.pcd");
   pcl::io::loadPCDFile (filename, *output);
-  pcl::console::print_info ("Loaded %s (%zu points)\n", filename.c_str (), output->size ());
+  pcl::console::print_info ("Loaded %s (%lu points)\n", filename.c_str (), output->size ());
   return (output);
 }
 
@@ -36,7 +36,7 @@ loadLocalDescriptors (std::string filename)
   LocalDescriptorsPtr output (new LocalDescriptors);
   filename.append ("_localdesc.pcd");
   pcl::io::loadPCDFile (filename, *output);
-  pcl::console::print_info ("Loaded %s (%zu points)\n", filename.c_str (), output->size ());
+  pcl::console::print_info ("Loaded %s (%lu points)\n", filename.c_str (), output->size ());
   return (output);
 }
 
@@ -58,7 +58,7 @@ find_feature_correspondences (const LocalDescriptorsPtr & source_descriptors,
   const int k = 1;
   std::vector<int> k_indices (k);
   std::vector<float> k_squared_distances (k);
-  for (size_t i = 0; i < source_descriptors->size (); ++i)
+  for (std::size_t i = 0; i < source_descriptors->size (); ++i)
   {
     descriptor_kdtree.nearestKSearch (*source_descriptors, i, k, k_indices, k_squared_distances);
     correspondences_out[i] = k_indices[0];
@@ -108,7 +108,7 @@ visualize_correspondences (const PointCloudPtr points1, const PointCloudPtr keyp
   std::cout << max_to_display << std::endl;
 
   // Draw lines between the best corresponding points
-  for (size_t i = 0; i < keypoints_left->size (); ++i)
+  for (std::size_t i = 0; i < keypoints_left->size (); ++i)
   {
     if (correspondence_scores[i] > threshold)
     {

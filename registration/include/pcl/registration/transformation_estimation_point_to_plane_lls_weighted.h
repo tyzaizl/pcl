@@ -36,8 +36,8 @@
  * $Id$
  *
  */
-#ifndef PCL_REGISTRATION_TRANSFORMATION_ESTIMATION_POINT_TO_PLANE_LLS_WEIGHTED_H_ 
-#define PCL_REGISTRATION_TRANSFORMATION_ESTIMATION_POINT_TO_PLANE_LLS_WEIGHTED_H_ 
+
+#pragma once
 
 #include <pcl/registration/transformation_estimation.h>
 #include <pcl/registration/warp_point_rigid.h>
@@ -63,10 +63,10 @@ namespace pcl
     class TransformationEstimationPointToPlaneLLSWeighted : public TransformationEstimation<PointSource, PointTarget, Scalar>
     {
       public:
-        typedef boost::shared_ptr<TransformationEstimationPointToPlaneLLSWeighted<PointSource, PointTarget, Scalar> > Ptr;
-        typedef boost::shared_ptr<const TransformationEstimationPointToPlaneLLSWeighted<PointSource, PointTarget, Scalar> > ConstPtr;
+        using Ptr = boost::shared_ptr<TransformationEstimationPointToPlaneLLSWeighted<PointSource, PointTarget, Scalar> >;
+        using ConstPtr = boost::shared_ptr<const TransformationEstimationPointToPlaneLLSWeighted<PointSource, PointTarget, Scalar> >;
 
-        typedef typename TransformationEstimation<PointSource, PointTarget, Scalar>::Matrix4 Matrix4;
+        using Matrix4 = typename TransformationEstimation<PointSource, PointTarget, Scalar>::Matrix4;
         
         TransformationEstimationPointToPlaneLLSWeighted () { };
         virtual ~TransformationEstimationPointToPlaneLLSWeighted () { };
@@ -99,7 +99,7 @@ namespace pcl
           * \param[in] cloud_src the source point cloud dataset
           * \param[in] indices_src the vector of indices describing the points of interest in \a cloud_src
           * \param[in] cloud_tgt the target point cloud dataset
-          * \param[in] indices_tgt the vector of indices describing the correspondences of the interst points from \a indices_src
+          * \param[in] indices_tgt the vector of indices describing the correspondences of the interest points from \a indices_src
           * \param[out] transformation_matrix the resultant transformation matrix
           */
         inline void
@@ -136,6 +136,7 @@ namespace pcl
         /** \brief Estimate a rigid rotation transformation between a source and a target
           * \param[in] source_it an iterator over the source point cloud dataset
           * \param[in] target_it an iterator over the target point cloud dataset
+          * \param weights_it
           * \param[out] transformation_matrix the resultant transformation matrix
           */
         void 
@@ -144,14 +145,14 @@ namespace pcl
                                      typename std::vector<Scalar>::const_iterator& weights_it,
                                      Matrix4 &transformation_matrix) const;
 
-        /** \brief Construct a 4 by 4 tranformation matrix from the provided rotation and translation.
+        /** \brief Construct a 4 by 4 transformation matrix from the provided rotation and translation.
           * \param[in] alpha the rotation about the x-axis
           * \param[in] beta the rotation about the y-axis
           * \param[in] gamma the rotation about the z-axis
           * \param[in] tx the x translation
           * \param[in] ty the y translation
           * \param[in] tz the z translation
-          * \param[out] transformation the resultant transformation matrix
+          * \param[out] transformation_matrix the resultant transformation matrix
           */
         inline void
         constructTransformationMatrix (const double & alpha, const double & beta, const double & gamma,
@@ -164,5 +165,3 @@ namespace pcl
 }
 
 #include <pcl/registration/impl/transformation_estimation_point_to_plane_lls_weighted.hpp>
-
-#endif /* PCL_REGISTRATION_TRANSFORMATION_ESTIMATION_POINT_TO_PLANE_LLS_WEIGHTED_H_  */

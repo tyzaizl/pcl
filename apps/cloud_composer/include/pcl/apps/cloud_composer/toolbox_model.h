@@ -35,15 +35,19 @@
  *
  */
 
-#ifndef TOOLBOX_MODEL_H_
-#define TOOLBOX_MODEL_H_
+#pragma once
 
-#include <pcl/apps/cloud_composer/qt.h>
+#include <QSet>
+#include <QStandardItemModel>
 
-enum TOOLBOX_ROLES 
-{ 
+class QItemSelection;
+class QItemSelectionModel;
+class QTreeView;
+
+enum TOOLBOX_ROLES
+{
   FACTORY = Qt::UserRole,
-  PARAMETER_MODEL, 
+  PARAMETER_MODEL,
   ALLOWED_INPUT_ITEM_TYPES,
   REQUIRED_INPUT_CHILDREN_TYPES
 };
@@ -64,9 +68,8 @@ namespace pcl
       Q_OBJECT
       
     public:
-      ToolBoxModel (QTreeView* tool_view = 0, QTreeView* parameter_view = 0, QObject *parent = 0);
+      ToolBoxModel (QTreeView* tool_view = nullptr, QTreeView* parameter_view = nullptr, QObject *parent = nullptr);
       ToolBoxModel (const ToolBoxModel& to_copy);
-      virtual ~ToolBoxModel ();
       
       void
       addTool (ToolFactory* tool_factory);
@@ -76,12 +79,12 @@ namespace pcl
       
       /** \brief Enables/Disables Tools based on currently selected items from model */
       void
-      updateEnabledTools (const QItemSelection current_selection);
+      updateEnabledTools (const QItemSelection& current_selection);
       
       void
       enableAllTools ();
       
-    public slots:
+    public Q_SLOTS:
       void
       activeProjectChanged (ProjectModel* new_model, ProjectModel* previous_model);
       
@@ -98,28 +101,23 @@ namespace pcl
       /** \brief This slot is called whenever the current project model emits layoutChanged, and calls updateEnabledTools */
       void
       modelChanged ();
-    signals:  
+    Q_SIGNALS:
       void
       enqueueToolAction (AbstractTool* tool);
       
     private:
       QStandardItem* 
-      addToolGroup (QString tool_group_name);
+      addToolGroup (const QString& tool_group_name);
       
       QTreeView* tool_view_;
       QTreeView* parameter_view_;
       QItemSelectionModel* selection_model_;
       QSet <QStandardItem*> tool_items;
       
-      ProjectModel* project_model_;
-      
+      ProjectModel* project_model_;      
     };
   }
 }
 
 Q_DECLARE_METATYPE (pcl::cloud_composer::ToolBoxModel);
-Q_DECLARE_METATYPE (pcl::cloud_composer::ToolFactory*);
 Q_DECLARE_METATYPE (QStandardItemModel*);
-
-#endif //TOOLBOX_MODEL_H_
-

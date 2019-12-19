@@ -58,17 +58,17 @@ namespace pcl
     if (R > 0.04045)
       R = pow ( (R + 0.055) / 1.055, 2.4);
     else
-      R = R / 12.92;
+      R /= 12.92;
 
     if (G > 0.04045)
       G = pow ( (G + 0.055) / 1.055, 2.4);
     else
-      G = G / 12.92;
+      G /= 12.92;
 
     if (B > 0.04045)
       B = pow ( (B + 0.055) / 1.055, 2.4);
     else
-      B = B / 12.92;
+      B /= 12.92;
 
     // postponed:
     //    R *= 100.0;
@@ -115,7 +115,7 @@ namespace pcl
   {
     out.resize (in.size ());
 
-    for (size_t i = 0; i < in.size (); ++i)
+    for (std::size_t i = 0; i < in.size (); ++i)
     {
       out[i].x = in[i].x;
       out[i].y = in[i].y;
@@ -185,16 +185,24 @@ namespace pcl
     // Difference between consecutive transforms
     double delta = 0;
     // Get the size of the target
-    const size_t N = indices_->size ();
+    const std::size_t N = indices_->size ();
 
     // Set the mahalanobis matrices to identity
     mahalanobis_.resize (N, Eigen::Matrix3d::Identity ());
 
     // Compute target cloud covariance matrices
-    computeCovariances<PointTarget> (target_, tree_, target_covariances_);
+    if ((!target_covariances_) || (target_covariances_->empty ()))
+    {
+      target_covariances_.reset (new MatricesVector);
+      computeCovariances<PointTarget> (target_, tree_, *target_covariances_);
+    }
     // Compute input cloud covariance matrices
-    computeCovariances<PointSource> (input_, tree_reciprocal_,
-        input_covariances_);
+    if ((!input_covariances_) || (input_covariances_->empty ()))
+    {
+      input_covariances_.reset (new MatricesVector);
+      computeCovariances<PointSource> (input_, tree_reciprocal_,
+          *input_covariances_);
+    }
 
     base_transformation_ = guess;
     nr_iterations_ = 0;
@@ -205,21 +213,21 @@ namespace pcl
 
     while (!converged_)
     {
-      size_t cnt = 0;
+      std::size_t cnt = 0;
       std::vector<int> source_indices (indices_->size ());
       std::vector<int> target_indices (indices_->size ());
 
       // guess corresponds to base_t and transformation_ to t
       Eigen::Matrix4d transform_R = Eigen::Matrix4d::Zero ();
-      for (size_t i = 0; i < 4; i++)
-        for (size_t j = 0; j < 4; j++)
-          for (size_t k = 0; k < 4; k++)
+      for (std::size_t i = 0; i < 4; i++)
+        for (std::size_t j = 0; j < 4; j++)
+          for (std::size_t k = 0; k < 4; k++)
             transform_R (i, j) += double (transformation_ (i, k))
                 * double (guess (k, j));
 
       Eigen::Matrix3d R = transform_R.topLeftCorner<3, 3> ();
 
-      for (size_t i = 0; i < N; i++)
+      for (std::size_t i = 0; i < N; i++)
       {
         // MODIFICATION: take point from the CIELAB cloud instead
         PointXYZLAB query = (*cloud_lab_)[i];
@@ -237,8 +245,8 @@ namespace pcl
         // Check if the distance to the nearest neighbor is smaller than the user imposed threshold
         if (nn_dists[0] < dist_threshold)
         {
-          Eigen::Matrix3d &C1 = input_covariances_[i];
-          Eigen::Matrix3d &C2 = target_covariances_[nn_indices[0]];
+          Eigen::Matrix3d &C1 = (*input_covariances_)[i];
+          Eigen::Matrix3d &C2 = (*target_covariances_)[nn_indices[0]];
           Eigen::Matrix3d &M = mahalanobis_[i];
           // M = R*C1
           M = R * C1;
@@ -274,7 +282,7 @@ namespace pcl
             else
               ratio = 1. / transformation_epsilon_;
             double c_delta = ratio
-                * fabs (
+                * std::abs (
                     previous_transformation_ (k, l) - transformation_ (k, l));
             if (c_delta > delta)
               delta = c_delta;
@@ -303,7 +311,7 @@ namespace pcl
         PCL_DEBUG("[pcl::%s::computeTransformation] Convergence failed\n",
             getClassName ().c_str ());
     }
-    //for some reason the static equivalent methode raises an error
+    //for some reason the static equivalent method raises an error
     // final_transformation_.block<3,3> (0,0) = (transformation_.block<3,3> (0,0)) * (guess.block<3,3> (0,0));
     // final_transformation_.block <3, 1> (0, 3) = transformation_.block <3, 1> (0, 3) + guess.rightCols<1>.block <3, 1> (0, 3);
     final_transformation_.topLeftCorner (3, 3) =
@@ -312,6 +320,9 @@ namespace pcl
     final_transformation_ (0, 3) = previous_transformation_ (0, 3) + guess (0, 3);
     final_transformation_ (1, 3) = previous_transformation_ (1, 3) + guess (1, 3);
     final_transformation_ (2, 3) = previous_transformation_ (2, 3) + guess (2, 3);
+
+    // Transform the point cloud
+    pcl::transformPointCloud (*input_, output, final_transformation_);
   }
 
 }

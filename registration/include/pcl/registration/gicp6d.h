@@ -36,29 +36,20 @@
  *
  */
 
-#ifndef PCL_GICP6D_H_
-#define PCL_GICP6D_H_
+#pragma once
 
-#include <pcl/registration/gicp.h>
-#include <pcl/kdtree/impl/kdtree_flann.hpp>
+#include <pcl/pcl_macros.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_representation.h>
+#include <pcl/kdtree/impl/kdtree_flann.hpp>
+#include <pcl/registration/gicp.h>
 
 namespace pcl
 {
-  /** \brief A custom point type for position and CIELAB color value */
-  struct EIGEN_ALIGN16 PointXYZLAB
+  struct EIGEN_ALIGN16 _PointXYZLAB
   {
-    inline PointXYZLAB ()
-    {
-      x = y = z = 0.0f; data[3]     = 1.0f;  // important for homogeneous coordinates
-      L = a = b = 0.0f; data_lab[3] = 0.0f;
-    }
-
     PCL_ADD_POINT4D; // this adds the members x,y,z
-
-    //EIGEN_ALIGN16
     union
     {
       struct
@@ -69,13 +60,22 @@ namespace pcl
       };
       float data_lab[4];
     };
+    PCL_MAKE_ALIGNED_OPERATOR_NEW
+  };
 
-    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  /** \brief A custom point type for position and CIELAB color value */
+  struct PointXYZLAB : public _PointXYZLAB
+  {
+    inline PointXYZLAB ()
+    {
+      x = y = z = 0.0f; data[3]     = 1.0f;  // important for homogeneous coordinates
+      L = a = b = 0.0f; data_lab[3] = 0.0f;
+    }
   };
 }
 
 // register the custom point type in PCL
-POINT_CLOUD_REGISTER_POINT_STRUCT(pcl::PointXYZLAB,
+POINT_CLOUD_REGISTER_POINT_STRUCT(pcl::_PointXYZLAB,
     (float, x, x)
     (float, y, y)
     (float, z, z)
@@ -83,6 +83,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(pcl::PointXYZLAB,
     (float, a, a)
     (float, b, b)
 )
+POINT_CLOUD_REGISTER_POINT_WRAPPER(pcl::PointXYZLAB, pcl::_PointXYZLAB)
 
 namespace pcl
 {
@@ -101,10 +102,10 @@ namespace pcl
    * \author Martin Holzkothen, Michael Korn
    * \ingroup registration
    */
-  class GeneralizedIterativeClosestPoint6D : public GeneralizedIterativeClosestPoint<PointXYZRGBA, PointXYZRGBA>
+  class PCL_EXPORTS GeneralizedIterativeClosestPoint6D : public GeneralizedIterativeClosestPoint<PointXYZRGBA, PointXYZRGBA>
   {
-    typedef PointXYZRGBA PointSource;
-    typedef PointXYZRGBA PointTarget;
+    using PointSource = PointXYZRGBA;
+    using PointTarget = PointXYZRGBA;
 
     public:
 
@@ -120,7 +121,7 @@ namespace pcl
        * \param[in] cloud the input point cloud source
        */
       void
-      setInputSource (const PointCloudSourceConstPtr& cloud);
+      setInputSource (const PointCloudSourceConstPtr& cloud) override;
 
       /** \brief Provide a pointer to the input target
        * (e.g., the point cloud that we want to align the input source to)
@@ -128,7 +129,7 @@ namespace pcl
        * \param[in] cloud the input point cloud target
        */
       void
-      setInputTarget (const PointCloudTargetConstPtr& target);
+      setInputTarget (const PointCloudTargetConstPtr& target) override;
 
     protected:
 
@@ -138,7 +139,7 @@ namespace pcl
        */
       void
       computeTransformation (PointCloudSource& output,
-          const Eigen::Matrix4f& guess);
+          const Eigen::Matrix4f& guess) override;
 
       /** \brief Search for the closest nearest neighbor of a given point.
        * \param query the point to search a nearest neighbour for
@@ -168,8 +169,8 @@ namespace pcl
           using PointRepresentation<PointXYZLAB>::trivial_;
 
         public:
-          typedef boost::shared_ptr<MyPointRepresentation> Ptr;
-          typedef boost::shared_ptr<const MyPointRepresentation> ConstPtr;
+          using Ptr = boost::shared_ptr<MyPointRepresentation>;
+          using ConstPtr = boost::shared_ptr<const MyPointRepresentation>;
 
           MyPointRepresentation ()
           {
@@ -177,7 +178,7 @@ namespace pcl
             trivial_ = false;
           }
 
-          virtual
+          
           ~MyPointRepresentation ()
           {
           }
@@ -188,8 +189,8 @@ namespace pcl
             return Ptr (new MyPointRepresentation (*this));
           }
 
-          virtual void
-          copyToFloatArray (const PointXYZLAB &p, float * out) const
+          void
+          copyToFloatArray (const PointXYZLAB &p, float * out) const override
           {
             // copy all of the six values
             out[0] = p.x;
@@ -205,5 +206,3 @@ namespace pcl
       MyPointRepresentation point_rep_;
   };
 }
-
-#endif //#ifndef PCL_GICP6D_H_

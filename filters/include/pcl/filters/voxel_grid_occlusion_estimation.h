@@ -38,8 +38,7 @@
  *
  */
 
-#ifndef PCL_FILTERS_VOXEL_GRID_OCCLUSION_ESTIMATION_H_
-#define PCL_FILTERS_VOXEL_GRID_OCCLUSION_ESTIMATION_H_
+#pragma once
 
 #include <pcl/filters/voxel_grid.h>
 
@@ -62,9 +61,9 @@ namespace pcl
       using VoxelGrid<PointT>::leaf_size_;
       using VoxelGrid<PointT>::inverse_leaf_size_;
 
-      typedef typename Filter<PointT>::PointCloud PointCloud;
-      typedef typename PointCloud::Ptr PointCloudPtr;
-      typedef typename PointCloud::ConstPtr PointCloudConstPtr;
+      using PointCloud = typename Filter<PointT>::PointCloud;
+      using PointCloudPtr = typename PointCloud::Ptr;
+      using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
     public:
       /** \brief Empty constructor. */
@@ -75,7 +74,7 @@ namespace pcl
       }
 
       /** \brief Destructor. */
-      virtual ~VoxelGridOcclusionEstimation ()
+      ~VoxelGridOcclusionEstimation ()
       {
       }
 
@@ -86,39 +85,42 @@ namespace pcl
       void
       initializeVoxelGrid ();
 
-      /** \brief Returns the state (free = 0, occluded = 1) of the voxel
+      /** \brief Computes the state (free = 0, occluded = 1) of the voxel
         * after utilizing a ray traversal algorithm to a target voxel
         * in (i, j, k) coordinates.
-        * \param[out] The state of the voxel.
-        * \param[in] The target voxel coordinate (i, j, k) of the voxel.
+        * \param[out] out_state The state of the voxel.
+        * \param[in] in_target_voxel The target voxel coordinate (i, j, k) of the voxel.
+        * \return 0 upon success and -1 if an error occurs
         */
       int
       occlusionEstimation (int& out_state,
                            const Eigen::Vector3i& in_target_voxel);
 
-      /** \brief Returns the state (free = 0, occluded = 1) of the voxel
+      /** \brief Computes the state (free = 0, occluded = 1) of the voxel
         * after utilizing a ray traversal algorithm to a target voxel
         * in (i, j, k) coordinates. Additionally, this function returns
         * the voxels penetrated of the ray-traversal algorithm till reaching
         * the target voxel.
-        * \param[out] The state of the voxel.
-        * \param[out] The voxels penetrated of the ray-traversal algorithm.
-        * \param[in] The target voxel coordinate (i, j, k) of the voxel.
+        * \param[out] out_state The state of the voxel.
+        * \param[out] out_ray The voxels penetrated of the ray-traversal algorithm.
+        * \param[in] in_target_voxel The target voxel coordinate (i, j, k) of the voxel.
+        * \return 0 upon success and -1 if an error occurs
         */
       int
       occlusionEstimation (int& out_state,
-                           std::vector<Eigen::Vector3i>& out_ray,
+                           std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& out_ray,
                            const Eigen::Vector3i& in_target_voxel);
 
-      /** \brief Returns the voxel coordinates (i, j, k) of all occluded
-        * voxels in the voxel gird.
-        * \param[out] the coordinates (i, j, k) of all occluded voxels
+      /** \brief Computes the voxel coordinates (i, j, k) of all occluded
+        * voxels in the voxel grid.
+        * \param[out] occluded_voxels the coordinates (i, j, k) of all occluded voxels
+        * \return 0 upon success and -1 if an error occurs
         */
       int
-      occlusionEstimationAll (std::vector<Eigen::Vector3i>& occluded_voxels);
+      occlusionEstimationAll (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& occluded_voxels);
 
       /** \brief Returns the voxel grid filtered point cloud
-        * \param[out] The voxel grid filtered point cloud
+        * \return The voxel grid filtered point cloud
         */
       inline PointCloud
       getFilteredPointCloud () { return filtered_cloud_; }
@@ -138,16 +140,16 @@ namespace pcl
 
       /** \brief Returns the corresponding centroid (x,y,z) coordinates
         * in the grid of voxel (i,j,k).
-        * \param[in] the coordinate (i, j, k) of the voxel
+        * \param[in] ijk the coordinate (i, j, k) of the voxel
         * \return the (x,y,z) coordinate of the voxel centroid
         */
       inline Eigen::Vector4f
       getCentroidCoordinate (const Eigen::Vector3i& ijk)
       {
         int i,j,k;
-        i = ((b_min_[0] < 0) ? (abs (min_b_[0]) + ijk[0]) : (ijk[0] - min_b_[0]));
-        j = ((b_min_[1] < 0) ? (abs (min_b_[1]) + ijk[1]) : (ijk[1] - min_b_[1]));
-        k = ((b_min_[2] < 0) ? (abs (min_b_[2]) + ijk[2]) : (ijk[2] - min_b_[2]));
+        i = ((b_min_[0] < 0) ? (std::abs (min_b_[0]) + ijk[0]) : (ijk[0] - min_b_[0]));
+        j = ((b_min_[1] < 0) ? (std::abs (min_b_[1]) + ijk[1]) : (ijk[1] - min_b_[1]));
+        k = ((b_min_[2] < 0) ? (std::abs (min_b_[2]) + ijk[2]) : (ijk[2] - min_b_[2]));
 
         Eigen::Vector4f xyz;
         xyz[0] = b_min_[0] + (leaf_size_[0] * 0.5f) + (static_cast<float> (i) * leaf_size_[0]);
@@ -167,8 +169,8 @@ namespace pcl
 
       /** \brief Returns the scaling value (tmin) were the ray intersects with the
         * voxel grid bounding box. (p_entry = origin + tmin * orientation)
-        * \param[in] The sensor origin
-        * \param[in] The sensor orientation
+        * \param[in] origin The sensor origin
+        * \param[in] direction The sensor orientation
         * \return the scaling value
         */
       float
@@ -177,10 +179,10 @@ namespace pcl
 
       /** \brief Returns the state of the target voxel (0 = visible, 1 = occupied)
         * unsing a ray traversal algorithm.
-        * \param[in] The target voxel in the voxel grid with coordinate (i, j, k).
-        * \param[in] The sensor origin.
-        * \param[in] The sensor orientation
-        * \param[in] The scaling value (tmin).
+        * \param[in] target_voxel The target voxel in the voxel grid with coordinate (i, j, k).
+        * \param[in] origin The sensor origin.
+        * \param[in] direction The sensor orientation
+        * \param[in] t_min The scaling value (tmin).
         * \return The estimated voxel state.
         */
       int
@@ -191,31 +193,31 @@ namespace pcl
 
       /** \brief Returns the state of the target voxel (0 = visible, 1 = occupied) and
         * the voxels penetrated by the ray unsing a ray traversal algorithm.
-        * \param[out] The voxels penetrated by the ray in (i, j, k) coordinates
-        * \param[in] The target voxel in the voxel grid with coordinate (i, j, k).
-        * \param[in] The sensor origin.
-        * \param[in] The sensor orientation
-        * \param[in] The scaling value (tmin).
+        * \param[out] out_ray The voxels penetrated by the ray in (i, j, k) coordinates
+        * \param[in] target_voxel The target voxel in the voxel grid with coordinate (i, j, k).
+        * \param[in] origin The sensor origin.
+        * \param[in] direction The sensor orientation
+        * \param[in] t_min The scaling value (tmin).
         * \return The estimated voxel state.
         */
       int
-      rayTraversal (std::vector <Eigen::Vector3i>& out_ray,
+      rayTraversal (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& out_ray,
                     const Eigen::Vector3i& target_voxel,
                     const Eigen::Vector4f& origin, 
                     const Eigen::Vector4f& direction,
                     const float t_min);
 
       /** \brief Returns a rounded value. 
-        * \param[in] value
+        * \param[in] d
         * \return rounded value
         */
       inline float
       round (float d)
       {
-        return static_cast<float> (floor (d + 0.5f));
+        return static_cast<float> (std::floor (d + 0.5f));
       }
 
-      // We use round here instead of floor due to some numerical issues.
+      // We use round here instead of std::floor due to some numerical issues.
       /** \brief Returns the corresponding (i,j,k) coordinates in the grid of point (x,y,z). 
         * \param[in] x the X point coordinate to get the (i, j, k) index at
         * \param[in] y the Y point coordinate to get the (i, j, k) index at
@@ -243,4 +245,6 @@ namespace pcl
   };
 }
 
-#endif  //#ifndef PCL_FILTERS_VOXEL_GRID_OCCLUSION_ESTIMATION_H_
+#ifdef PCL_NO_PRECOMPILE
+#include <pcl/filters/impl/voxel_grid_occlusion_estimation.hpp>
+#endif

@@ -76,13 +76,13 @@ main (int argc, char** argv)
   vtkSmartPointer<vtkPolyData> polydata;
   vtkSmartPointer<vtkPLYReader> reader = vtkSmartPointer<vtkPLYReader>::New ();
   reader->SetFileName (argv[ply_file_indices[0]]);
+  reader->Update ();
   polydata = reader->GetOutput ();
-  polydata->Update ();
-  print_info ("Loaded %s with %zu points/vertices.\n", argv[ply_file_indices[0]], polydata->GetNumberOfPoints ());
+  print_info ("Loaded %s with %lu points/vertices.\n", argv[ply_file_indices[0]], polydata->GetNumberOfPoints ());
 
   // Convert to VTK and save
   vtkSmartPointer<vtkPolyDataWriter> writer = vtkSmartPointer<vtkPolyDataWriter>::New ();
-  writer->SetInput (polydata);
+  writer->SetInputData (polydata);
   writer->SetFileName (argv[vtk_file_indices[0]]);
   writer->SetFileTypeToBinary ();
   writer->Write ();

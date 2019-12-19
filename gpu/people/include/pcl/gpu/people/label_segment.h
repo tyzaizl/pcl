@@ -39,8 +39,7 @@
  * @brief This file contains the function prototypes for the segmentation functions
  */
 
-#ifndef PCL_GPU_PEOPLE_LABEL_SEGMENT_H_
-#define PCL_GPU_PEOPLE_LABEL_SEGMENT_H_
+#pragma once
 
 // our headers
 #include "pcl/gpu/people/label_blob2.h"
@@ -71,14 +70,14 @@ namespace pcl
     {
       namespace label_skeleton
       {
-        /**
-         * @brief this function smooths the label image based on label and depth
-         * @param[in] lmap_in the cvMat with the labels, must be CV_8UC1
-         * @param[in] dmap the cvMat with the depths, must be CV_16U in mm
-         * @param[out] lmap_out the smoothed output labelmap as cvMat
-         * @param[in] patch_size make the patch size for smoothing
-         * @param[in] depthThres the z-distance thresshold
-         * @todo add a Gaussian contribution function to depth and vote
+        /*
+         * \brief this function smooths the label image based on label and depth
+         * \param[in] lmap_in the cvMat with the labels, must be CV_8UC1
+         * \param[in] dmap the cvMat with the depths, must be CV_16U in mm
+         * \param[out] lmap_out the smoothed output labelmap as cvMat
+         * \param[in] patch_size make the patch size for smoothing
+         * \param[in] depthThres the z-distance threshold
+         * \todo add a Gaussian contribution function to depth and vote
          **/
         //inline void smoothLabelImage ( cv::Mat&      lmap_in,
         //                        cv::Mat&      dmap,
@@ -119,7 +118,7 @@ namespace pcl
         //          // get the depth of this part of the patch
         //          short depth_l = dmap.at<short>(h_l,w_l);
         //          // evaluate the difference to the centroid 
-        //          if(abs(depth - depth_l) < static_cast<int> (depthThres))
+        //          if(std::abs(depth - depth_l) < static_cast<int> (depthThres))
         //          {
         //            char label = lmap_in.at<char>(h_l,w_l);
         //            if(label >= 0 && label < NUM_PARTS)
@@ -147,14 +146,14 @@ namespace pcl
         //  }
         //}
 
-        /**
-         * @brief this function smooths the label image based on label and depth
-         * @param[in] lmap_in the cvMat with the labels, must be CV_8UC1
-         * @param[in] dmap the cvMat with the depths, must be CV_16U in mm
-         * @param[out] lmap_out the smoothed output labelmap as cvMat
-         * @todo make the patch size a parameter
-         * @todo make the z-distance a parameter
-         * @todo add a Gaussian contribution function to depth and vote
+        /*
+         * \brief this function smooths the label image based on label and depth
+         * \param[in] lmap_in the cvMat with the labels, must be CV_8UC1
+         * \param[in] dmap the cvMat with the depths, must be CV_16U in mm
+         * \param[out] lmap_out the smoothed output labelmap as cvMat
+         * \todo make the patch size a parameter
+         * \todo make the z-distance a parameter
+         * \todo add a Gaussian contribution function to depth and vote
          **/
         //inline void smoothLabelImage2 ( cv::Mat&  lmap_in,
         //                        cv::Mat&  dmap,
@@ -201,7 +200,7 @@ namespace pcl
         //          // get the depth of this part of the patch
         //          short depth_l = dmap.at<short>(h_l,w_l);
         //          // evaluate the difference to the centroid 
-        //          if(abs(depth - depth_l) < static_cast<int> (depthThres))
+        //          if(std::abs(depth - depth_l) < static_cast<int> (depthThres))
         //          {
         //            char label = lmap_in.at<char>(h_l,w_l);
         //            if(label >= 0 && label < NUM_PARTS)
@@ -297,7 +296,7 @@ namespace pcl
                   // get the depth of this part of the patch
                   depth_l = drow_offset[w_l];
                   // evaluate the difference to the centroid 
-                  if(abs(depth - depth_l) < static_cast<int> (depthThres))
+                  if(std::abs(depth - depth_l) < static_cast<int> (depthThres))
                   {
                     label = lrow_offset[w_l];
                     votes[static_cast<unsigned int>(label)]++;
@@ -397,5 +396,3 @@ namespace pcl
     } // end namespace people
   } // end namespace gpu
 } // end namespace pcl
-
-#endif //#ifndef LABELSKEL_SEGMENT_H

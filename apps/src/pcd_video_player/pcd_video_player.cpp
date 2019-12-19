@@ -113,7 +113,7 @@ PCDVideoPlayer::PCDVideoPlayer ()
 void 
 PCDVideoPlayer::backButtonPressed ()
 {
-  if(current_frame_ == 0) // Allready in the beginning
+  if(current_frame_ == 0) // Already in the beginning
   {
     PCL_DEBUG ("[PCDVideoPlayer::nextButtonPressed] : reached the end\n");
     current_frame_ = nr_of_frames_ - 1; // reset to end
@@ -160,7 +160,7 @@ PCDVideoPlayer::selectFolderButtonPressed ()
     for (boost::filesystem::directory_iterator itr (dir_.toStdString ()); itr != end_itr; ++itr)
     {
       std::string ext = itr->path ().extension ().string ();
-      if (ext.compare (".pcd") == 0)
+      if (ext == ".pcd")
       {
         pcd_files_.push_back (itr->path ().string ());
         pcd_paths_.push_back (itr->path ());
@@ -186,17 +186,14 @@ PCDVideoPlayer::selectFolderButtonPressed ()
     cloud_present_ = false;
     return;
   }
-  else
-  {
-    // Reset the Slider
-    ui_->indexSlider->setValue (0);                // set cursor back in the beginning
-    ui_->indexSlider->setRange (0, nr_of_frames_ - 1);  // rescale the slider
+  // Reset the Slider
+  ui_->indexSlider->setValue (0);                // set cursor back in the beginning
+  ui_->indexSlider->setRange (0, nr_of_frames_ - 1);  // rescale the slider
 
-    current_frame_ = 0;
+  current_frame_ = 0;
 
-    cloud_present_ = true;
-    cloud_modified_ = true;
-  }
+  cloud_present_ = true;
+  cloud_modified_ = true;
 }
 
 void 
@@ -218,22 +215,20 @@ PCDVideoPlayer::selectFilesButtonPressed ()
     cloud_present_ = false;
     return;
   }
-  else
+
+  for(int i = 0; i < qt_pcd_files.size (); i++)
   {
-    for(int i = 0; i < qt_pcd_files.size (); i++)
-    {
-      pcd_files_.push_back (qt_pcd_files.at (i).toStdString ());
-    }
-
-    current_frame_ = 0;
-
-    // Reset the Slider
-    ui_->indexSlider->setValue (0);                // set cursor back in the beginning
-    ui_->indexSlider->setRange (0, nr_of_frames_ - 1);  // rescale the slider
-
-    cloud_present_ = true;
-    cloud_modified_ = true;
+    pcd_files_.push_back (qt_pcd_files.at (i).toStdString ());
   }
+
+  current_frame_ = 0;
+
+  // Reset the Slider
+  ui_->indexSlider->setValue (0);                // set cursor back in the beginning
+  ui_->indexSlider->setRange (0, nr_of_frames_ - 1);  // rescale the slider
+
+  cloud_present_ = true;
+  cloud_modified_ = true;
 }
 
 void 
@@ -295,7 +290,7 @@ print_usage ()
   PCL_INFO ("\t  Up/Down move a vertical slider by one single step.\n");
   PCL_INFO ("\t  PageUp moves up one page.\n");
   PCL_INFO ("\t  PageDown moves down one page.\n");
-  PCL_INFO ("\t  Home moves to the start (mininum).\n");
+  PCL_INFO ("\t  Home moves to the start (minimum).\n");
   PCL_INFO ("\t  End moves to the end (maximum).\n");
 }
 
@@ -308,5 +303,5 @@ main (int argc, char** argv)
 
   VideoPlayer.show ();
 
-  return (app.exec ());
+  return (QApplication::exec ());
 }

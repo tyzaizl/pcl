@@ -38,8 +38,7 @@
  *
  */
 
-#ifndef PCL_FEATURES_OURCVFH_H_
-#define PCL_FEATURES_OURCVFH_H_
+#pragma once
 
 #include <pcl/features/feature.h>
 #include <pcl/search/pcl_search.h>
@@ -62,8 +61,8 @@ namespace pcl
   class OURCVFHEstimation : public FeatureFromNormals<PointInT, PointNT, PointOutT>
   {
     public:
-      typedef boost::shared_ptr<OURCVFHEstimation<PointInT, PointNT, PointOutT> > Ptr;
-      typedef boost::shared_ptr<const OURCVFHEstimation<PointInT, PointNT, PointOutT> > ConstPtr;
+      using Ptr = boost::shared_ptr<OURCVFHEstimation<PointInT, PointNT, PointOutT> >;
+      using ConstPtr = boost::shared_ptr<const OURCVFHEstimation<PointInT, PointNT, PointOutT> >;
       using Feature<PointInT, PointOutT>::feature_name_;
       using Feature<PointInT, PointOutT>::getClassName;
       using Feature<PointInT, PointOutT>::indices_;
@@ -72,14 +71,13 @@ namespace pcl
       using Feature<PointInT, PointOutT>::surface_;
       using FeatureFromNormals<PointInT, PointNT, PointOutT>::normals_;
 
-      typedef typename Feature<PointInT, PointOutT>::PointCloudOut PointCloudOut;
-      typedef typename pcl::search::Search<PointNormal>::Ptr KdTreePtr;
-      typedef typename pcl::PointCloud<PointInT>::Ptr PointInTPtr;
+      using PointCloudOut = typename Feature<PointInT, PointOutT>::PointCloudOut;
+      using KdTreePtr = typename pcl::search::Search<PointNormal>::Ptr;
+      using PointInTPtr = typename pcl::PointCloud<PointInT>::Ptr;
       /** \brief Empty constructor. */
       OURCVFHEstimation () :
         vpx_ (0), vpy_ (0), vpz_ (0), leaf_size_ (0.005f), normalize_bins_ (false), curv_threshold_ (0.03f), cluster_tolerance_ (leaf_size_ * 3),
-            eps_angle_threshold_ (0.125f), min_points_ (50), radius_normals_ (leaf_size_ * 3), centroids_dominant_orientations_ (),
-            dominant_normals_ ()
+            eps_angle_threshold_ (0.125f), min_points_ (50), radius_normals_ (leaf_size_ * 3)
       {
         search_radius_ = 0;
         k_ = 1;
@@ -92,7 +90,7 @@ namespace pcl
 
       /** \brief Creates an affine transformation from the RF axes
        * \param[in] evx the x-axis
-       * \param[in] evy the z-axis
+       * \param[in] evy the y-axis
        * \param[in] evz the z-axis
        * \param[out] transformPC the resulting transformation
        * \param[in] center_mat 4x4 matrix concatenated to the resulting transformation
@@ -144,6 +142,7 @@ namespace pcl
 
       /** \brief Removes normals with high curvature caused by real edges or noisy data
        * \param[in] cloud pointcloud to be filtered
+       * \param[in] indices_to_use
        * \param[out] indices_out the indices of the points with higher curvature than threshold
        * \param[out] indices_in the indices of the remaining points after filtering
        * \param[in] threshold threshold value for curvature
@@ -191,9 +190,9 @@ namespace pcl
        * \param[out] centroids vector to hold the centroids
        */
       inline void
-      getCentroidClusters (std::vector<Eigen::Vector3f> & centroids)
+      getCentroidClusters (std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > & centroids)
       {
-        for (size_t i = 0; i < centroids_dominant_orientations_.size (); ++i)
+        for (std::size_t i = 0; i < centroids_dominant_orientations_.size (); ++i)
           centroids.push_back (centroids_dominant_orientations_[i]);
       }
 
@@ -201,9 +200,9 @@ namespace pcl
        * \param[out] centroids vector to hold the normal centroids
        */
       inline void
-      getCentroidNormalClusters (std::vector<Eigen::Vector3f> & centroids)
+      getCentroidNormalClusters (std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > & centroids)
       {
-        for (size_t i = 0; i < dominant_normals_.size (); ++i)
+        for (std::size_t i = 0; i < dominant_normals_.size (); ++i)
           centroids.push_back (dominant_normals_[i]);
       }
 
@@ -239,12 +238,12 @@ namespace pcl
        * \param[in] min the minimum amount of points to be set
        */
       inline void
-      setMinPoints (size_t min)
+      setMinPoints (std::size_t min)
       {
         min_points_ = min;
       }
 
-      /** \brief Sets wether if the signatures should be normalized or not
+      /** \brief Sets whether the signatures should be normalized or not
        * \param[in] normalize true if normalization is required, false otherwise
        */
       inline void
@@ -260,6 +259,15 @@ namespace pcl
       getClusterIndices (std::vector<pcl::PointIndices> & indices)
       {
         indices = clusters_;
+      }
+    
+      /** \brief Gets the number of non-disambiguable axes that correspond to each centroid
+       * \param[out] cluster_axes vector mapping each centroid to the number of signatures
+       */
+      inline void
+      getClusterAxes (std::vector<short> & cluster_axes)
+      {
+        cluster_axes = cluster_axes_;
       }
 
       /** \brief Sets the refinement factor for the clusters
@@ -325,7 +333,7 @@ namespace pcl
        */
       float leaf_size_;
 
-      /** \brief Wether to normalize the signatures or not. Default: false. */
+      /** \brief Whether to normalize the signatures or not. Default: false. */
       bool normalize_bins_;
 
       /** \brief Curvature threshold for removing normals. */
@@ -340,7 +348,7 @@ namespace pcl
       /** \brief Minimum amount of points in a clustered region to be considered stable for CVFH
        * computation.
        */
-      size_t min_points_;
+      std::size_t min_points_;
 
       /** \brief Radius for the normals computation. */
       float radius_normals_;
@@ -362,7 +370,7 @@ namespace pcl
        * feature estimates
        */
       void
-      computeFeature (PointCloudOut &output);
+      computeFeature (PointCloudOut &output) override;
 
       /** \brief Region growing method using Euclidean distances and neighbors normals to 
        * add points to a region.
@@ -385,16 +393,16 @@ namespace pcl
 
     protected:
       /** \brief Centroids that were used to compute different OUR-CVFH descriptors */
-      std::vector<Eigen::Vector3f> centroids_dominant_orientations_;
+      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > centroids_dominant_orientations_;
       /** \brief Normal centroids that were used to compute different OUR-CVFH descriptors */
-      std::vector<Eigen::Vector3f> dominant_normals_;
+      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > dominant_normals_;
       /** \brief Indices to the points representing the stable clusters */
       std::vector<pcl::PointIndices> clusters_;
+      /** \brief Mapping from clusters to OUR-CVFH descriptors */
+      std::vector<short> cluster_axes_;
   };
 }
 
 #ifdef PCL_NO_PRECOMPILE
 #include <pcl/features/impl/our_cvfh.hpp>
 #endif
-
-#endif  //#ifndef PCL_FEATURES_VFH_H_

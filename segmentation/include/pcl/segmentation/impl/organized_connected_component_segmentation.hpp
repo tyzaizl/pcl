@@ -68,7 +68,7 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::findLabeledRegion
                              Neighbor( 0,  1,  labels->width    ),
                              Neighbor(-1,  1,  labels->width - 1)};
   
-  // find one pixel with other label in the neighborhood -> assume thats the one we came from
+  // find one pixel with other label in the neighborhood -> assume that's the one we came from
   int direction = -1;
   int x;
   int y;
@@ -100,7 +100,7 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::findLabeledRegion
       x = curr_x + directions [nIdx].d_x;
       y = curr_y + directions [nIdx].d_y;
       index = curr_idx + directions [nIdx].d_index;
-      if (x >= 0 && y < int(labels->width) && y >= 0 && y < int(labels->height) && labels->points[index].label == label)
+      if (x >= 0 && x < int(labels->width) && y >= 0 && y < int(labels->height) && labels->points[index].label == label)
         break;
     }
     
@@ -120,15 +120,15 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::segment (pcl::Poi
   std::vector<unsigned> run_ids;
 
   unsigned invalid_label = std::numeric_limits<unsigned>::max ();
-  pcl::Label invalid_pt;
+  PointLT invalid_pt;
   invalid_pt.label = std::numeric_limits<unsigned>::max ();
   labels.points.resize (input_->points.size (), invalid_pt);
   labels.width = input_->width;
   labels.height = input_->height;
-  unsigned int clust_id = 0;
+  std::size_t clust_id = 0;
   
   //First pixel
-  if (pcl_isfinite (input_->points[0].x))
+  if (std::isfinite (input_->points[0].x))
   {
     labels[0].label = clust_id++;
     run_ids.push_back (labels[0].label );
@@ -137,9 +137,9 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::segment (pcl::Poi
   // First row
   for (int colIdx = 1; colIdx < static_cast<int> (input_->width); ++colIdx)
   {
-    if (!pcl_isfinite (input_->points[colIdx].x))
+    if (!std::isfinite (input_->points[colIdx].x))
       continue;
-    else if (compare_->compare (colIdx, colIdx - 1 ))
+    if (compare_->compare (colIdx, colIdx - 1 ))
     {
       labels[colIdx].label = labels[colIdx - 1].label;
     }
@@ -153,10 +153,10 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::segment (pcl::Poi
   // Everything else
   unsigned int current_row = input_->width;
   unsigned int previous_row = 0;
-  for (size_t rowIdx = 1; rowIdx < input_->height; ++rowIdx, previous_row = current_row, current_row += input_->width)
+  for (std::size_t rowIdx = 1; rowIdx < input_->height; ++rowIdx, previous_row = current_row, current_row += input_->width)
   {
     // First pixel
-    if (pcl_isfinite (input_->points[current_row].x))
+    if (std::isfinite (input_->points[current_row].x))
     {
       if (compare_->compare (current_row, previous_row))
       {
@@ -172,7 +172,7 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::segment (pcl::Poi
     // Rest of row
     for (int colIdx = 1; colIdx < static_cast<int> (input_->width); ++colIdx)
     {
-      if (pcl_isfinite (input_->points[current_row + colIdx].x))
+      if (std::isfinite (input_->points[current_row + colIdx].x))
       {
         if (compare_->compare (current_row + colIdx, current_row + colIdx - 1))
         {
@@ -182,7 +182,7 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::segment (pcl::Poi
         {
           if (labels[current_row + colIdx].label == invalid_label)
             labels[current_row + colIdx].label = labels[previous_row + colIdx].label;
-          else
+          else if (labels[previous_row + colIdx].label != invalid_label)
           {
             unsigned root1 = findRoot (run_ids, labels[current_row + colIdx].label);
             unsigned root2 = findRoot (run_ids, labels[previous_row + colIdx].label);
@@ -205,8 +205,8 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::segment (pcl::Poi
   }
   
   std::vector<unsigned> map (clust_id);
-  unsigned max_id = 0;
-  for (unsigned runIdx = 0; runIdx < run_ids.size (); ++runIdx)
+  std::size_t max_id = 0;
+  for (std::size_t runIdx = 0; runIdx < run_ids.size (); ++runIdx)
   {
     // if it is its own root -> new region
     if (run_ids[runIdx] == runIdx)
@@ -216,7 +216,7 @@ pcl::OrganizedConnectedComponentSegmentation<PointT, PointLT>::segment (pcl::Poi
   }
 
   label_indices.resize (max_id + 1);
-  for (unsigned idx = 0; idx < input_->points.size (); idx++)
+  for (std::size_t idx = 0; idx < input_->points.size (); idx++)
   {
     if (labels[idx].label != invalid_label)
     {

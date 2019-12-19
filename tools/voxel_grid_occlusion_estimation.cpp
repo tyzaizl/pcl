@@ -56,8 +56,8 @@ using namespace pcl;
 using namespace pcl::io;
 using namespace pcl::console;
 
-typedef PointXYZ PointT;
-typedef PointCloud<PointT> CloudT;
+using PointT = PointXYZ;
+using CloudT = PointCloud<PointT>;
 
 float default_leaf_size = 0.01f;
 
@@ -90,22 +90,22 @@ getVoxelActors (pcl::PointCloud<pcl::PointXYZ>& voxelCenters,
 {
   vtkSmartPointer < vtkAppendPolyData > treeWireframe = vtkSmartPointer<vtkAppendPolyData>::New ();
   
-  size_t i;
   double s = voxelSideLen/2.0;
   
-  for (i = 0; i < voxelCenters.points.size (); i++)
+  for (const auto &point : voxelCenters.points)
   {
-    double x = voxelCenters.points[i].x;
-    double y = voxelCenters.points[i].y;
-    double z = voxelCenters.points[i].z;
+    double x = point.x;
+    double y = point.y;
+    double z = point.z;
     
-    treeWireframe->AddInput (getCuboid (x - s, x + s, y - s, y + s, z - s, z + s));
+    treeWireframe->AddInputData (getCuboid (x - s, x + s, y - s, y + s, z - s, z + s));
   }
 
   vtkSmartPointer < vtkLODActor > treeActor = vtkSmartPointer<vtkLODActor>::New ();
   
   vtkSmartPointer < vtkDataSetMapper > mapper = vtkSmartPointer<vtkDataSetMapper>::New ();
-  mapper->SetInput (treeWireframe->GetOutput ());
+  mapper->SetInputData (treeWireframe->GetOutput ());
+
   treeActor->SetMapper (mapper);
   
   treeActor->GetProperty ()->SetRepresentationToWireframe ();
@@ -119,12 +119,12 @@ displayBoundingBox (Eigen::Vector3f& min_b, Eigen::Vector3f& max_b,
                     vtkSmartPointer<vtkActorCollection> coll)
 {
   vtkSmartPointer < vtkAppendPolyData > treeWireframe = vtkSmartPointer<vtkAppendPolyData>::New ();
-  treeWireframe->AddInput (getCuboid (min_b[0], max_b[0], min_b[1], max_b[1], min_b[2], max_b[2]));
+  treeWireframe->AddInputData (getCuboid (min_b[0], max_b[0], min_b[1], max_b[1], min_b[2], max_b[2]));
 
   vtkSmartPointer < vtkActor > treeActor = vtkSmartPointer<vtkActor>::New ();
 
   vtkSmartPointer < vtkDataSetMapper > mapper = vtkSmartPointer<vtkDataSetMapper>::New ();
-  mapper->SetInput (treeWireframe->GetOutput ());
+  mapper->SetInputData (treeWireframe->GetOutput ());
   treeActor->SetMapper (mapper);
 
   treeActor->GetProperty ()->SetRepresentationToWireframe ();
@@ -173,7 +173,7 @@ int main (int argc, char** argv)
   }
   else
   {
-    print_error ("Leaf size must be specified with either 1 or 3 numbers (%zu given).\n", values.size ());
+    print_error ("Leaf size must be specified with either 1 or 3 numbers (%lu given).\n", values.size ());
   }
   print_info ("Using a leaf size of: "); print_value ("%f, %f, %f\n", leaf_x, leaf_y, leaf_z);
 
@@ -199,7 +199,7 @@ int main (int argc, char** argv)
   tt.tic ();
 
   // estimate the occluded space
-  std::vector <Eigen::Vector3i> occluded_voxels;
+  std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> > occluded_voxels;
   vg.occlusionEstimationAll (occluded_voxels);
 
   print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%d", (int)occluded_voxels.size ()); print_info (" occluded voxels]\n");
@@ -209,7 +209,7 @@ int main (int argc, char** argv)
   occ_centroids->height = 1;
   occ_centroids->is_dense = false;
   occ_centroids->points.resize (occluded_voxels.size ());
-  for (size_t i = 0; i < occluded_voxels.size (); ++i)
+  for (std::size_t i = 0; i < occluded_voxels.size (); ++i)
   {
     Eigen::Vector4f xyz = vg.getCentroidCoordinate (occluded_voxels[i]);
     PointT point;
@@ -225,7 +225,7 @@ int main (int argc, char** argv)
   cloud_centroids->is_dense = false;
   cloud_centroids->points.resize (input_cloud->points.size ());
 
-  for (size_t i = 0; i < input_cloud->points.size (); ++i)
+  for (std::size_t i = 0; i < input_cloud->points.size (); ++i)
   {
     float x = input_cloud->points[i].x;
     float y = input_cloud->points[i].y;
@@ -265,7 +265,7 @@ int main (int argc, char** argv)
   vtkActor* a;
   coll->InitTraversal ();
   a = coll->GetNextActor ();
-  while(a!=0)
+  while(a!=nullptr)
     {
       renderer->AddActor (a);
       a = coll->GetNextActor ();

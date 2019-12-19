@@ -35,8 +35,7 @@
  *
  */
 
-#ifndef PCL_IO_TAR_H_
-#define PCL_IO_TAR_H_
+#pragma once
 
 #include <pcl/point_cloud.h>
 
@@ -67,7 +66,7 @@ namespace pcl
       char file_name_prefix[155];
       char _padding[12];
 
-      /** \brief . */
+      /** \brief get file size */
       unsigned int 
       getFileSize ()
       {
@@ -84,12 +83,11 @@ namespace pcl
 
     /** \brief Save a PointCloud dataset into a TAR file. 
       * Append if the file exists, or create a new one if not.
-      *
-      * \param[in] tar_filename the name of the TAR file to save the cloud to
-      * \param[in] cloud the point cloud dataset to save
-      * \param[in] pcd_filename the internal name of the PCD file that should be stored in the TAR header
       * \remark till implemented will return FALSE
       */
+      // param[in] tar_filename the name of the TAR file to save the cloud to
+      // param[in] cloud the point cloud dataset to save
+      // param[in] pcd_filename the internal name of the PCD file that should be stored in the TAR header
     template <typename PointT> bool
     saveTARPointCloud (const std::string& /*tar_filename*/,
                        const PointCloud<PointT>& /*cloud*/,
@@ -99,5 +97,3 @@ namespace pcl
     }
   }
 }
-#endif        // PCL_IO_TAR_H_
-

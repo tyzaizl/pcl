@@ -58,22 +58,22 @@ TEST (PCL, RIFTEstimation)
       PointXYZI p;
       p.x = x;
       p.y = y;
-      p.z = sqrtf (400 - x * x - y * y);
-      p.intensity = expf ((-powf (x - 3.0f, 2.0f) + powf (y + 2.0f, 2.0f)) / (2.0f * 25.0f)) + expf ((-powf (x + 5.0f, 2.0f) + powf (y - 5.0f, 2.0f))
+      p.z = std::sqrt (400 - x * x - y * y);
+      p.intensity = std::exp ((-powf (x - 3.0f, 2.0f) + powf (y + 2.0f, 2.0f)) / (2.0f * 25.0f)) + std::exp ((-powf (x + 5.0f, 2.0f) + powf (y - 5.0f, 2.0f))
                                                                                  / (2.0f * 4.0f));
 
       cloud_xyzi.points.push_back (p);
     }
   }
-  cloud_xyzi.width = static_cast<uint32_t> (cloud_xyzi.points.size ());
+  cloud_xyzi.width = static_cast<std::uint32_t> (cloud_xyzi.points.size ());
 
   // Generate the intensity gradient data
   PointCloud<IntensityGradient> gradient;
   gradient.height = 1;
-  gradient.width = static_cast<uint32_t> (cloud_xyzi.points.size ());
+  gradient.width = static_cast<std::uint32_t> (cloud_xyzi.points.size ());
   gradient.is_dense = true;
   gradient.points.resize (gradient.width);
-  for (size_t i = 0; i < cloud_xyzi.points.size (); ++i)
+  for (std::size_t i = 0; i < cloud_xyzi.points.size (); ++i)
   {
     const PointXYZI &p = cloud_xyzi.points[i];
 
@@ -81,16 +81,16 @@ TEST (PCL, RIFTEstimation)
     float nx = p.x;
     float ny = p.y;
     float nz = p.z;
-    float magnitude = sqrtf (nx * nx + ny * ny + nz * nz);
+    float magnitude = std::sqrt (nx * nx + ny * ny + nz * nz);
     nx /= magnitude;
     ny /= magnitude;
     nz /= magnitude;
 
     // Compute the intensity gradient analytically...
-    float tmpx = -(p.x + 5.0f) / 4.0f / expf ((powf (p.x + 5.0f, 2.0f) + powf (p.y - 5.0f, 2.0f)) / 8.0f) - (p.x - 3.0f) / 25.0f
-        / expf ((powf (p.x - 3.0f, 2.0f) + powf (p.y + 2.0f, 2.0f)) / 50.0f);
-    float tmpy = -(p.y - 5.0f) / 4.0f / expf ((powf (p.x + 5.0f, 2.0f) + powf (p.y - 5.0f, 2.0f)) / 8.0f) - (p.y + 2.0f) / 25.0f
-        / expf ((powf (p.x - 3.0f, 2.0f) + powf (p.y + 2.0f, 2.0f)) / 50.0f);
+    float tmpx = -(p.x + 5.0f) / 4.0f / std::exp ((powf (p.x + 5.0f, 2.0f) + powf (p.y - 5.0f, 2.0f)) / 8.0f) - (p.x - 3.0f) / 25.0f
+        / std::exp ((powf (p.x - 3.0f, 2.0f) + powf (p.y + 2.0f, 2.0f)) / 50.0f);
+    float tmpy = -(p.y - 5.0f) / 4.0f / std::exp ((powf (p.x + 5.0f, 2.0f) + powf (p.y - 5.0f, 2.0f)) / 8.0f) - (p.y + 2.0f) / 25.0f
+        / std::exp ((powf (p.x - 3.0f, 2.0f) + powf (p.y + 2.0f, 2.0f)) / 50.0f);
     float tmpz = 0.0f;
     // ...and project the 3-D gradient vector onto the surface's tangent plane.
     float gx = (1 - nx * nx) * tmpx + (-nx * ny) * tmpy + (-nx * nz) * tmpz;
@@ -103,7 +103,7 @@ TEST (PCL, RIFTEstimation)
   }
 
   // Compute the RIFT features
-  typedef Histogram<32> RIFTDescriptor;
+  using RIFTDescriptor = Histogram<32>;
   RIFTEstimation<PointXYZI, IntensityGradient, RIFTDescriptor> rift_est;
   search::KdTree<PointXYZI>::Ptr treept4 (new search::KdTree<PointXYZI> (false));
   rift_est.setSearchMethod (treept4);
@@ -118,10 +118,26 @@ TEST (PCL, RIFTEstimation)
 
   // Compare to independently verified values
   const RIFTDescriptor &rift = rift_output.points[220];
-  const float correct_rift_feature_values[32] = {0.0187f, 0.0349f, 0.0647f, 0.0881f, 0.0042f, 0.0131f, 0.0346f, 0.0030f,
-                                                 0.0076f, 0.0218f, 0.0463f, 0.0030f, 0.0087f, 0.0288f, 0.0920f, 0.0472f,
-                                                 0.0076f, 0.0420f, 0.0726f, 0.0669f, 0.0090f, 0.0901f, 0.1274f, 0.2185f,
-                                                 0.0147f, 0.1222f, 0.3568f, 0.4348f, 0.0149f, 0.0806f, 0.2787f, 0.6864f};
+  float correct_rift_feature_values[32];
+
+  unsigned major, minor, patch;
+  std::sscanf (FLANN_VERSION_, "%u.%u.%u", &major, &minor, &patch);
+  if (PCL_VERSION_CALC (major, minor, patch) > PCL_VERSION_CALC (1, 8, 4))
+  {
+    const float data[32] = {0.0052f, 0.0349f, 0.0647f, 0.0881f, 0.0042f, 0.0131f, 0.0346f, 0.0030f,
+                            0.0076f, 0.0218f, 0.0463f, 0.0030f, 0.0087f, 0.0288f, 0.0920f, 0.0472f,
+                            0.0211f, 0.0420f, 0.0726f, 0.0669f, 0.0090f, 0.0901f, 0.1274f, 0.2185f,
+                            0.0147f, 0.1222f, 0.3568f, 0.4348f, 0.0149f, 0.0806f, 0.2787f, 0.6864f};
+    std::copy (data, data + 32, correct_rift_feature_values);
+  }
+  else
+  {
+    const float data[32] = {0.0187f, 0.0349f, 0.0647f, 0.0881f, 0.0042f, 0.0131f, 0.0346f, 0.0030f,
+                            0.0076f, 0.0218f, 0.0463f, 0.0030f, 0.0087f, 0.0288f, 0.0920f, 0.0472f,
+                            0.0076f, 0.0420f, 0.0726f, 0.0669f, 0.0090f, 0.0901f, 0.1274f, 0.2185f,
+                            0.0147f, 0.1222f, 0.3568f, 0.4348f, 0.0149f, 0.0806f, 0.2787f, 0.6864f};
+    std::copy (data, data + 32, correct_rift_feature_values);
+  }
   for (int i = 0; i < 32; ++i)
     EXPECT_NEAR (rift.histogram[i], correct_rift_feature_values[i], 1e-4);
 }

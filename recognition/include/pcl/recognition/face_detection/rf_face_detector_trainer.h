@@ -5,8 +5,7 @@
  *      Author: Aitor Aldoma
  */
 
-#ifndef PCL_RF_FACE_DETECTOR_TRAINER_H_
-#define PCL_RF_FACE_DETECTOR_TRAINER_H_
+#pragma once
 
 #include "pcl/recognition/face_detection/face_detector_data_provider.h"
 #include "pcl/recognition/face_detection/rf_face_utils.h"
@@ -27,24 +26,24 @@ namespace pcl
       float thres_face_;
       int num_images_;
       float trans_max_variance_;
-      size_t min_votes_size_;
+      std::size_t min_votes_size_;
       int used_for_pose_;
       bool use_normals_;
       std::string directory_;
       float HEAD_ST_DIAMETER_;
       float larger_radius_ratio_;
-      std::vector<Eigen::Vector3f> head_center_votes_;
-      std::vector<std::vector<Eigen::Vector3f> > head_center_votes_clustered_;
-      std::vector<std::vector<Eigen::Vector3f> > head_center_original_votes_clustered_;
-      std::vector<Eigen::Vector3f> angle_votes_;
+      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > head_center_votes_;
+      std::vector<std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > > head_center_votes_clustered_;
+      std::vector<std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > > head_center_original_votes_clustered_;
+      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > angle_votes_;
       std::vector<float> uncertainties_;
-      std::vector<Eigen::Vector3f> head_clusters_centers_;
-      std::vector<Eigen::Vector3f> head_clusters_rotation_;
+      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > head_clusters_centers_;
+      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > head_clusters_rotation_;
 
       pcl::PointCloud<pcl::PointXYZ>::Ptr input_;
       pcl::PointCloud<pcl::PointXYZI>::Ptr face_heat_map_;
 
-      typedef face_detection::RFTreeNode<face_detection::FeatureType> NodeType;
+      using NodeType = face_detection::RFTreeNode<face_detection::FeatureType>;
       pcl::DecisionForest<NodeType> forest_;
 
       std::string model_path_;
@@ -182,7 +181,7 @@ namespace pcl
         votes_cloud->width = static_cast<int>(head_center_votes_.size ());
         votes_cloud->height = 1;
 
-        for (size_t i = 0; i < head_center_votes_.size (); i++)
+        for (std::size_t i = 0; i < head_center_votes_.size (); i++)
         {
           votes_cloud->points[i].getVector3fMap () = head_center_votes_[i];
         }
@@ -195,9 +194,9 @@ namespace pcl
         votes_cloud->height = 1;
 
         int p = 0;
-        for (size_t i = 0; i < head_center_votes_clustered_.size (); i++)
+        for (std::size_t i = 0; i < head_center_votes_clustered_.size (); i++)
         {
-          for (size_t j = 0; j < head_center_votes_clustered_[i].size (); j++, p++)
+          for (std::size_t j = 0; j < head_center_votes_clustered_[i].size (); j++, p++)
           {
             votes_cloud->points[p].getVector3fMap () = head_center_votes_clustered_[i][j];
             votes_cloud->points[p].intensity = 0.1f * static_cast<float> (i);
@@ -214,9 +213,9 @@ namespace pcl
         votes_cloud->height = 1;
 
         int p = 0;
-        for (size_t i = 0; i < head_center_original_votes_clustered_.size (); i++)
+        for (std::size_t i = 0; i < head_center_original_votes_clustered_.size (); i++)
         {
-          for (size_t j = 0; j < head_center_original_votes_clustered_[i].size (); j++, p++)
+          for (std::size_t j = 0; j < head_center_original_votes_clustered_[i].size (); j++, p++)
           {
             votes_cloud->points[p].getVector3fMap () = head_center_original_votes_clustered_[i][j];
             votes_cloud->points[p].intensity = 0.1f * static_cast<float> (i);
@@ -229,7 +228,7 @@ namespace pcl
       //get heads
       void getDetectedFaces(std::vector<Eigen::VectorXf> & faces)
       {
-        for (size_t i = 0; i < head_clusters_centers_.size (); i++)
+        for (std::size_t i = 0; i < head_clusters_centers_.size (); i++)
         {
           Eigen::VectorXf head (6);
           head[0] = head_clusters_centers_[i][0];
@@ -259,5 +258,3 @@ namespace pcl
       void detectFaces();
   };
 }
-
-#endif /* PCL_RF_FACE_DETECTOR_TRAINER_H_ */

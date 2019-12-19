@@ -58,11 +58,19 @@ pcl::ExtractIndices<PointT>::filterDirectly (PointCloudPtr &cloud)
   pcl::for_each_type<FieldList> (pcl::detail::FieldAdder<PointT> (fields));
   for (int rii = 0; rii < static_cast<int> (removed_indices_->size ()); ++rii)  // rii = removed indices iterator
   {
-    uint8_t* pt_data = reinterpret_cast<uint8_t*> (&cloud->points[(*removed_indices_)[rii]]);
-    for (int fi = 0; fi < static_cast<int> (fields.size ()); ++fi)  // fi = field iterator
-      memcpy (pt_data + fields[fi].offset, &user_filter_value_, sizeof (float));
+    std::size_t pt_index = (std::size_t) (*removed_indices_)[rii];
+    if (pt_index >= input_->points.size ())
+    {
+      PCL_ERROR ("[pcl::%s::filterDirectly] The index exceeds the size of the input. Do nothing.\n",
+                 getClassName ().c_str ());
+      *cloud = *input_;
+      return;
+    }
+    std::uint8_t* pt_data = reinterpret_cast<std::uint8_t*> (&cloud->points[pt_index]);
+    for (const auto &field : fields)
+      memcpy (pt_data + field.offset, &user_filter_value_, sizeof (float));
   }
-  if (!pcl_isfinite (user_filter_value_))
+  if (!std::isfinite (user_filter_value_))
     cloud->is_dense = false;
 }
 
@@ -81,13 +89,21 @@ pcl::ExtractIndices<PointT>::applyFilter (PointCloud &output)
     output = *input_;
     std::vector<pcl::PCLPointField> fields;
     pcl::for_each_type<FieldList> (pcl::detail::FieldAdder<PointT> (fields));
-    for (int rii = 0; rii < static_cast<int> (removed_indices_->size ()); ++rii)  // rii = removed indices iterator
+    for (const auto ri : *removed_indices_)  // ri = removed index
     {
-      uint8_t* pt_data = reinterpret_cast<uint8_t*> (&output.points[(*removed_indices_)[rii]]);
-      for (int fi = 0; fi < static_cast<int> (fields.size ()); ++fi)  // fi = field iterator
-        memcpy (pt_data + fields[fi].offset, &user_filter_value_, sizeof (float));
+      std::size_t pt_index = (std::size_t)ri;
+      if (pt_index >= input_->points.size ())
+      {
+        PCL_ERROR ("[pcl::%s::applyFilter] The index exceeds the size of the input. Do nothing.\n",
+                   getClassName ().c_str ());
+        output = *input_;
+        return;
+      }
+      std::uint8_t* pt_data = reinterpret_cast<std::uint8_t*> (&output.points[pt_index]);
+      for (const auto &field : fields)
+        memcpy (pt_data + field.offset, &user_filter_value_, sizeof (float));
     }
-    if (!pcl_isfinite (user_filter_value_))
+    if (!std::isfinite (user_filter_value_))
       output.is_dense = false;
   }
   else

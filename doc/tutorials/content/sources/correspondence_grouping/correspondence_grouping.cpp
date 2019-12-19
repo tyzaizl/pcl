@@ -4,7 +4,7 @@
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/features/shot_omp.h>
 #include <pcl/features/board.h>
-#include <pcl/keypoints/uniform_sampling.h>
+#include <pcl/filters/uniform_sampling.h>
 #include <pcl/recognition/cg/hough_3d.h>
 #include <pcl/recognition/cg/geometric_consistency.h>
 #include <pcl/visualization/pcl_visualizer.h>
@@ -133,9 +133,9 @@ computeCloudResolution (const pcl::PointCloud<PointType>::ConstPtr &cloud)
   pcl::search::KdTree<PointType> tree;
   tree.setInputCloud (cloud);
 
-  for (size_t i = 0; i < cloud->size (); ++i)
+  for (std::size_t i = 0; i < cloud->size (); ++i)
   {
-    if (! pcl_isfinite ((*cloud)[i].x))
+    if (! std::isfinite ((*cloud)[i].x))
     {
       continue;
     }
@@ -221,19 +221,16 @@ main (int argc, char *argv[])
   //
   //  Downsample Clouds to Extract keypoints
   //
-  pcl::PointCloud<int> sampled_indices;
 
   pcl::UniformSampling<PointType> uniform_sampling;
   uniform_sampling.setInputCloud (model);
   uniform_sampling.setRadiusSearch (model_ss_);
-  uniform_sampling.compute (sampled_indices);
-  pcl::copyPointCloud (*model, sampled_indices.points, *model_keypoints);
+  uniform_sampling.filter (*model_keypoints);
   std::cout << "Model total points: " << model->size () << "; Selected Keypoints: " << model_keypoints->size () << std::endl;
 
   uniform_sampling.setInputCloud (scene);
   uniform_sampling.setRadiusSearch (scene_ss_);
-  uniform_sampling.compute (sampled_indices);
-  pcl::copyPointCloud (*scene, sampled_indices.points, *scene_keypoints);
+  uniform_sampling.filter (*scene_keypoints);
   std::cout << "Scene total points: " << scene->size () << "; Selected Keypoints: " << scene_keypoints->size () << std::endl;
 
 
@@ -262,11 +259,11 @@ main (int argc, char *argv[])
   match_search.setInputCloud (model_descriptors);
 
   //  For each scene keypoint descriptor, find nearest neighbor into the model keypoints descriptor cloud and add it to the correspondences vector.
-  for (size_t i = 0; i < scene_descriptors->size (); ++i)
+  for (std::size_t i = 0; i < scene_descriptors->size (); ++i)
   {
     std::vector<int> neigh_indices (1);
     std::vector<float> neigh_sqr_dists (1);
-    if (!pcl_isfinite (scene_descriptors->at (i).descriptor[0])) //skipping NaNs
+    if (!std::isfinite (scene_descriptors->at (i).descriptor[0])) //skipping NaNs
     {
       continue;
     }
@@ -342,7 +339,7 @@ main (int argc, char *argv[])
   //  Output results
   //
   std::cout << "Model instances found: " << rototranslations.size () << std::endl;
-  for (size_t i = 0; i < rototranslations.size (); ++i)
+  for (std::size_t i = 0; i < rototranslations.size (); ++i)
   {
     std::cout << "\n    Instance " << i + 1 << ":" << std::endl;
     std::cout << "        Correspondences belonging to this instance: " << clustered_corrs[i].size () << std::endl;
@@ -389,7 +386,7 @@ main (int argc, char *argv[])
     viewer.setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "off_scene_model_keypoints");
   }
 
-  for (size_t i = 0; i < rototranslations.size (); ++i)
+  for (std::size_t i = 0; i < rototranslations.size (); ++i)
   {
     pcl::PointCloud<PointType>::Ptr rotated_model (new pcl::PointCloud<PointType> ());
     pcl::transformPointCloud (*model, *rotated_model, rototranslations[i]);
@@ -402,7 +399,7 @@ main (int argc, char *argv[])
 
     if (show_correspondences_)
     {
-      for (size_t j = 0; j < clustered_corrs[i].size (); ++j)
+      for (std::size_t j = 0; j < clustered_corrs[i].size (); ++j)
       {
         std::stringstream ss_line;
         ss_line << "correspondence_line" << i << "_" << j;

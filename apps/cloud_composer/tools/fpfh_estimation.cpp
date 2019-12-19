@@ -7,10 +7,7 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/filter.h>
 
-
-
-Q_EXPORT_PLUGIN2(cloud_composer_fpfh_estimation_tool, pcl::cloud_composer::FPFHEstimationToolFactory)
-
+Q_PLUGIN_METADATA(IID "cloud_composer.ToolFactory/1.0")
 
 pcl::cloud_composer::FPFHEstimationTool::FPFHEstimationTool (PropertiesModel* parameter_model, QObject* parent)
   : NewItemTool (parameter_model, parent)
@@ -25,17 +22,17 @@ pcl::cloud_composer::FPFHEstimationTool::~FPFHEstimationTool ()
 }
 
 QList <pcl::cloud_composer::CloudComposerItem*>
-pcl::cloud_composer::FPFHEstimationTool::performAction (ConstItemList input_data, PointTypeFlags::PointType type)
+pcl::cloud_composer::FPFHEstimationTool::performAction (ConstItemList input_data, PointTypeFlags::PointType)
 {
   QList <CloudComposerItem*> output;
   const CloudComposerItem* input_item;
   // Check input data length
-  if ( input_data.size () == 0)
+  if ( input_data.empty ())
   {
     qCritical () << "Empty input in FPFH Estimation Tool!";
     return output;
   }
-  else if ( input_data.size () > 1)
+  if ( input_data.size () > 1)
   {
     qWarning () << "Input vector has more than one item in FPFH Estimation!";
   }
@@ -46,7 +43,7 @@ pcl::cloud_composer::FPFHEstimationTool::performAction (ConstItemList input_data
   {
     //Check if this cloud has normals computed!
     QList <CloudComposerItem*> normals_list = input_item->getChildren (CloudComposerItem::NORMALS_ITEM);
-    if ( normals_list.size () == 0 )
+    if ( normals_list.empty () )
     {
       qCritical () << "No normals item child found in this cloud item";
       return output;

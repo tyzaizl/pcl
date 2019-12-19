@@ -2,10 +2,7 @@
 #include <pcl/apps/cloud_composer/items/cloud_item.h>
 #include <pcl/filters/passthrough.h>
 
-
-
-Q_EXPORT_PLUGIN2(cloud_composer_sanitize_cloud_tool, pcl::cloud_composer::SanitizeCloudToolFactory)
-
+Q_PLUGIN_METADATA(IID "cloud_composer.ToolFactory/1.0")
 
 pcl::cloud_composer::SanitizeCloudTool::SanitizeCloudTool (PropertiesModel* parameter_model, QObject* parent)
 : ModifyItemTool (parameter_model, parent)
@@ -20,12 +17,12 @@ pcl::cloud_composer::SanitizeCloudTool::~SanitizeCloudTool ()
 }
 
 QList <pcl::cloud_composer::CloudComposerItem*>
-pcl::cloud_composer::SanitizeCloudTool::performAction (ConstItemList input_data, PointTypeFlags::PointType type)
+pcl::cloud_composer::SanitizeCloudTool::performAction (ConstItemList input_data, PointTypeFlags::PointType)
 {
   QList <CloudComposerItem*> output;
   const CloudComposerItem* input_item;
   // Check input data length
-  if ( input_data.size () == 0)
+  if ( input_data.empty ())
   {
     qCritical () << "Empty input in SanitizeCloudTool!";
     return output;
@@ -81,3 +78,4 @@ pcl::cloud_composer::SanitizeCloudToolFactory::createToolParameterModel (QObject
   
   return parameter_model;
 }
+

@@ -99,7 +99,7 @@ pcl::VoxelGridOcclusionEstimation<PointT>::occlusionEstimation (int& out_state,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT> int
 pcl::VoxelGridOcclusionEstimation<PointT>::occlusionEstimation (int& out_state,
-                                                                std::vector<Eigen::Vector3i>& out_ray,
+                                                                std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& out_ray,
                                                                 const Eigen::Vector3i& in_target_voxel)
 {
   if (!initialized_)
@@ -130,7 +130,7 @@ pcl::VoxelGridOcclusionEstimation<PointT>::occlusionEstimation (int& out_state,
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT> int
-pcl::VoxelGridOcclusionEstimation<PointT>::occlusionEstimationAll (std::vector<Eigen::Vector3i>& occluded_voxels)
+pcl::VoxelGridOcclusionEstimation<PointT>::occlusionEstimationAll (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& occluded_voxels)
 {
   if (!initialized_)
   {
@@ -292,9 +292,9 @@ pcl::VoxelGridOcclusionEstimation<PointT>::rayTraversal (const Eigen::Vector3i& 
   float t_max_y = t_min + (voxel_max[1] - start[1]) / direction[1];
   float t_max_z = t_min + (voxel_max[2] - start[2]) / direction[2];
      
-  float t_delta_x = leaf_size_[0] / static_cast<float> (fabs (direction[0]));
-  float t_delta_y = leaf_size_[1] / static_cast<float> (fabs (direction[1]));
-  float t_delta_z = leaf_size_[2] / static_cast<float> (fabs (direction[2]));
+  float t_delta_x = leaf_size_[0] / static_cast<float> (std::abs (direction[0]));
+  float t_delta_y = leaf_size_[1] / static_cast<float> (std::abs (direction[1]));
+  float t_delta_z = leaf_size_[2] / static_cast<float> (std::abs (direction[2]));
 
   // index of the point in the point cloud
   int index;
@@ -334,7 +334,7 @@ pcl::VoxelGridOcclusionEstimation<PointT>::rayTraversal (const Eigen::Vector3i& 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT> int
-pcl::VoxelGridOcclusionEstimation<PointT>::rayTraversal (std::vector <Eigen::Vector3i>& out_ray,
+pcl::VoxelGridOcclusionEstimation<PointT>::rayTraversal (std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i> >& out_ray,
                                                          const Eigen::Vector3i& target_voxel,
                                                          const Eigen::Vector4f& origin, 
                                                          const Eigen::Vector4f& direction,
@@ -392,9 +392,9 @@ pcl::VoxelGridOcclusionEstimation<PointT>::rayTraversal (std::vector <Eigen::Vec
   float t_max_y = t_min + (voxel_max[1] - start[1]) / direction[1];
   float t_max_z = t_min + (voxel_max[2] - start[2]) / direction[2];
      
-  float t_delta_x = leaf_size_[0] / static_cast<float> (fabs (direction[0]));
-  float t_delta_y = leaf_size_[1] / static_cast<float> (fabs (direction[1]));
-  float t_delta_z = leaf_size_[2] / static_cast<float> (fabs (direction[2]));
+  float t_delta_x = leaf_size_[0] / static_cast<float> (std::abs (direction[0]));
+  float t_delta_y = leaf_size_[1] / static_cast<float> (std::abs (direction[1]));
+  float t_delta_z = leaf_size_[2] / static_cast<float> (std::abs (direction[2]));
 
   // the index of the cloud (-1 if empty)
   int index = -1;

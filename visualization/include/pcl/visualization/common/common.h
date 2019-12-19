@@ -34,8 +34,8 @@
  * $Id$
  *
  */
-#ifndef PCL_PCL_VISUALIZER_COMMON_H_
-#define PCL_PCL_VISUALIZER_COMMON_H_
+
+#pragma once
 
 #if defined __GNUC__
 #pragma GCC system_header
@@ -44,6 +44,11 @@
 #include <pcl/pcl_macros.h>
 #include <pcl/visualization/eigen.h>
 #include <vtkMatrix4x4.h>
+#include <vtkSmartPointer.h>
+#include <vtkLookupTable.h>
+
+class vtkCamera;
+class vtkRenderWindow;
 
 namespace pcl
 {
@@ -91,16 +96,19 @@ namespace pcl
     PCL_EXPORTS float
     viewScreenArea (const Eigen::Vector3d &eye, const Eigen::Vector3d &min_bb, const Eigen::Vector3d &max_bb, const Eigen::Matrix4d &view_projection_matrix, int width, int height);
 
+    /** \brief Set of rendering properties. */
     enum RenderingProperties
     {
-      PCL_VISUALIZER_POINT_SIZE,
-      PCL_VISUALIZER_OPACITY,
-      PCL_VISUALIZER_LINE_WIDTH,
+      PCL_VISUALIZER_POINT_SIZE,            /**< integer starting from 1 */
+      PCL_VISUALIZER_OPACITY,               /**< Float going from 0.0 (transparent) to 1.0 (opaque) */
+      PCL_VISUALIZER_LINE_WIDTH,            /**< Integer starting from 1 */
       PCL_VISUALIZER_FONT_SIZE,
-      PCL_VISUALIZER_COLOR,
+      PCL_VISUALIZER_COLOR,                 /**< 3 floats (R, G, B) going from 0.0 (dark) to 1.0 (light) */
       PCL_VISUALIZER_REPRESENTATION,
       PCL_VISUALIZER_IMMEDIATE_RENDERING,
-      PCL_VISUALIZER_SHADING
+      PCL_VISUALIZER_SHADING,
+      PCL_VISUALIZER_LUT,                   /**< colormap type \ref pcl::visualization::LookUpTableRepresentationProperties */
+      PCL_VISUALIZER_LUT_RANGE              /**< two doubles (min and max) or \ref pcl::visualization::LookUpTableRepresentationProperties::PCL_VISUALIZER_LUT_RANGE_AUTO */
     };
 
     enum RenderingRepresentationProperties
@@ -117,11 +125,44 @@ namespace pcl
       PCL_VISUALIZER_SHADING_PHONG
     };
 
+    /*! Colormap properties. See [mathworks colormap page](http://www.mathworks.com/help/matlab/ref/colormap.html#input_argument_name) for image representations of the colormaps. */
+    enum LookUpTableRepresentationProperties
+    {
+      PCL_VISUALIZER_LUT_JET,           /**< Jet colormap */
+      PCL_VISUALIZER_LUT_JET_INVERSE,   /**< Inverse jet colormap */
+      PCL_VISUALIZER_LUT_HSV,           /**< HSV colormap */
+      PCL_VISUALIZER_LUT_HSV_INVERSE,   /**< Inverse HSV colormap */
+      PCL_VISUALIZER_LUT_GREY,          /**< Grey colormap (black to white) */
+      PCL_VISUALIZER_LUT_BLUE2RED,      /**< Blue to red colormap (blue to white to red) */
+      PCL_VISUALIZER_LUT_RANGE_AUTO,    /**< Set LUT range to min and max values of the data */
+      PCL_VISUALIZER_LUT_VIRIDIS        /**< Viridis colormap */
+    };
+
+    /** \brief Generate a lookup table for a colormap.
+      * \param[in] colormap_type
+      * \param[out] table a vtk lookup table
+      * \note The list of available colormaps can be found in \ref pcl::visualization::LookUpTableRepresentationProperties.
+      */    
+    PCL_EXPORTS bool
+    getColormapLUT  (LookUpTableRepresentationProperties colormap_type, vtkSmartPointer<vtkLookupTable> &table);
+
     //////////////////////////////////////////////////////////////////////////////////////////////
     /** \brief Camera class holds a set of camera parameters together with the window pos/size. */
     class PCL_EXPORTS Camera
     {
       public:
+        /** Construct a camera with meaningful default values.
+          * The camera is positioned at origin, looks along z-axis and has up-vector along y-axis. Window position and
+          * size are initialized with (0, 0) and (1, 1) respectively. */
+        Camera ();
+
+        /** Construct a camera by copying parameters from a VTK camera.
+          * Window position and size are initialized with (0, 0) and (1, 1) respectively.*/
+        Camera (vtkCamera& camera);
+
+        /** Construct a camera by copying parameters from a VTK camera and a VTK render window. */
+        Camera (vtkCamera& camera, vtkRenderWindow& window);
+
         /** \brief Focal point or lookAt.
           * \note The view direction can be obtained by (focal-pos).normalized ()
           */
@@ -187,5 +228,3 @@ namespace pcl
 }
 
 #include <pcl/visualization/common/impl/common.hpp>
-
-#endif

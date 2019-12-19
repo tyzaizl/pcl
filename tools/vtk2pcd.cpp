@@ -107,7 +107,7 @@ main (int argc, char** argv)
   if (copy_normals)
   {
     vtkSmartPointer<vtkPolyDataNormals> ng = vtkSmartPointer<vtkPolyDataNormals>::New ();
-    ng->SetInput (polydata);
+    ng->SetInputData (polydata);
     ng->ComputePointNormalsOn ();
     ng->ComputeCellNormalsOff ();
     ng->Update ();

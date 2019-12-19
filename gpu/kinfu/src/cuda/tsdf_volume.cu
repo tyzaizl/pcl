@@ -67,7 +67,7 @@ namespace pcl
 void
 pcl::device::initVolume (PtrStep<short2> volume)
 {
-  dim3 block (32, 16);
+  dim3 block (16, 16);
   dim3 grid (1, 1, 1);
   grid.x = divUp (VOLUME_X, block.x);      
   grid.y = divUp (VOLUME_Y, block.y);
@@ -83,11 +83,9 @@ namespace pcl
   {
     struct Tsdf
     {
-      enum
-      {
-        CTA_SIZE_X = 32, CTA_SIZE_Y = 8,
-        MAX_WEIGHT = 1 << 7
-      };
+      static constexpr int CTA_SIZE_X = 32;
+      static constexpr int CTA_SIZE_Y = 8;
+      static constexpr int MAX_WEIGHT = 1 << 7;
 
       mutable PtrStep<short2> volume;
       float3 cell_size;
@@ -130,7 +128,7 @@ namespace pcl
         {
           float3 v_g = getVoxelGCoo (x, y, z);            //3 // p
 
-          //tranform to curr cam coo space
+          //transform to curr cam coo space
           float3 v = Rcurr_inv * (v_g - tcurr);           //4
 
           int2 coo;           //project to current cam
@@ -153,7 +151,7 @@ namespace pcl
 
               if (sdf >= -tranc_dist_mm)
               {
-                float tsdf = fmin (1, sdf / tranc_dist_mm);
+                float tsdf = fmin (1.f, sdf / tranc_dist_mm);
 
                 int weight_prev;
                 float tsdf_prev;
@@ -451,7 +449,7 @@ namespace pcl
                     bool integrate = true;
                     if ((x > 0 &&  x < VOLUME_X-2) && (y > 0 && y < VOLUME_Y-2) && (z > 0 && z < VOLUME_Z-2))
                     {
-                        const float qnan = numeric_limits<float>::quiet_NaN();
+                        const float qnan = std::numeric_limits<float>::quiet_NaN();
                         float3 normal = make_float3(qnan, qnan, qnan);
 
                         float Fn, Fp;

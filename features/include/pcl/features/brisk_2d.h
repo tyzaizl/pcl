@@ -37,8 +37,7 @@
  *
  */
 
-#ifndef PCL_FEATURES_BRISK_2D_H_
-#define PCL_FEATURES_BRISK_2D_H_
+#pragma once
 
 // PCL includes
 #include <pcl/features/feature.h>
@@ -68,17 +67,17 @@ namespace pcl
   class BRISK2DEstimation// : public Feature<PointT, KeyPointT>
   {
     public:
-      typedef boost::shared_ptr<BRISK2DEstimation<PointInT, PointOutT, KeypointT, IntensityT> > Ptr;
-      typedef boost::shared_ptr<const BRISK2DEstimation<PointInT, PointOutT, KeypointT, IntensityT> > ConstPtr;
+      using Ptr = boost::shared_ptr<BRISK2DEstimation<PointInT, PointOutT, KeypointT, IntensityT> >;
+      using ConstPtr = boost::shared_ptr<const BRISK2DEstimation<PointInT, PointOutT, KeypointT, IntensityT> >;
 
-      typedef typename pcl::PointCloud<PointInT> PointCloudInT;
-      typedef typename pcl::PointCloud<PointInT>::ConstPtr PointCloudInTConstPtr;
+      using PointCloudInT = pcl::PointCloud<PointInT>;
+      using PointCloudInTConstPtr = typename PointCloudInT::ConstPtr;
 
-      typedef typename pcl::PointCloud<KeypointT> KeypointPointCloudT;
-      typedef typename pcl::PointCloud<KeypointT>::Ptr KeypointPointCloudTPtr;
-      typedef typename pcl::PointCloud<KeypointT>::ConstPtr KeypointPointCloudTConstPtr;
+      using KeypointPointCloudT = pcl::PointCloud<KeypointT>;
+      using KeypointPointCloudTPtr = typename KeypointPointCloudT::Ptr;
+      using KeypointPointCloudTConstPtr = typename KeypointPointCloudT::ConstPtr;
 
-      typedef typename pcl::PointCloud<PointOutT> PointCloudOutT;
+      using PointCloudOutT = pcl::PointCloud<PointOutT>;
 
       /** \brief Constructor. */
       BRISK2DEstimation ();
@@ -126,8 +125,8 @@ namespace pcl
       }
 
       /** \brief Computes the descriptors for the previously specified 
-        *        points and input data.
-        * \param[out] descriptors the destination for the computed descriptors.
+        * points and input data.
+        * \param[out] output descriptors the destination for the computed descriptors.
         */
       void
       compute (PointCloudOutT &output);
@@ -140,7 +139,7 @@ namespace pcl
         *
         * \note This should never be called by a regular user. We use a fixed type in PCL 
         * (BRISKSignature512) and tampering with the parameters might lead to a different
-        * size descriptor which the user needs to accomodate in a new point type.
+        * size descriptor which the user needs to accommodate in a new point type.
         */
       void
       generateKernel (std::vector<float> &radius_list,
@@ -262,5 +261,3 @@ namespace pcl
 }
 
 #include <pcl/features/impl/brisk_2d.hpp>
-
-#endif  //#ifndef PCL_FEATURES_BRISK_2D_H_

@@ -44,7 +44,6 @@
 
 #include <pcl/console/print.h>
 #include <pcl/console/parse.h>
-#include <pcl/console/time.h>
 
 using namespace std;
 using namespace pcl;
@@ -71,14 +70,14 @@ compute (PointCloud<PointXYZ>::ConstPtr cloud_in,
 {
   if (!convex_concave_hull)
   {
-    print_info ("Computing the convex hull of a cloud with %zu points.\n", cloud_in->size ());
+    print_info ("Computing the convex hull of a cloud with %lu points.\n", cloud_in->size ());
     ConvexHull<PointXYZ> convex_hull;
     convex_hull.setInputCloud (cloud_in);
     convex_hull.reconstruct (mesh_out);
   }
   else
   {
-    print_info ("Computing the concave hull (alpha shapes) with alpha %f of a cloud with %zu points.\n", alpha, cloud_in->size ());
+    print_info ("Computing the concave hull (alpha shapes) with alpha %f of a cloud with %lu points.\n", alpha, cloud_in->size ());
     ConcaveHull<PointXYZ> concave_hull;
     concave_hull.setInputCloud (cloud_in);
     concave_hull.setAlpha (alpha);
@@ -106,7 +105,7 @@ main (int argc, char** argv)
   if (parse_argument (argc, argv, "-alpha", alpha) != -1)
     convex_concave_hull = true;
 
-  vector<int> pcd_file_indices;
+  std::vector<int> pcd_file_indices;
   pcd_file_indices = parse_file_extension_argument (argc, argv, ".pcd");
   if (pcd_file_indices.size () != 1)
   {
@@ -114,11 +113,11 @@ main (int argc, char** argv)
     return (-1);
   }
 
-  vector<int> vtk_file_indices;
+  std::vector<int> vtk_file_indices;
   vtk_file_indices = parse_file_extension_argument (argc, argv, ".vtk");
   if (vtk_file_indices.size () != 1)
   {
-    print_error ("Need one ouput VTK file to continue.\n");
+    print_error ("Need one output VTK file to continue.\n");
     return (-1);
   }
 

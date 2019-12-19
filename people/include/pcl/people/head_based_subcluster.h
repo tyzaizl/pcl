@@ -38,8 +38,7 @@
  * Author: Matteo Munaro
  */
 
-#ifndef PCL_PEOPLE_HEAD_BASED_SUBCLUSTER_H_
-#define PCL_PEOPLE_HEAD_BASED_SUBCLUSTER_H_
+#pragma once
 
 #include <pcl/people/person_cluster.h>
 #include <pcl/people/height_map_2d.h>
@@ -60,9 +59,9 @@ namespace pcl
     {
     public:
 
-      typedef pcl::PointCloud<PointT> PointCloud;
-      typedef boost::shared_ptr<PointCloud> PointCloudPtr;
-      typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
+      using PointCloud = pcl::PointCloud<PointT>;
+      using PointCloudPtr = typename PointCloud::Ptr;
+      using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
       /** \brief Constructor. */
       HeadBasedSubclustering ();
@@ -92,8 +91,8 @@ namespace pcl
        * \brief Create subclusters centered on the heads position from the current cluster.
        * 
        * \param[in] cluster A PersonCluster.
-       * \param[in] maxima_number Number of local maxima to use as centers of the new cluster.
-       * \param[in] maxima_cloud_indices Cloud indices of local maxima to use as centers of the new cluster.
+       * \param[in] maxima_number_after_filtering Number of local maxima to use as centers of the new cluster.
+       * \param[in] maxima_cloud_indices_filtered Cloud indices of local maxima to use as centers of the new cluster.
        * \param[out] subclusters Output vector of PersonCluster objects derived from the input cluster.
        */
       void
@@ -228,4 +227,3 @@ namespace pcl
   } /* namespace people */
 } /* namespace pcl */
 #include <pcl/people/impl/head_based_subcluster.hpp>
-#endif /* PCL_PEOPLE_HEAD_BASED_SUBCLUSTER_H_ */

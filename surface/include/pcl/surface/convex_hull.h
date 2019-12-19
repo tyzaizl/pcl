@@ -37,11 +37,11 @@
  *
  */
 
-#include <pcl/pcl_config.h>
-#ifdef HAVE_QHULL
+#pragma once
 
-#ifndef PCL_CONVEX_HULL_2D_H_
-#define PCL_CONVEX_HULL_2D_H_
+#include <pcl/pcl_macros.h>
+#include <pcl/pcl_config.h>
+#ifdef HAVE_QHULL 
 
 // PCL includes
 #include <pcl/surface/reconstruction.h>
@@ -58,8 +58,8 @@ namespace pcl
   inline bool
   comparePoints2D (const std::pair<int, Eigen::Vector4f> & p1, const std::pair<int, Eigen::Vector4f> & p2)
   {
-    double angle1 = atan2 (p1.second[1], p1.second[0]) + M_PI;
-    double angle2 = atan2 (p2.second[1], p2.second[0]) + M_PI;
+    double angle1 = std::atan2 (p1.second[1], p1.second[0]) + M_PI;
+    double angle2 = std::atan2 (p2.second[1], p2.second[0]) + M_PI;
     return (angle1 > angle2);
   }
 
@@ -78,24 +78,24 @@ namespace pcl
       using PCLBase<PointInT>::deinitCompute;
 
     public:
-      typedef boost::shared_ptr<ConvexHull<PointInT> > Ptr;
-      typedef boost::shared_ptr<const ConvexHull<PointInT> > ConstPtr;
+      using Ptr = boost::shared_ptr<ConvexHull<PointInT> >;
+      using ConstPtr = boost::shared_ptr<const ConvexHull<PointInT> >;
 
       using MeshConstruction<PointInT>::reconstruct;
 
-      typedef pcl::PointCloud<PointInT> PointCloud;
-      typedef typename PointCloud::Ptr PointCloudPtr;
-      typedef typename PointCloud::ConstPtr PointCloudConstPtr;
+      using PointCloud = pcl::PointCloud<PointInT>;
+      using PointCloudPtr = typename PointCloud::Ptr;
+      using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
       /** \brief Empty constructor. */
       ConvexHull () : compute_area_ (false), total_area_ (0), total_volume_ (0), dimension_ (0), 
-                      projection_angle_thresh_ (cos (0.174532925) ), qhull_flags ("qhull "),
+                      projection_angle_thresh_ (std::cos (0.174532925) ), qhull_flags ("qhull "),
                       x_axis_ (1.0, 0.0, 0.0), y_axis_ (0.0, 1.0, 0.0), z_axis_ (0.0, 0.0, 1.0)
       {
       };
       
       /** \brief Empty destructor */
-      virtual ~ConvexHull () {}
+      ~ConvexHull () {}
 
       /** \brief Compute a convex hull for all points given.
         *
@@ -119,7 +119,7 @@ namespace pcl
 
       /** \brief If set to true, the qhull library is called to compute the total area and volume of the convex hull.
         * NOTE: When this option is activated, the qhull library produces output to the console.
-        * \param[in] value wheter to compute the area and the volume, default is false
+        * \param[in] value whether to compute the area and the volume, default is false
         */
       void
       setComputeAreaVolume (bool value)
@@ -166,6 +166,14 @@ namespace pcl
         return (dimension_);
       }
 
+      /** \brief Retrieve the indices of the input point cloud that for the convex hull.
+        *
+        * \note Should only be called after reconstruction was performed.
+        * \param[out] hull_point_indices The indices of the points forming the point cloud
+        */
+      void
+      getHullPointIndices (pcl::PointIndices &hull_point_indices) const;
+
     protected:
       /** \brief The actual reconstruction method. 
         * 
@@ -207,15 +215,15 @@ namespace pcl
         *
         * \param[out] output a PolygonMesh representing the convex hull of the input data.
         */
-      virtual void
-      performReconstruction (PolygonMesh &output);
+      void
+      performReconstruction (PolygonMesh &output) override;
       
       /** \brief A reconstruction method that returns the polygon of the convex hull.
         *
         * \param[out] polygons the polygon(s) representing the convex hull of the input data.
         */
-      virtual void
-      performReconstruction (std::vector<pcl::Vertices> &polygons);
+      void
+      performReconstruction (std::vector<pcl::Vertices> &polygons) override;
 
       /** \brief Automatically determines the dimension of input data - 2D or 3D. */
       void 
@@ -223,7 +231,7 @@ namespace pcl
 
       /** \brief Class get name method. */
       std::string
-      getClassName () const
+      getClassName () const override
       {
         return ("ConvexHull");
       }
@@ -255,8 +263,11 @@ namespace pcl
       /* \brief z-axis - for checking valid projections. */
       const Eigen::Vector3d z_axis_;
 
+      /* \brief vector containing the point cloud indices of the convex hull points. */
+      pcl::PointIndices hull_indices_;
+
       public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        PCL_MAKE_ALIGNED_OPERATOR_NEW
   };
 }
 
@@ -264,5 +275,4 @@ namespace pcl
 #include <pcl/surface/impl/convex_hull.hpp>
 #endif
 
-#endif  //#ifndef PCL_CONVEX_HULL_2D_H_
 #endif

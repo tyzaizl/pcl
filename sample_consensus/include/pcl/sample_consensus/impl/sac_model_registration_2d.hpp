@@ -61,12 +61,12 @@ pcl::SampleConsensusModelRegistration2D<PointT>::isSampleGood (const std::vector
 
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
-pcl::SampleConsensusModelRegistration2D<PointT>::getDistancesToModel (const Eigen::VectorXf &model_coefficients, std::vector<double> &distances) 
+pcl::SampleConsensusModelRegistration2D<PointT>::getDistancesToModel (const Eigen::VectorXf &model_coefficients, std::vector<double> &distances) const
 {
   PCL_INFO ("[pcl::SampleConsensusModelRegistration2D<PointT>::getDistancesToModel]\n");
   if (indices_->size () != indices_tgt_->size ())
   {
-    PCL_ERROR ("[pcl::SampleConsensusModelRegistration2D::getDistancesToModel] Number of source indices (%zu) differs than number of target indices (%zu)!\n", indices_->size (), indices_tgt_->size ());
+    PCL_ERROR ("[pcl::SampleConsensusModelRegistration2D::getDistancesToModel] Number of source indices (%lu) differs than number of target indices (%lu)!\n", indices_->size (), indices_tgt_->size ());
     distances.clear ();
     return;
   }
@@ -85,7 +85,7 @@ pcl::SampleConsensusModelRegistration2D<PointT>::getDistancesToModel (const Eige
   transform.row (2).matrix () = model_coefficients.segment<4>(8);
   transform.row (3).matrix () = model_coefficients.segment<4>(12);
 
-  for (size_t i = 0; i < indices_->size (); ++i)
+  for (std::size_t i = 0; i < indices_->size (); ++i)
   {
     Eigen::Vector4f pt_src (input_->points[(*indices_)[i]].x, 
                             input_->points[(*indices_)[i]].y, 
@@ -117,7 +117,7 @@ pcl::SampleConsensusModelRegistration2D<PointT>::selectWithinDistance (const Eig
 {
   if (indices_->size () != indices_tgt_->size ())
   {
-    PCL_ERROR ("[pcl::SampleConsensusModelRegistration2D::selectWithinDistance] Number of source indices (%zu) differs than number of target indices (%zu)!\n", indices_->size (), indices_tgt_->size ());
+    PCL_ERROR ("[pcl::SampleConsensusModelRegistration2D::selectWithinDistance] Number of source indices (%lu) differs than number of target indices (%lu)!\n", indices_->size (), indices_tgt_->size ());
     inliers.clear ();
     return;
   }
@@ -139,7 +139,7 @@ pcl::SampleConsensusModelRegistration2D<PointT>::selectWithinDistance (const Eig
   transform.row (2).matrix () = model_coefficients.segment<4>(8);
   transform.row (3).matrix () = model_coefficients.segment<4>(12);
 
-  for (size_t i = 0; i < indices_->size (); ++i)
+  for (std::size_t i = 0; i < indices_->size (); ++i)
   {
     Eigen::Vector4f pt_src (input_->points[(*indices_)[i]].x, 
                             input_->points[(*indices_)[i]].y, 
@@ -176,11 +176,11 @@ pcl::SampleConsensusModelRegistration2D<PointT>::selectWithinDistance (const Eig
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> int
 pcl::SampleConsensusModelRegistration2D<PointT>::countWithinDistance (
-    const Eigen::VectorXf &model_coefficients, const double threshold)
+    const Eigen::VectorXf &model_coefficients, const double threshold) const
 {
   if (indices_->size () != indices_tgt_->size ())
   {
-    PCL_ERROR ("[pcl::SampleConsensusModelRegistration2D::countWithinDistance] Number of source indices (%zu) differs than number of target indices (%zu)!\n", indices_->size (), indices_tgt_->size ());
+    PCL_ERROR ("[pcl::SampleConsensusModelRegistration2D::countWithinDistance] Number of source indices (%lu) differs than number of target indices (%lu)!\n", indices_->size (), indices_tgt_->size ());
     return (0);
   }
   if (!target_)
@@ -199,7 +199,7 @@ pcl::SampleConsensusModelRegistration2D<PointT>::countWithinDistance (
 
   int nr_p = 0; 
   
-  for (size_t i = 0; i < indices_->size (); ++i)
+  for (std::size_t i = 0; i < indices_->size (); ++i)
   {
     Eigen::Vector4f pt_src (input_->points[(*indices_)[i]].x, 
                             input_->points[(*indices_)[i]].y, 

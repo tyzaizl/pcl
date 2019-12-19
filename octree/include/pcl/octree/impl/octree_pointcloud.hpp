@@ -39,12 +39,10 @@
 #ifndef PCL_OCTREE_POINTCLOUD_HPP_
 #define PCL_OCTREE_POINTCLOUD_HPP_
 
-#include <vector>
-#include <assert.h>
+#include <cassert>
 
 #include <pcl/common/common.h>
-
-using namespace std;
+#include <pcl/octree/impl/octree_base.hpp>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 template<typename PointT, typename LeafContainerT, typename BranchContainerT, typename OctreeT>
@@ -57,33 +55,25 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-template<typename PointT, typename LeafContainerT, typename BranchContainerT, typename OctreeT>
-pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>::~OctreePointCloud ()
-{
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////
 template<typename PointT, typename LeafContainerT, typename BranchContainerT, typename OctreeT> void
 pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>::addPointsFromInputCloud ()
 {
-  size_t i;
-
   if (indices_)
   {
-    for (std::vector<int>::const_iterator current = indices_->begin (); current != indices_->end (); ++current)
+    for (const int &index : *indices_)
     {
-      assert( (*current>=0) && (*current < static_cast<int> (input_->points.size ())));
+      assert( (index >= 0) && (index < static_cast<int> (input_->points.size ())));
       
-      if (isFinite (input_->points[*current]))
+      if (isFinite (input_->points[index]))
       {
         // add points to octree
-        this->addPointIdx (*current);
+        this->addPointIdx (index);
       }
     }
   }
   else
   {
-    for (i = 0; i < input_->points.size (); i++)
+    for (std::size_t i = 0; i < input_->points.size (); i++)
     {
       if (isFinite (input_->points[i]))
       {
@@ -131,13 +121,18 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
 template<typename PointT, typename LeafContainerT, typename BranchContainerT, typename OctreeT> bool
 pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>::isVoxelOccupiedAtPoint (const PointT& point_arg) const
 {
+  if (!isPointWithinBoundingBox (point_arg))
+  {
+    return false;
+  }
+
   OctreeKey key;
 
   // generate key for point
   this->genOctreeKeyforPoint (point_arg, key);
 
   // search for key in octree
-  return (isPointWithinBoundingBox (point_arg) && this->existLeaf (key));
+  return (this->existLeaf (key));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -156,18 +151,25 @@ template<typename PointT, typename LeafContainerT, typename BranchContainerT, ty
 pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>::isVoxelOccupiedAtPoint (
     const double point_x_arg, const double point_y_arg, const double point_z_arg) const
 {
-  OctreeKey key;
+  // create a new point with the argument coordinates
+  PointT point;
+  point.x = point_x_arg;
+  point.y = point_y_arg;
+  point.z = point_z_arg;
 
-  // generate key for point
-  this->genOctreeKeyforPoint (point_x_arg, point_y_arg, point_z_arg, key);
-
-  return (this->existLeaf (key));
+  // search for voxel at point in octree
+  return (this->isVoxelOccupiedAtPoint (point));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 template<typename PointT, typename LeafContainerT, typename BranchContainerT, typename OctreeT> void
 pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>::deleteVoxelAtPoint (const PointT& point_arg)
 {
+  if (!isPointWithinBoundingBox (point_arg))
+  {
+    return;
+  }
+
   OctreeKey key;
 
   // generate key for point
@@ -213,7 +215,7 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
   float norm = direction.norm ();
   direction.normalize ();
 
-  const float step_size = static_cast<const float> (resolution_) * precision;
+  const float step_size = static_cast<float> (resolution_) * precision;
   // Ensure we get at least one step for the first voxel.
   const int nsteps = std::max (1, static_cast<int> (norm / step_size));
 
@@ -224,7 +226,7 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
   // Walk along the line segment with small steps.
   for (int i = 0; i < nsteps; ++i)
   {
-    Eigen::Vector3f p = origin + (direction * step_size * static_cast<const float> (i));
+    Eigen::Vector3f p = origin + (direction * step_size * static_cast<float> (i));
 
     PointT octree_p;
     octree_p.x = p.x ();
@@ -316,13 +318,13 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
   min_z_ = min_z_arg;
   max_z_ = max_z_arg;
 
-  min_x_ = min (min_x_, max_x_);
-  min_y_ = min (min_y_, max_y_);
-  min_z_ = min (min_z_, max_z_);
+  min_x_ = std::min (min_x_, max_x_);
+  min_y_ = std::min (min_y_, max_y_);
+  min_z_ = std::min (min_z_, max_z_);
 
-  max_x_ = max (min_x_, max_x_);
-  max_y_ = max (min_y_, max_y_);
-  max_z_ = max (min_z_, max_z_);
+  max_x_ = std::max (min_x_, max_x_);
+  max_y_ = std::max (min_y_, max_y_);
+  max_z_ = std::max (min_z_, max_z_);
 
   // generate bit masks for octree
   getKeyBitSize ();
@@ -351,13 +353,13 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
   min_z_ = 0.0f;
   max_z_ = max_z_arg;
 
-  min_x_ = min (min_x_, max_x_);
-  min_y_ = min (min_y_, max_y_);
-  min_z_ = min (min_z_, max_z_);
+  min_x_ = std::min (min_x_, max_x_);
+  min_y_ = std::min (min_y_, max_y_);
+  min_z_ = std::min (min_z_, max_z_);
 
-  max_x_ = max (min_x_, max_x_);
-  max_y_ = max (min_y_, max_y_);
-  max_z_ = max (min_z_, max_z_);
+  max_x_ = std::max (min_x_, max_x_);
+  max_y_ = std::max (min_y_, max_y_);
+  max_z_ = std::max (min_z_, max_z_);
 
   // generate bit masks for octree
   getKeyBitSize ();
@@ -383,13 +385,13 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
   min_z_ = 0.0f;
   max_z_ = cubeLen_arg;
 
-  min_x_ = min (min_x_, max_x_);
-  min_y_ = min (min_y_, max_y_);
-  min_z_ = min (min_z_, max_z_);
+  min_x_ = std::min (min_x_, max_x_);
+  min_y_ = std::min (min_y_, max_y_);
+  min_z_ = std::min (min_z_, max_z_);
 
-  max_x_ = max (min_x_, max_x_);
-  max_y_ = max (min_y_, max_y_);
-  max_z_ = max (min_z_, max_z_);
+  max_x_ = std::max (min_x_, max_x_);
+  max_y_ = std::max (min_y_, max_y_);
+  max_z_ = std::max (min_z_, max_z_);
 
   // generate bit masks for octree
   getKeyBitSize ();
@@ -512,7 +514,7 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
   if (depth_mask)
   {
     // get amount of objects in leaf container
-    size_t leaf_obj_count = (*leaf_node)->getSize ();
+    std::size_t leaf_obj_count = (*leaf_node)->getSize ();
 
   // copy leaf data
     std::vector<int> leafIndices;
@@ -528,16 +530,13 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
     BranchNode* childBranch = this->createBranchChild (*parent_branch, child_idx);
     this->branch_count_ ++;
 
-    typename std::vector<int>::iterator it = leafIndices.begin();
-    typename std::vector<int>::const_iterator it_end = leafIndices.end();
-
     // add data to new branch
     OctreeKey new_index_key;
 
-    for (it = leafIndices.begin(); it!=it_end; ++it)
+    for (const int &leafIndex : leafIndices)
     {
 
-      const PointT& point_from_index = input_->points[*it];
+      const PointT& point_from_index = input_->points[leafIndex];
       // generate key
       genOctreeKeyforPoint (point_from_index, new_index_key);
 
@@ -545,7 +544,7 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
       BranchNode* newBranchParent;
       this->createLeafRecursive (new_index_key, depth_mask, childBranch, newLeaf, newBranchParent);
 
-      (*newLeaf)->addPointIndex(*it);
+      (*newLeaf)->addPointIndex(leafIndex);
     }
   }
 
@@ -576,7 +575,7 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
   if (this->dynamic_depth_enabled_ && depth_mask)
   {
     // get amount of objects in leaf container
-    size_t leaf_obj_count = (*leaf_node)->getSize ();
+    std::size_t leaf_obj_count = (*leaf_node)->getSize ();
 
     while  (leaf_obj_count>=max_objs_per_leaf_ && depth_mask)
     {
@@ -621,19 +620,19 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
   const float minValue = std::numeric_limits<float>::epsilon();
 
   // find maximum key values for x, y, z
-  max_key_x = static_cast<unsigned int> ((max_x_ - min_x_) / resolution_);
-  max_key_y = static_cast<unsigned int> ((max_y_ - min_y_) / resolution_);
-  max_key_z = static_cast<unsigned int> ((max_z_ - min_z_) / resolution_);
+  max_key_x = static_cast<unsigned int> (std::ceil ((max_x_ - min_x_ - minValue) / resolution_));
+  max_key_y = static_cast<unsigned int> (std::ceil ((max_y_ - min_y_ - minValue) / resolution_));
+  max_key_z = static_cast<unsigned int> (std::ceil ((max_z_ - min_z_ - minValue) / resolution_));
 
   // find maximum amount of keys
-  max_voxels = max (max (max (max_key_x, max_key_y), max_key_z), static_cast<unsigned int> (2));
+  max_voxels = std::max (std::max (std::max (max_key_x, max_key_y), max_key_z), static_cast<unsigned int> (2));
 
 
   // tree depth == amount of bits of max_voxels
-  this->octree_depth_ = max ((min (static_cast<unsigned int> (OctreeKey::maxDepth), static_cast<unsigned int> (ceil (this->Log2 (max_voxels)-minValue)))),
+  this->octree_depth_ = std::max ((std::min (static_cast<unsigned int> (OctreeKey::maxDepth), static_cast<unsigned int> (std::ceil (std::log2 (max_voxels) - minValue)))),
                                   static_cast<unsigned int> (0));
 
-  octree_side_len = static_cast<double> (1 << this->octree_depth_) * resolution_-minValue;
+  octree_side_len = static_cast<double> (1 << this->octree_depth_) * resolution_;
 
   if (this->leaf_count_ == 0)
   {
@@ -645,13 +644,25 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
     octree_oversize_y = (octree_side_len - (max_y_ - min_y_)) / 2.0;
     octree_oversize_z = (octree_side_len - (max_z_ - min_z_)) / 2.0;
 
-    min_x_ -= octree_oversize_x;
-    min_y_ -= octree_oversize_y;
-    min_z_ -= octree_oversize_z;
+    assert (octree_oversize_x > -minValue);
+    assert (octree_oversize_y > -minValue);
+    assert (octree_oversize_z > -minValue);
 
-    max_x_ += octree_oversize_x;
-    max_y_ += octree_oversize_y;
-    max_z_ += octree_oversize_z;
+    if (octree_oversize_x > minValue)
+    {
+      min_x_ -= octree_oversize_x;
+      max_x_ += octree_oversize_x;
+    }
+    if (octree_oversize_y > minValue)
+    {
+      min_y_ -= octree_oversize_y;
+      max_y_ += octree_oversize_y;
+    }
+    if (octree_oversize_z > minValue)
+    {
+      min_z_ -= octree_oversize_z;
+      max_z_ += octree_oversize_z;
+    }
   }
   else
   {
@@ -674,6 +685,10 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
     key_arg.x = static_cast<unsigned int> ((point_arg.x - this->min_x_) / this->resolution_);
     key_arg.y = static_cast<unsigned int> ((point_arg.y - this->min_y_) / this->resolution_);
     key_arg.z = static_cast<unsigned int> ((point_arg.z - this->min_z_) / this->resolution_);
+    
+    assert (key_arg.x <= this->max_key_.x);
+    assert (key_arg.y <= this->max_key_.y);
+    assert (key_arg.z <= this->max_key_.z);
   }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -778,13 +793,10 @@ pcl::octree::OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT>
     const OctreeKey& key_arg,
     AlignedPointTVector &voxel_center_list_arg) const
 {
-  // child iterator
-  unsigned char child_idx;
-
   int voxel_count = 0;
 
   // iterate over all children
-  for (child_idx = 0; child_idx < 8; child_idx++)
+  for (unsigned char child_idx = 0; child_idx < 8; child_idx++)
   {
     if (!this->branchHasChild (*node_arg, child_idx))
       continue;

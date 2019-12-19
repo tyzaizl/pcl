@@ -49,7 +49,7 @@ const float Select2DTool::DEFAULT_TOOL_DISPLAY_COLOR_BLUE_ = 1.0f;
 
 
 Select2DTool::Select2DTool (SelectionPtr selection_ptr, CloudPtr cloud_ptr)
-  : selection_ptr_(selection_ptr), cloud_ptr_(cloud_ptr), display_box_(false)
+  : selection_ptr_(std::move(selection_ptr)), cloud_ptr_(std::move(cloud_ptr)), display_box_(false)
 {
 }
 
@@ -94,9 +94,9 @@ Select2DTool::end (int x, int y, BitMask modifiers, BitMask)
   GLfloat project[16];
   glGetFloatv(GL_PROJECTION_MATRIX, project);
 
-  std::vector<Point3D> ptsvec;
+  Point3DVector ptsvec;
   cloud_ptr_->getDisplaySpacePoints(ptsvec);
-  for(unsigned int i = 0; i < ptsvec.size(); ++i)
+  for(std::size_t i = 0; i < ptsvec.size(); ++i)
   {
     Point3D pt = ptsvec[i];
     if (isInSelectBox(pt, project, viewport))
@@ -131,6 +131,9 @@ Select2DTool::isInSelectBox (const Point3D& pt,
   float max_x = std::max(final_x_, origin_x_)/(viewport[2]*0.5) - 1.0;
   float max_y = (viewport[3] - std::min(origin_y_, final_y_))/(viewport[3]*0.5) - 1.0;
   float min_y = (viewport[3] - std::max(origin_y_, final_y_))/(viewport[3]*0.5) - 1.0;
+  // Ignore the points behind the camera
+  if (w < 0)
+    return (false);
   // Check the left and right sides
   if ((x < min_x) || (x > max_x))
     return (false);
@@ -193,8 +196,8 @@ Select2DTool::drawRubberBand (GLint* viewport) const
 void
 Select2DTool::highlightPoints (GLint* viewport) const
 {
-  double width = abs(origin_x_ - final_x_);
-  double height = abs(origin_y_ - final_y_);
+  double width = std::abs(origin_x_ - final_x_);
+  double height = std::abs(origin_y_ - final_y_);
   glPushAttrib(GL_SCISSOR_BIT);
   {
     glEnable(GL_SCISSOR_TEST);

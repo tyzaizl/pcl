@@ -39,8 +39,7 @@
   * \Created on: July 07, 2012
   */
 
-#ifndef PCL_BEARING_ANGLE_IMAGE_H_
-#define PCL_BEARING_ANGLE_IMAGE_H_
+#pragma once
 
 #include <cmath>
 #include <pcl/point_types.h>
@@ -51,17 +50,15 @@ namespace pcl
   /** \brief class BearingAngleImage is used as an interface to generate Bearing Angle(BA) image.
     * \author: Qinghua Li (qinghua__li@163.com)
     */
-  class BearingAngleImage : public pcl::PointCloud<PointXYZRGBA>
+  class PCL_EXPORTS BearingAngleImage : public pcl::PointCloud<PointXYZRGBA>
   {
     public:
       // ===== TYPEDEFS =====
-      typedef pcl::PointCloud<PointXYZRGBA> BaseClass;
+      using BaseClass = pcl::PointCloud<PointXYZRGBA>;
 
       // =====CONSTRUCTOR & DESTRUCTOR=====
       /** Constructor */
       BearingAngleImage ();
-      /** Destructor */
-      virtual ~BearingAngleImage ();
 
     public:
       /** \brief Reset all values to an empty Bearing Angle image */
@@ -69,7 +66,9 @@ namespace pcl
       reset ();
 
       /** \brief Calculate the angle between the laser beam and the segment joining two consecutive
-        * \measurement points.
+        * measurement points.
+        * \param point1
+        * \param point2
         */
       double
       getAngle (const PointXYZ &point1, const PointXYZ &point2);
@@ -83,5 +82,3 @@ namespace pcl
       PointXYZRGBA unobserved_point_;
   };
 }
-
-#endif // PCL_BEARING_ANGLE_IMAGE_H_

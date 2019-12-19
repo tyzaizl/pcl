@@ -37,9 +37,9 @@
  *
  */
 
-#ifndef PCL_SEARCH_ORGANIZED_NEIGHBOR_SEARCH_H_
-#define PCL_SEARCH_ORGANIZED_NEIGHBOR_SEARCH_H_
+#pragma once
 
+#include <pcl/pcl_macros.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/search/search.h>
@@ -64,14 +64,14 @@ namespace pcl
 
       public:
         // public typedefs
-        typedef pcl::PointCloud<PointT> PointCloud;
-        typedef boost::shared_ptr<PointCloud> PointCloudPtr;
+        using PointCloud = pcl::PointCloud<PointT>;
+        using PointCloudPtr = typename PointCloud::Ptr;
 
-        typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
-        typedef boost::shared_ptr<const std::vector<int> > IndicesConstPtr;
+        using PointCloudConstPtr = typename PointCloud::ConstPtr;
+        using typename Search<PointT>::IndicesConstPtr;
 
-        typedef boost::shared_ptr<pcl::search::OrganizedNeighbor<PointT> > Ptr;
-        typedef boost::shared_ptr<const pcl::search::OrganizedNeighbor<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<pcl::search::OrganizedNeighbor<PointT> >;
+        using ConstPtr = boost::shared_ptr<const pcl::search::OrganizedNeighbor<PointT> >;
 
         using pcl::search::Search<PointT>::indices_;
         using pcl::search::Search<PointT>::sorted_results_;
@@ -92,12 +92,11 @@ namespace pcl
           , KR_KRT_ (Eigen::Matrix<float, 3, 3, Eigen::RowMajor>::Zero ())
           , eps_ (eps)
           , pyramid_level_ (pyramid_level)
-          , mask_ ()
         {
         }
 
         /** \brief Empty deconstructor. */
-        virtual ~OrganizedNeighbor () {}
+        ~OrganizedNeighbor () {}
 
         /** \brief Test whether this search-object is valid (input is organized AND from projective device)
           *        User should use this method after setting the input cloud, since setInput just prints an error 
@@ -112,7 +111,7 @@ namespace pcl
           // 2 * tan (85 degree) ~ 22.86
           float min_f = 0.043744332f * static_cast<float>(input_->width);
           //std::cout << "isValid: " << determinant3x3Matrix<Eigen::Matrix3f> (KR_ / sqrt (KR_KRT_.coeff (8))) << " >= " << (min_f * min_f) << std::endl;
-          return (determinant3x3Matrix<Eigen::Matrix3f> (KR_ / sqrtf (KR_KRT_.coeff (8))) >= (min_f * min_f));
+          return (determinant3x3Matrix<Eigen::Matrix3f> (KR_ / std::sqrt (KR_KRT_.coeff (8))) >= (min_f * min_f));
         }
         
         /** \brief Compute the camera matrix
@@ -125,8 +124,8 @@ namespace pcl
           * \param[in] cloud the const boost shared pointer to a PointCloud message
           * \param[in] indices the const boost shared pointer to PointIndices
           */
-        virtual void
-        setInputCloud (const PointCloudConstPtr& cloud, const IndicesConstPtr &indices = IndicesConstPtr ())
+        void
+        setInputCloud (const PointCloudConstPtr& cloud, const IndicesConstPtr &indices = IndicesConstPtr ()) override
         {
           input_ = cloud;
           
@@ -134,7 +133,7 @@ namespace pcl
           input_ = cloud;
           indices_ = indices;
 
-          if (indices_.get () != NULL && indices_->size () != 0)
+          if (indices_ && !indices_->empty())
           {
             mask_.assign (input_->size (), 0);
             for (std::vector<int>::const_iterator iIt = indices_->begin (); iIt != indices_->end (); ++iIt)
@@ -161,7 +160,7 @@ namespace pcl
                       double radius,
                       std::vector<int> &k_indices,
                       std::vector<float> &k_sqr_distances,
-                      unsigned int max_nn = 0) const;
+                      unsigned int max_nn = 0) const override;
 
         /** \brief estimated the projection matrix from the input cloud. */
         void 
@@ -180,7 +179,7 @@ namespace pcl
         nearestKSearch (const PointT &p_q,
                         int k,
                         std::vector<int> &k_indices,
-                        std::vector<float> &k_sqr_distances) const;
+                        std::vector<float> &k_sqr_distances) const override;
 
         /** \brief projects a point into the image
           * \param[in] p point in 3D World Coordinate Frame to be projected onto the image plane
@@ -208,15 +207,15 @@ namespace pcl
         /** \brief test if point given by index is among the k NN in results to the query point.
           * \param[in] query query point
           * \param[in] k number of maximum nn interested in
-          * \param[in] queue priority queue with k NN
+          * \param[in,out] queue priority queue with k NN
           * \param[in] index index on point to be tested
-          * \return wheter the top element changed or not.
+          * \return whether the top element changed or not.
           */
         inline bool 
         testPoint (const PointT& query, unsigned k, std::priority_queue<Entry>& queue, unsigned index) const
         {
           const PointT& point = input_->points [index];
-          if (mask_ [index] && pcl_isfinite (point.x))
+          if (mask_ [index] && std::isfinite (point.x))
           {
             //float squared_distance = (point.getVector3fMap () - query.getVector3fMap ()).squaredNorm ();
             float dist_x = point.x - query.x;
@@ -224,8 +223,11 @@ namespace pcl
             float dist_z = point.z - query.z;
             float squared_distance = dist_x * dist_x + dist_y * dist_y + dist_z * dist_z;
             if (queue.size () < k)
+            {
               queue.push (Entry (index, squared_distance));
-            else if (queue.top ().distance > squared_distance)
+              return queue.size () == k;
+            }
+            if (queue.top ().distance > squared_distance)
             {
               queue.pop ();
               queue.push (Entry (index, squared_distance));
@@ -273,7 +275,7 @@ namespace pcl
         /** \brief mask, indicating whether the point was in the indices list or not.*/
         std::vector<unsigned char> mask_;
       public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        PCL_MAKE_ALIGNED_OPERATOR_NEW
     };
   }
 }
@@ -281,6 +283,3 @@ namespace pcl
 #ifdef PCL_NO_PRECOMPILE
 #include <pcl/search/impl/organized.hpp>
 #endif
-
-#endif
-

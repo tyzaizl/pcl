@@ -33,8 +33,7 @@
  *
  */
 
-#ifndef PCL_POLYNOMIAL_CALCULATIONS_H_
-#define PCL_POLYNOMIAL_CALCULATIONS_H_
+#pragma once
 
 #include <pcl/common/eigen.h>
 #include <pcl/common/bivariate_polynomial.h>
@@ -50,21 +49,17 @@ namespace pcl
   class PolynomialCalculationsT 
   {
     public:
-      // =====CONSTRUCTOR & DESTRUCTOR=====
-      PolynomialCalculationsT ();
-      ~PolynomialCalculationsT ();
-      
       // =====PUBLIC STRUCTS=====
       //! Parameters used in this class
       struct Parameters
       {
-        Parameters () : zero_value (), sqr_zero_value () { setZeroValue (1e-6);}
+        Parameters () { setZeroValue (1e-6);}
         //! Set zero_value
         void
         setZeroValue (real new_zero_value);
 
-        real zero_value;       //!< Every value below this is considered to be zero
-        real sqr_zero_value;   //!< sqr of the above
+        real zero_value = {};       //!< Every value below this is considered to be zero
+        real sqr_zero_value = {};   //!< sqr of the above
       };
       
       // =====PUBLIC METHODS=====
@@ -93,12 +88,12 @@ namespace pcl
        *  error is set to true if the approximation did not work for any reason
        *  (not enough points, matrix not invertible, etc.) */
       inline BivariatePolynomialT<real>
-      bivariatePolynomialApproximation (std::vector<Eigen::Matrix<real, 3, 1> >& samplePoints,
+      bivariatePolynomialApproximation (std::vector<Eigen::Matrix<real, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<real, 3, 1> > >& samplePoints,
                                         unsigned int polynomial_degree, bool& error) const;
       
       //! Same as above, using a reference for the return value
       inline bool
-      bivariatePolynomialApproximation (std::vector<Eigen::Matrix<real, 3, 1> >& samplePoints,
+      bivariatePolynomialApproximation (std::vector<Eigen::Matrix<real, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<real, 3, 1> > >& samplePoints,
                                         unsigned int polynomial_degree, BivariatePolynomialT<real>& ret) const;
 
       //! Set the minimum value under which values are considered zero
@@ -107,29 +102,27 @@ namespace pcl
       
     protected:  
       // =====PROTECTED METHODS=====
-      //! check if fabs(d)<zeroValue
+      //! check if std::abs(d)<zeroValue
       inline bool
       isNearlyZero (real d) const 
       { 
-        return (fabs (d) < parameters_.zero_value);
+        return (std::abs (d) < parameters_.zero_value);
       }
       
-      //! check if sqrt(fabs(d))<zeroValue
+      //! check if sqrt(std::abs(d))<zeroValue
       inline bool
       sqrtIsNearlyZero (real d) const 
       { 
-        return (fabs (d) < parameters_.sqr_zero_value);
+        return (std::abs (d) < parameters_.sqr_zero_value);
       }
       
       // =====PROTECTED MEMBERS=====
       Parameters parameters_;
   };
 
-  typedef PolynomialCalculationsT<double> PolynomialCalculationsd;
-  typedef PolynomialCalculationsT<float>  PolynomialCalculations;
+  using PolynomialCalculationsd = PolynomialCalculationsT<double>;
+  using PolynomialCalculations = PolynomialCalculationsT<float>;
 
 }  // end namespace
 
 #include <pcl/common/impl/polynomial_calculations.hpp>
-
-#endif

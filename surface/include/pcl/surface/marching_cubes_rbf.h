@@ -33,9 +33,9 @@
  *
  */
 
-#ifndef PCL_SURFACE_MARCHING_CUBES_RBF_H_
-#define PCL_SURFACE_MARCHING_CUBES_RBF_H_
+#pragma once
 
+#include <pcl/pcl_macros.h>
 #include <pcl/surface/boost.h>
 #include <pcl/surface/marching_cubes.h>
 
@@ -54,8 +54,8 @@ namespace pcl
   class MarchingCubesRBF : public MarchingCubes<PointNT>
   {
     public:
-      typedef boost::shared_ptr<MarchingCubesRBF<PointNT> > Ptr;
-      typedef boost::shared_ptr<const MarchingCubesRBF<PointNT> > ConstPtr;
+      using Ptr = boost::shared_ptr<MarchingCubesRBF<PointNT> >;
+      using ConstPtr = boost::shared_ptr<const MarchingCubesRBF<PointNT> >;
 
       using SurfaceReconstruction<PointNT>::input_;
       using SurfaceReconstruction<PointNT>::tree_;
@@ -63,24 +63,32 @@ namespace pcl
       using MarchingCubes<PointNT>::res_x_;
       using MarchingCubes<PointNT>::res_y_;
       using MarchingCubes<PointNT>::res_z_;
-      using MarchingCubes<PointNT>::min_p_;
-      using MarchingCubes<PointNT>::max_p_;
+      using MarchingCubes<PointNT>::size_voxel_;
+      using MarchingCubes<PointNT>::upper_boundary_;
+      using MarchingCubes<PointNT>::lower_boundary_;
 
-      typedef typename pcl::PointCloud<PointNT>::Ptr PointCloudPtr;
+      using PointCloudPtr = typename pcl::PointCloud<PointNT>::Ptr;
 
-      typedef typename pcl::KdTree<PointNT> KdTree;
-      typedef typename pcl::KdTree<PointNT>::Ptr KdTreePtr;
+      using KdTree = pcl::KdTree<PointNT>;
+      using KdTreePtr = typename KdTree::Ptr;
 
 
       /** \brief Constructor. */
-      MarchingCubesRBF ();
+      MarchingCubesRBF (const float off_surface_epsilon = 0.1f,
+                        const float percentage_extend_grid = 0.0f,
+                        const float iso_level = 0.0f) :
+        MarchingCubes<PointNT> (percentage_extend_grid, iso_level),
+        off_surface_epsilon_ (off_surface_epsilon)
+      {
+      }
 
       /** \brief Destructor. */
       ~MarchingCubesRBF ();
 
-      /** \brief Convert the point cloud into voxel data. */
+      /** \brief Convert the point cloud into voxel data.
+        */
       void
-      voxelizeData ();
+      voxelizeData () override;
 
 
       /** \brief Set the off-surface points displacement value.
@@ -105,13 +113,10 @@ namespace pcl
       float off_surface_epsilon_;
 
     public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      PCL_MAKE_ALIGNED_OPERATOR_NEW
   };
 }
 
 #ifdef PCL_NO_PRECOMPILE
 #include <pcl/surface/impl/marching_cubes_rbf.hpp>
 #endif
-
-#endif  // PCL_SURFACE_MARCHING_CUBES_RBF_H_
-

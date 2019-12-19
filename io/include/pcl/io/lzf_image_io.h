@@ -35,8 +35,7 @@
  *
  */
 
-#ifndef PCL_LZF_IMAGE_IO_H_
-#define PCL_LZF_IMAGE_IO_H_
+#pragma once
 
 #include <pcl/pcl_macros.h>
 #include <pcl/point_cloud.h>
@@ -114,14 +113,14 @@ namespace pcl
         }
 
         /** \brief Get the image width as read from disk. */
-        inline uint32_t
+        inline std::uint32_t
         getWidth () const
         {
           return (width_);
         }
 
         /** \brief Get the image height as read from disk. */
-        inline uint32_t
+        inline std::uint32_t
         getHeight () const
         {
           return (height_);
@@ -143,13 +142,14 @@ namespace pcl
 
         /** \brief Load a compressed image array from disk
           * \param[in] filename the file name to load the data from
-          * \param[out] data_size the size of the data
+          * \param[out] data the size of the data
+          * \param uncompressed_size
           * \return an array filled with the data loaded from disk, NULL if error
           */
         bool
         loadImageBlob (const std::string &filename,
                        std::vector<char> &data,
-                       uint32_t &uncompressed_size);
+                       std::uint32_t &uncompressed_size);
 
         /** \brief Realtime LZF decompression.
           * \param[in] input the array to decompress
@@ -161,10 +161,10 @@ namespace pcl
                     std::vector<char> &output); 
 
         /** \brief The image width, as read from the file. */
-        uint32_t width_;
+        std::uint32_t width_;
 
         /** \brief The image height, as read from the file. */
-        uint32_t height_;
+        std::uint32_t height_;
 
         /** \brief The image type string, as read from the file. */
         std::string image_type_identifier_;
@@ -190,12 +190,11 @@ namespace pcl
 
         /** Empty constructor */
         LZFDepth16ImageReader () 
-          : LZFImageReader () 
-          , z_multiplication_factor_ (0.001)      // Set default multiplication factor
+          : z_multiplication_factor_ (0.001)      // Set default multiplication factor
         {}
 
         /** Empty destructor */
-        virtual ~LZFDepth16ImageReader () {}
+        ~LZFDepth16ImageReader () {}
 
         /** \brief Read the data stored in a PCLZF depth file and convert it to a pcl::PointCloud type.
           * \param[in] filename the file name to read the data from
@@ -214,11 +213,11 @@ namespace pcl
                  unsigned int num_threads=0);
 
         /** \brief Read camera parameters from a given stream and store them internally.
-          * The parameters will be read from the <depth> ... </depth> tag.
+          * The parameters will be read from the \<depth\> ... \</depth\> tag.
           * \return true if operation successful, false otherwise
           */ 
-        virtual bool
-        readParameters (std::istream& is);
+        bool
+        readParameters (std::istream& is) override;
 
       protected:
         /** \brief Z-value depth multiplication factor 
@@ -243,9 +242,9 @@ namespace pcl
         using LZFImageReader::readParameters;
 
         /** Empty constructor */
-        LZFRGB24ImageReader () : LZFImageReader () {}
+        LZFRGB24ImageReader () {}
         /** Empty destructor */
-        virtual ~LZFRGB24ImageReader () {}
+        ~LZFRGB24ImageReader () {}
 
         /** \brief Read the data stored in a PCLZF RGB file and convert it to a pcl::PointCloud type.
           * \param[in] filename the file name to read the data from
@@ -265,11 +264,11 @@ namespace pcl
                  unsigned int num_threads=0);
 
         /** \brief Read camera parameters from a given stream and store them internally.
-          * The parameters will be read from the <rgb> ... </rgb> tag.
+          * The parameters will be read from the \<rgb\> ... \</rgb\> tag.
           * \return true if operation successful, false otherwise
           */ 
-        virtual bool
-        readParameters (std::istream& is);
+        bool
+        readParameters (std::istream& is) override;
 
       protected:
     };
@@ -290,7 +289,7 @@ namespace pcl
         using LZFRGB24ImageReader::readParameters;
 
         /** Empty constructor */
-        LZFYUV422ImageReader () : LZFRGB24ImageReader () {}
+        LZFYUV422ImageReader () {}
         /** Empty destructor */
         ~LZFYUV422ImageReader () {}
 
@@ -328,7 +327,7 @@ namespace pcl
         using LZFRGB24ImageReader::readParameters;
 
         /** Empty constructor */
-        LZFBayer8ImageReader () : LZFRGB24ImageReader () {}
+        LZFBayer8ImageReader () {}
         /** Empty destructor */
         ~LZFBayer8ImageReader () {}
 
@@ -391,7 +390,7 @@ namespace pcl
           */
         virtual bool
         write (const char* data,
-               uint32_t width, uint32_t height,
+               std::uint32_t width, std::uint32_t height,
                const std::string &filename) = 0;
 
         /** \brief Write camera parameters to disk. Virtual.
@@ -414,7 +413,7 @@ namespace pcl
           */
         virtual bool
         write (const char* data,
-               uint32_t width, uint32_t height,
+               std::uint32_t width, std::uint32_t height,
                const CameraParameters &parameters,
                const std::string &filename_data,
                const std::string &filename_xml)
@@ -446,7 +445,7 @@ namespace pcl
           * \return true if operation successful, false otherwise
           */
         bool
-        saveImageBlob (const char* data, size_t data_size, 
+        saveImageBlob (const char* data, std::size_t data_size, 
                        const std::string &filename);
 
         /** \brief Realtime LZF compression.
@@ -460,9 +459,9 @@ namespace pcl
           * \param[out] output the compressed output array (must be pre-allocated!)
           * \return the number of bytes in the output array
           */
-        uint32_t
-        compress (const char* input, uint32_t input_size, 
-                  uint32_t width, uint32_t height,
+        std::uint32_t
+        compress (const char* input, std::uint32_t input_size, 
+                  std::uint32_t width, std::uint32_t height,
                   const std::string &image_type,
                   char *output);
     };
@@ -482,12 +481,11 @@ namespace pcl
       public:
         /** Empty constructor */
         LZFDepth16ImageWriter () 
-          : LZFImageWriter ()
-          , z_multiplication_factor_ (0.001)      // Set default multiplication factor
+          : z_multiplication_factor_ (0.001)      // Set default multiplication factor
         {}
 
         /** Empty destructor */
-        virtual ~LZFDepth16ImageWriter () {}
+        ~LZFDepth16ImageWriter () {}
 
         /** \brief Save a 16-bit depth image into PCL-LZF format.
           * \param[in] data the array holding the depth image
@@ -496,26 +494,26 @@ namespace pcl
           * \param[in] filename the file name to write (preferred extension: .pclzf)
           * \return true if operation successful, false otherwise
           */
-        virtual bool
+        bool
         write (const char* data,
-               uint32_t width, uint32_t height,
-               const std::string &filename);
+               std::uint32_t width, std::uint32_t height,
+               const std::string &filename) override;
 
         /** \brief Write camera parameters to disk.
           * \param[in] parameters the camera parameters
           * \param[in] filename the file name to write
           * \return true if operation successful, false otherwise
           * This overwrites the following parameters in the xml file, under the 
-          * <depth> tag:
-          *   <focal_length_x>...</focal_length_x>
-          *   <focal_length_y>...</focal_length_y>
-          *   <principal_point_x>...</principal_point_x>
-          *   <principal_point_y>...</principal_point_y>
-          *   <z_multiplication_factor>...</z_multiplication_factor>
+          * \<depth> tag:
+          *   \<focal_length_x\>...\</focal_length_x\>
+          *   \<focal_length_y\>...\</focal_length_y\>
+          *   \<principal_point_x\>...\</principal_point_x\>
+          *   \<principal_point_y\>...\</principal_point_y\>
+          *   \<z_multiplication_factor\>...\</z_multiplication_factor\>
           */ 
-        virtual bool
+        bool
         writeParameters (const CameraParameters &parameters,
-                         const std::string &filename);
+                         const std::string &filename) override;
 
       protected:
         /** \brief Z-value depth multiplication factor 
@@ -538,9 +536,9 @@ namespace pcl
     {
       public:
         /** Empty constructor */
-        LZFRGB24ImageWriter () : LZFImageWriter () {}
+        LZFRGB24ImageWriter () {}
         /** Empty destructor */
-        virtual ~LZFRGB24ImageWriter () {}
+        ~LZFRGB24ImageWriter () {}
 
         /** \brief Save a 24-bit RGB image into PCL-LZF format.
           * \param[in] data the array holding the RGB image (as [RGB..RGB] or [BGR..BGR])
@@ -549,19 +547,19 @@ namespace pcl
           * \param[in] filename the file name to write (preferred extension: .pclzf)
           * \return true if operation successful, false otherwise
           */
-        virtual bool
+        bool
         write (const char *data, 
-               uint32_t width, uint32_t height,
-               const std::string &filename);
+               std::uint32_t width, std::uint32_t height,
+               const std::string &filename) override;
 
         /** \brief Write camera parameters to disk.
           * \param[in] parameters the camera parameters
           * \param[in] filename the file name to write
           * \return true if operation successful, false otherwise
           */ 
-        virtual bool
+        bool
         writeParameters (const CameraParameters &parameters,
-                         const std::string &filename);
+                         const std::string &filename) override;
 
       protected:
     };
@@ -580,9 +578,9 @@ namespace pcl
     {
       public:
         /** Empty constructor */
-        LZFYUV422ImageWriter () : LZFRGB24ImageWriter () {}
+        LZFYUV422ImageWriter () {}
         /** Empty destructor */
-        virtual ~LZFYUV422ImageWriter () {}
+        ~LZFYUV422ImageWriter () {}
 
         /** \brief Save a 16-bit YUV422 image into PCL-LZF format.
           * \param[in] data the array holding the YUV422 image (as [YUYV...YUYV])
@@ -591,10 +589,10 @@ namespace pcl
           * \param[in] filename the file name to write (preferred extension: .pclzf)
           * \return true if operation successful, false otherwise
           */
-        virtual bool
+        bool
         write (const char *data, 
-               uint32_t width, uint32_t height,
-               const std::string &filename);
+               std::uint32_t width, std::uint32_t height,
+               const std::string &filename) override;
     };
 
     /** \brief PCL-LZF 8-bit Bayer image format writer.
@@ -611,9 +609,9 @@ namespace pcl
     {
       public:
         /** Empty constructor */
-        LZFBayer8ImageWriter () : LZFRGB24ImageWriter () {}
+        LZFBayer8ImageWriter () {}
         /** Empty destructor */
-        virtual ~LZFBayer8ImageWriter () {}
+        ~LZFBayer8ImageWriter () {}
 
         /** \brief Save a 8-bit Bayer image into PCL-LZF format.
           * \param[in] data the array holding the 8-bit Bayer array
@@ -622,14 +620,12 @@ namespace pcl
           * \param[in] filename the file name to write (preferred extension: .pclzf)
           * \return true if operation successful, false otherwise
           */
-        virtual bool
+        bool
         write (const char *data, 
-               uint32_t width, uint32_t height,
-               const std::string &filename);
+               std::uint32_t width, std::uint32_t height,
+               const std::string &filename) override;
     };
   }
 }
 
 #include <pcl/io/impl/lzf_image_io.hpp>
-
-#endif  //#ifndef PCL_LZF_IMAGE_IO_H_

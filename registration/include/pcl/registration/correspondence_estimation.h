@@ -38,8 +38,7 @@
  *
  */
 
-#ifndef PCL_REGISTRATION_CORRESPONDENCE_ESTIMATION_H_
-#define PCL_REGISTRATION_CORRESPONDENCE_ESTIMATION_H_
+#pragma once
 
 #include <string>
 
@@ -63,8 +62,8 @@ namespace pcl
     class CorrespondenceEstimationBase: public PCLBase<PointSource>
     {
       public:
-        typedef boost::shared_ptr<CorrespondenceEstimationBase<PointSource, PointTarget, Scalar> > Ptr;
-        typedef boost::shared_ptr<const CorrespondenceEstimationBase<PointSource, PointTarget, Scalar> > ConstPtr;
+        using Ptr = boost::shared_ptr<CorrespondenceEstimationBase<PointSource, PointTarget, Scalar> >;
+        using ConstPtr = boost::shared_ptr<const CorrespondenceEstimationBase<PointSource, PointTarget, Scalar> >;
 
         // using PCLBase<PointSource>::initCompute;
         using PCLBase<PointSource>::deinitCompute;
@@ -72,21 +71,21 @@ namespace pcl
         using PCLBase<PointSource>::indices_;
         using PCLBase<PointSource>::setIndices;
 
-        typedef pcl::search::KdTree<PointTarget> KdTree;
-        typedef typename KdTree::Ptr KdTreePtr;
+        using KdTree = pcl::search::KdTree<PointTarget>;
+        using KdTreePtr = typename KdTree::Ptr;
 
-        typedef pcl::search::KdTree<PointSource> KdTreeReciprocal;
-        typedef typename KdTree::Ptr KdTreeReciprocalPtr;
+        using KdTreeReciprocal = pcl::search::KdTree<PointSource>;
+        using KdTreeReciprocalPtr = typename KdTree::Ptr;
 
-        typedef pcl::PointCloud<PointSource> PointCloudSource;
-        typedef typename PointCloudSource::Ptr PointCloudSourcePtr;
-        typedef typename PointCloudSource::ConstPtr PointCloudSourceConstPtr;
+        using PointCloudSource = pcl::PointCloud<PointSource>;
+        using PointCloudSourcePtr = typename PointCloudSource::Ptr;
+        using PointCloudSourceConstPtr = typename PointCloudSource::ConstPtr;
 
-        typedef pcl::PointCloud<PointTarget> PointCloudTarget;
-        typedef typename PointCloudTarget::Ptr PointCloudTargetPtr;
-        typedef typename PointCloudTarget::ConstPtr PointCloudTargetConstPtr;
+        using PointCloudTarget = pcl::PointCloud<PointTarget>;
+        using PointCloudTargetPtr = typename PointCloudTarget::Ptr;
+        using PointCloudTargetConstPtr = typename PointCloudTarget::ConstPtr;
 
-        typedef typename KdTree::PointRepresentationConstPtr PointRepresentationConstPtr;
+        using PointRepresentationConstPtr = typename KdTree::PointRepresentationConstPtr;
 
         /** \brief Empty constructor. */
         CorrespondenceEstimationBase () 
@@ -94,10 +93,8 @@ namespace pcl
           , tree_ (new pcl::search::KdTree<PointTarget>)
           , tree_reciprocal_ (new pcl::search::KdTree<PointSource>)
           , target_ ()
-          , target_indices_ ()
           , point_representation_ ()
           , input_transformed_ ()
-          , input_fields_ ()
           , target_cloud_updated_ (true)
           , source_cloud_updated_ (true)
           , force_no_recompute_ (false)
@@ -106,18 +103,7 @@ namespace pcl
         }
       
         /** \brief Empty destructor */
-        virtual ~CorrespondenceEstimationBase () {}
-
-        /** \brief Provide a pointer to the input source 
-          * (e.g., the point cloud that we want to align to the target)
-          *
-          * \param[in] cloud the input point cloud source
-          */
-        PCL_DEPRECATED (void setInputCloud (const PointCloudSourceConstPtr &cloud), "[pcl::registration::CorrespondenceEstimationBase::setInputCloud] setInputCloud is deprecated. Please use setInputSource instead.");
-
-        /** \brief Get a pointer to the input point cloud dataset target. */
-        PCL_DEPRECATED (PointCloudSourceConstPtr const getInputCloud (), 
-            "[pcl::registration::CorrespondenceEstimationBase::getInputCloud] getInputCloud is deprecated. Please use getInputSource instead.");
+        ~CorrespondenceEstimationBase () {}
 
         /** \brief Provide a pointer to the input source 
           * (e.g., the point cloud that we want to align to the target)
@@ -129,7 +115,7 @@ namespace pcl
         {
           source_cloud_updated_ = true;
           PCLBase<PointSource>::setInputCloud (cloud);
-          pcl::getFields (*cloud, input_fields_);
+          input_fields_ = pcl::getFields<PointSource> ();
         }
 
         /** \brief Get a pointer to the input point cloud dataset target. */
@@ -291,7 +277,7 @@ namespace pcl
         }
 
         /** \brief Clone and cast to CorrespondenceEstimationBase */
-        virtual boost::shared_ptr< CorrespondenceEstimationBase<PointSource, PointTarget, Scalar> > clone () const = 0;
+        virtual typename CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::Ptr clone () const = 0;
 
       protected:
         /** \brief The correspondence estimation method name. */
@@ -324,11 +310,11 @@ namespace pcl
         inline const std::string& 
         getClassName () const { return (corr_name_); }
 
-        /** \brief Internal computation initalization. */
+        /** \brief Internal computation initialization. */
         bool
         initCompute ();
         
-        /** \brief Internal computation initalization for reciprocal correspondences. */
+        /** \brief Internal computation initialization for reciprocal correspondences. */
         bool
         initComputeReciprocal ();
 
@@ -375,8 +361,8 @@ namespace pcl
     class CorrespondenceEstimation : public CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>
     {
       public:
-        typedef boost::shared_ptr<CorrespondenceEstimation<PointSource, PointTarget, Scalar> > Ptr;
-        typedef boost::shared_ptr<const CorrespondenceEstimation<PointSource, PointTarget, Scalar> > ConstPtr;
+        using Ptr = boost::shared_ptr<CorrespondenceEstimation<PointSource, PointTarget, Scalar> >;
+        using ConstPtr = boost::shared_ptr<const CorrespondenceEstimation<PointSource, PointTarget, Scalar> >;
 
         using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::point_representation_;
         using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::input_transformed_;
@@ -393,18 +379,18 @@ namespace pcl
         using CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::input_fields_;
         using PCLBase<PointSource>::deinitCompute;
 
-        typedef pcl::search::KdTree<PointTarget> KdTree;
-        typedef typename pcl::search::KdTree<PointTarget>::Ptr KdTreePtr;
+        using KdTree = pcl::search::KdTree<PointTarget>;
+        using KdTreePtr = typename KdTree::Ptr;
 
-        typedef pcl::PointCloud<PointSource> PointCloudSource;
-        typedef typename PointCloudSource::Ptr PointCloudSourcePtr;
-        typedef typename PointCloudSource::ConstPtr PointCloudSourceConstPtr;
+        using PointCloudSource = pcl::PointCloud<PointSource>;
+        using PointCloudSourcePtr = typename PointCloudSource::Ptr;
+        using PointCloudSourceConstPtr = typename PointCloudSource::ConstPtr;
 
-        typedef pcl::PointCloud<PointTarget> PointCloudTarget;
-        typedef typename PointCloudTarget::Ptr PointCloudTargetPtr;
-        typedef typename PointCloudTarget::ConstPtr PointCloudTargetConstPtr;
+        using PointCloudTarget = pcl::PointCloud<PointTarget>;
+        using PointCloudTargetPtr = typename PointCloudTarget::Ptr;
+        using PointCloudTargetConstPtr = typename PointCloudTarget::ConstPtr;
 
-        typedef typename KdTree::PointRepresentationConstPtr PointRepresentationConstPtr;
+        using PointRepresentationConstPtr = typename KdTree::PointRepresentationConstPtr;
 
         /** \brief Empty constructor. */
         CorrespondenceEstimation () 
@@ -413,15 +399,15 @@ namespace pcl
         }
       
         /** \brief Empty destructor */
-        virtual ~CorrespondenceEstimation () {}
+        ~CorrespondenceEstimation () {}
 
         /** \brief Determine the correspondences between input and target cloud.
           * \param[out] correspondences the found correspondences (index of query point, index of target point, distance)
           * \param[in] max_distance maximum allowed distance between correspondences
           */
-        virtual void 
+        void 
         determineCorrespondences (pcl::Correspondences &correspondences,
-                                  double max_distance = std::numeric_limits<double>::max ());
+                                  double max_distance = std::numeric_limits<double>::max ()) override;
 
         /** \brief Determine the reciprocal correspondences between input and target cloud.
           * A correspondence is considered reciprocal if both Src_i has Tgt_i as a 
@@ -430,16 +416,16 @@ namespace pcl
           * \param[out] correspondences the found correspondences (index of query and target point, distance)
           * \param[in] max_distance maximum allowed distance between correspondences
           */
-        virtual void 
+        void 
         determineReciprocalCorrespondences (pcl::Correspondences &correspondences,
-                                            double max_distance = std::numeric_limits<double>::max ());
+                                            double max_distance = std::numeric_limits<double>::max ()) override;
 
         
         /** \brief Clone and cast to CorrespondenceEstimationBase */
-        virtual boost::shared_ptr< CorrespondenceEstimationBase<PointSource, PointTarget, Scalar> > 
-        clone () const
+        typename CorrespondenceEstimationBase<PointSource, PointTarget, Scalar>::Ptr
+        clone () const override
         {
-          CorrespondenceEstimation<PointSource, PointTarget, Scalar>::Ptr copy (new CorrespondenceEstimation<PointSource, PointTarget, Scalar> (*this));
+          Ptr copy (new CorrespondenceEstimation<PointSource, PointTarget, Scalar> (*this));
           return (copy);
         }
      };
@@ -447,5 +433,3 @@ namespace pcl
 }
 
 #include <pcl/registration/impl/correspondence_estimation.hpp>
-
-#endif /* PCL_REGISTRATION_CORRESPONDENCE_ESTIMATION_H_ */

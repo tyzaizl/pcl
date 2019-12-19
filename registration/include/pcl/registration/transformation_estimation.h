@@ -37,8 +37,8 @@
  * $Id$
  *
  */
-#ifndef PCL_REGISTRATION_TRANSFORMATION_ESTIMATION_H_
-#define PCL_REGISTRATION_TRANSFORMATION_ESTIMATION_H_
+
+#pragma once
 
 #include <pcl/correspondence.h>
 #include <pcl/common/transforms.h>
@@ -62,7 +62,7 @@ namespace pcl
     class TransformationEstimation
     {
       public:
-        typedef Eigen::Matrix<Scalar, 4, 4> Matrix4;
+        using Matrix4 = Eigen::Matrix<Scalar, 4, 4>;
 
         TransformationEstimation () {};
         virtual ~TransformationEstimation () {};
@@ -95,7 +95,7 @@ namespace pcl
           * \param[in] cloud_src the source point cloud dataset
           * \param[in] indices_src the vector of indices describing the points of interest in \a cloud_src
           * \param[in] cloud_tgt the target point cloud dataset
-          * \param[in] indices_tgt the vector of indices describing the correspondences of the interst points from \a indices_src
+          * \param[in] indices_tgt the vector of indices describing the correspondences of the interest points from \a indices_src
           * \param[out] transformation_matrix the resultant transformation matrix
           */
         virtual void
@@ -120,10 +120,8 @@ namespace pcl
             Matrix4 &transformation_matrix) const = 0;
 
 
-        typedef boost::shared_ptr<TransformationEstimation<PointSource, PointTarget, Scalar> > Ptr;
-        typedef boost::shared_ptr<const TransformationEstimation<PointSource, PointTarget, Scalar> > ConstPtr;
+        using Ptr = boost::shared_ptr<TransformationEstimation<PointSource, PointTarget, Scalar> >;
+        using ConstPtr = boost::shared_ptr<const TransformationEstimation<PointSource, PointTarget, Scalar> >;
     };
   }
 }
-
-#endif /* PCL_REGISTRATION_TRANSFORMATION_ESTIMATION_H_ */

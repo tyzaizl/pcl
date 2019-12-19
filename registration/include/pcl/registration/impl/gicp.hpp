@@ -43,24 +43,16 @@
 #include <pcl/registration/boost.h>
 #include <pcl/registration/exceptions.h>
 
-///////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointSource, typename PointTarget> void
-pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::setInputCloud (
-    const typename pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::PointCloudSourceConstPtr &cloud)
-{
-  setInputSource (cloud);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointSource, typename PointTarget> 
+template <typename PointSource, typename PointTarget>
 template<typename PointT> void
-pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeCovariances(typename pcl::PointCloud<PointT>::ConstPtr cloud, 
+pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeCovariances(typename pcl::PointCloud<PointT>::ConstPtr cloud,
                                                                                     const typename pcl::search::KdTree<PointT>::Ptr kdtree,
-                                                                                    std::vector<Eigen::Matrix3d>& cloud_covariances)
+                                                                                    MatricesVector& cloud_covariances)
 {
   if (k_correspondences_ > int (cloud->size ()))
   {
-    PCL_ERROR ("[pcl::GeneralizedIterativeClosestPoint::computeCovariances] Number or points in cloud (%zu) is less than k_correspondences_ (%zu)!\n", cloud->size (), k_correspondences_);
+    PCL_ERROR ("[pcl::GeneralizedIterativeClosestPoint::computeCovariances] Number or points in cloud (%lu) is less than k_correspondences_ (%lu)!\n", cloud->size (), k_correspondences_);
     return;
   }
 
@@ -72,9 +64,8 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeCovarian
   if(cloud_covariances.size () < cloud->size ())
     cloud_covariances.resize (cloud->size ());
 
-  typename pcl::PointCloud<PointT>::const_iterator points_iterator = cloud->begin ();
-  std::vector<Eigen::Matrix3d>::iterator matrices_iterator = cloud_covariances.begin ();
-  for(;
+  MatricesVector::iterator matrices_iterator = cloud_covariances.begin ();
+  for(auto points_iterator = cloud->begin ();
       points_iterator != cloud->end ();
       ++points_iterator, ++matrices_iterator)
   {
@@ -86,35 +77,35 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeCovarian
 
     // Search for the K nearest neighbours
     kdtree->nearestKSearch(query_point, k_correspondences_, nn_indecies, nn_dist_sq);
-    
+
     // Find the covariance matrix
     for(int j = 0; j < k_correspondences_; j++) {
       const PointT &pt = (*cloud)[nn_indecies[j]];
-      
+
       mean[0] += pt.x;
       mean[1] += pt.y;
       mean[2] += pt.z;
-      
+
       cov(0,0) += pt.x*pt.x;
-      
+
       cov(1,0) += pt.y*pt.x;
       cov(1,1) += pt.y*pt.y;
-      
+
       cov(2,0) += pt.z*pt.x;
       cov(2,1) += pt.z*pt.y;
-      cov(2,2) += pt.z*pt.z;    
+      cov(2,2) += pt.z*pt.z;
     }
-  
+
     mean /= static_cast<double> (k_correspondences_);
     // Get the actual covariance
     for (int k = 0; k < 3; k++)
-      for (int l = 0; l <= k; l++) 
+      for (int l = 0; l <= k; l++)
       {
         cov(k,l) /= static_cast<double> (k_correspondences_);
         cov(k,l) -= mean[k]*mean[l];
         cov(l,k) = cov(k,l);
       }
-    
+
     // Compute the SVD (covariance matrix is symmetric so U = V')
     Eigen::JacobiSVD<Eigen::Matrix3d> svd(cov, Eigen::ComputeFullU);
     cov.setZero ();
@@ -125,7 +116,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeCovarian
       double v = 1.; // biggest 2 singular values replaced by 1
       if(k == 2)   // smallest singular value replaced by gicp_epsilon
         v = gicp_epsilon_;
-      cov+= v * col * col.transpose(); 
+      cov+= v * col * col.transpose();
     }
   }
 }
@@ -139,11 +130,11 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeRDerivat
   Eigen::Matrix3d dR_dPsi;
 
   double phi = x[3], theta = x[4], psi = x[5];
-  
-  double cphi = cos(phi), sphi = sin(phi);
-  double ctheta = cos(theta), stheta = sin(theta);
-  double cpsi = cos(psi), spsi = sin(psi);
-      
+
+  double cphi = std::cos(phi), sphi = sin(phi);
+  double ctheta = std::cos(theta), stheta = sin(theta);
+  double cpsi = std::cos(psi), spsi = sin(psi);
+
   dR_dPhi(0,0) = 0.;
   dR_dPhi(1,0) = 0.;
   dR_dPhi(2,0) = 0.;
@@ -179,7 +170,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeRDerivat
   dR_dPsi(0,2) = cpsi*sphi - cphi*spsi*stheta;
   dR_dPsi(1,2) = sphi*spsi + cphi*cpsi*stheta;
   dR_dPsi(2,2) = 0.;
-      
+
   g[3] = matricesInnerProd(dR_dPhi, R);
   g[4] = matricesInnerProd(dR_dTheta, R);
   g[5] = matricesInnerProd(dR_dPsi, R);
@@ -187,15 +178,15 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeRDerivat
 
 ////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointSource, typename PointTarget> void
-pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::estimateRigidTransformationBFGS (const PointCloudSource &cloud_src, 
-                                                                                                  const std::vector<int> &indices_src, 
-                                                                                                  const PointCloudTarget &cloud_tgt, 
-                                                                                                  const std::vector<int> &indices_tgt, 
+pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::estimateRigidTransformationBFGS (const PointCloudSource &cloud_src,
+                                                                                                  const std::vector<int> &indices_src,
+                                                                                                  const PointCloudTarget &cloud_tgt,
+                                                                                                  const std::vector<int> &indices_tgt,
                                                                                                   Eigen::Matrix4f &transformation_matrix)
 {
   if (indices_src.size () < 4)     // need at least 4 samples
   {
-    PCL_THROW_EXCEPTION (NotEnoughPointsException, 
+    PCL_THROW_EXCEPTION (NotEnoughPointsException,
                          "[pcl::GeneralizedIterativeClosestPoint::estimateRigidTransformationBFGS] Need at least 4 points to estimate a transform! Source and target have " << indices_src.size () << " points!");
     return;
   }
@@ -204,9 +195,9 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::estimateRigidTr
   x[0] = transformation_matrix (0,3);
   x[1] = transformation_matrix (1,3);
   x[2] = transformation_matrix (2,3);
-  x[3] = atan2 (transformation_matrix (2,1), transformation_matrix (2,2));
+  x[3] = std::atan2 (transformation_matrix (2,1), transformation_matrix (2,2));
   x[4] = asin (-transformation_matrix (2,0));
-  x[5] = atan2 (transformation_matrix (1,0), transformation_matrix (0,0));
+  x[5] = std::atan2 (transformation_matrix (1,0), transformation_matrix (0,0));
 
   // Set temporary pointers
   tmp_src_ = &cloud_src;
@@ -227,6 +218,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::estimateRigidTr
 
   int inner_iterations_ = 0;
   int result = bfgs.minimizeInit (x);
+  result = BFGSSpace::Running;
   do
   {
     inner_iterations_++;
@@ -245,7 +237,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::estimateRigidTr
     applyState(transformation_matrix, x);
   }
   else
-    PCL_THROW_EXCEPTION(SolverDidntConvergeException, 
+    PCL_THROW_EXCEPTION(SolverDidntConvergeException,
                         "[pcl::" << getClassName () << "::TransformationEstimationBFGS::estimateRigidTransformation] BFGS solver didn't converge!");
 }
 
@@ -265,7 +257,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::OptimizationFun
     Vector4fMapConst p_tgt = gicp_->tmp_tgt_->points[(*gicp_->tmp_idx_tgt_)[i]].getVector4fMap ();
     Eigen::Vector4f pp (transformation_matrix * p_src);
     // Estimate the distance (cost function)
-    // The last coordiante is still guaranteed to be set to 1.0
+    // The last coordinate is still guaranteed to be set to 1.0
     Eigen::Vector3d res(pp[0] - p_tgt[0], pp[1] - p_tgt[1], pp[2] - p_tgt[2]);
     Eigen::Vector3d temp (gicp_->mahalanobis((*gicp_->tmp_idx_src_)[i]) * res);
     //increment= res'*temp/num_matches = temp'*M*temp/num_matches (we postpone 1/num_matches after the loop closes)
@@ -293,7 +285,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::OptimizationFun
     Vector4fMapConst p_tgt = gicp_->tmp_tgt_->points[(*gicp_->tmp_idx_tgt_)[i]].getVector4fMap ();
 
     Eigen::Vector4f pp (transformation_matrix * p_src);
-    // The last coordiante is still guaranteed to be set to 1.0
+    // The last coordinate is still guaranteed to be set to 1.0
     Eigen::Vector3d res (pp[0] - p_tgt[0], pp[1] - p_tgt[1], pp[2] - p_tgt[2]);
     // temp = M*res
     Eigen::Vector3d temp (gicp_->mahalanobis ((*gicp_->tmp_idx_src_)[i]) * res);
@@ -319,7 +311,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::OptimizationFun
   f = 0;
   g.setZero ();
   Eigen::Matrix3d R = Eigen::Matrix3d::Zero ();
-  const int m = static_cast<const int> (gicp_->tmp_idx_src_->size ());
+  const int m = static_cast<int> (gicp_->tmp_idx_src_->size ());
   for (int i = 0; i < m; ++i)
   {
     // The last coordinate, p_src[3] is guaranteed to be set to 1.0 in registration.hpp
@@ -327,7 +319,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::OptimizationFun
     // The last coordinate, p_tgt[3] is guaranteed to be set to 1.0 in registration.hpp
     Vector4fMapConst p_tgt = gicp_->tmp_tgt_->points[(*gicp_->tmp_idx_tgt_)[i]].getVector4fMap ();
     Eigen::Vector4f pp (transformation_matrix * p_src);
-    // The last coordiante is still guaranteed to be set to 1.0
+    // The last coordinate is still guaranteed to be set to 1.0
     Eigen::Vector3d res (pp[0] - p_tgt[0], pp[1] - p_tgt[1], pp[2] - p_tgt[2]);
     // temp = M*res
     Eigen::Vector3d temp (gicp_->mahalanobis((*gicp_->tmp_idx_src_)[i]) * res);
@@ -339,7 +331,7 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::OptimizationFun
     pp = gicp_->base_transformation_ * p_src;
     Eigen::Vector3d p_src3 (pp[0], pp[1], pp[2]);
     // Increment rotation gradient
-    R+= p_src3 * temp.transpose();    
+    R+= p_src3 * temp.transpose();
   }
   f/= double(m);
   g.head<3> ()*= double(2.0/m);
@@ -356,42 +348,49 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeTransfor
   // Difference between consecutive transforms
   double delta = 0;
   // Get the size of the target
-  const size_t N = indices_->size ();
+  const std::size_t N = indices_->size ();
   // Set the mahalanobis matrices to identity
   mahalanobis_.resize (N, Eigen::Matrix3d::Identity ());
   // Compute target cloud covariance matrices
-  if (target_covariances_.empty ())
-    computeCovariances<PointTarget> (target_, tree_, target_covariances_);
+  if ((!target_covariances_) || (target_covariances_->empty ()))
+  {
+    target_covariances_.reset (new MatricesVector);  
+    computeCovariances<PointTarget> (target_, tree_, *target_covariances_);
+  }
   // Compute input cloud covariance matrices
-  if (input_covariances_.empty ())
-    computeCovariances<PointSource> (input_, tree_reciprocal_, input_covariances_);
+  if ((!input_covariances_) || (input_covariances_->empty ()))
+  {
+    input_covariances_.reset (new MatricesVector);
+    computeCovariances<PointSource> (input_, tree_reciprocal_, *input_covariances_);
+  }
 
-  base_transformation_ = guess;
+  base_transformation_ = Eigen::Matrix4f::Identity();
   nr_iterations_ = 0;
   converged_ = false;
   double dist_threshold = corr_dist_threshold_ * corr_dist_threshold_;
   std::vector<int> nn_indices (1);
   std::vector<float> nn_dists (1);
 
+  pcl::transformPointCloud(output, output, guess);
+
   while(!converged_)
   {
-    size_t cnt = 0;
+    std::size_t cnt = 0;
     std::vector<int> source_indices (indices_->size ());
     std::vector<int> target_indices (indices_->size ());
 
     // guess corresponds to base_t and transformation_ to t
     Eigen::Matrix4d transform_R = Eigen::Matrix4d::Zero ();
-    for(size_t i = 0; i < 4; i++)
-      for(size_t j = 0; j < 4; j++)
-        for(size_t k = 0; k < 4; k++)
+    for(std::size_t i = 0; i < 4; i++)
+      for(std::size_t j = 0; j < 4; j++)
+        for(std::size_t k = 0; k < 4; k++)
           transform_R(i,j)+= double(transformation_(i,k)) * double(guess(k,j));
 
     Eigen::Matrix3d R = transform_R.topLeftCorner<3,3> ();
 
-    for (size_t i = 0; i < N; i++)
+    for (std::size_t i = 0; i < N; i++)
     {
       PointSource query = output[i];
-      query.getVector4fMap () = guess * query.getVector4fMap ();
       query.getVector4fMap () = transformation_ * query.getVector4fMap ();
 
       if (!searchForNeighbors (query, nn_indices, nn_dists))
@@ -399,17 +398,17 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeTransfor
         PCL_ERROR ("[pcl::%s::computeTransformation] Unable to find a nearest neighbor in the target dataset for point %d in the source!\n", getClassName ().c_str (), (*indices_)[i]);
         return;
       }
-      
+
       // Check if the distance to the nearest neighbor is smaller than the user imposed threshold
       if (nn_dists[0] < dist_threshold)
       {
-        Eigen::Matrix3d &C1 = input_covariances_[i];
-        Eigen::Matrix3d &C2 = target_covariances_[nn_indices[0]];
+        Eigen::Matrix3d &C1 = (*input_covariances_)[i];
+        Eigen::Matrix3d &C2 = (*target_covariances_)[nn_indices[0]];
         Eigen::Matrix3d &M = mahalanobis_[i];
         // M = R*C1
         M = R * C1;
         // temp = M*R' + C2 = R*C1*R' + C2
-        Eigen::Matrix3d temp = M * R.transpose();        
+        Eigen::Matrix3d temp = M * R.transpose();
         temp+= C2;
         // M = temp^-1
         M = temp.inverse ();
@@ -435,12 +434,12 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeTransfor
             ratio = 1./rotation_epsilon_;
           else
             ratio = 1./transformation_epsilon_;
-          double c_delta = ratio*fabs(previous_transformation_(k,l) - transformation_(k,l));
+          double c_delta = ratio*std::abs(previous_transformation_(k,l) - transformation_(k,l));
           if(c_delta > delta)
             delta = c_delta;
         }
       }
-    } 
+    }
     catch (PCLException &e)
     {
       PCL_DEBUG ("[pcl::%s::computeTransformation] Optimization issue %s\n", getClassName ().c_str (), e.what ());
@@ -451,20 +450,17 @@ pcl::GeneralizedIterativeClosestPoint<PointSource, PointTarget>::computeTransfor
     if (nr_iterations_ >= max_iterations_ || delta < 1)
     {
       converged_ = true;
-      previous_transformation_ = transformation_;
       PCL_DEBUG ("[pcl::%s::computeTransformation] Convergence reached. Number of iterations: %d out of %d. Transformation difference: %f\n",
                  getClassName ().c_str (), nr_iterations_, max_iterations_, (transformation_ - previous_transformation_).array ().abs ().sum ());
-    } 
+      previous_transformation_ = transformation_;
+    }
     else
       PCL_DEBUG ("[pcl::%s::computeTransformation] Convergence failed\n", getClassName ().c_str ());
   }
-  //for some reason the static equivalent methode raises an error
-  // final_transformation_.block<3,3> (0,0) = (transformation_.block<3,3> (0,0)) * (guess.block<3,3> (0,0));
-  // final_transformation_.block <3, 1> (0, 3) = transformation_.block <3, 1> (0, 3) + guess.rightCols<1>.block <3, 1> (0, 3);
-  final_transformation_.topLeftCorner (3,3) = previous_transformation_.topLeftCorner (3,3) * guess.topLeftCorner (3,3);
-  final_transformation_(0,3) = previous_transformation_(0,3) + guess(0,3);
-  final_transformation_(1,3) = previous_transformation_(1,3) + guess(1,3);
-  final_transformation_(2,3) = previous_transformation_(2,3) + guess(2,3);
+  final_transformation_ = previous_transformation_ * guess;
+
+  // Transform the point cloud
+  pcl::transformPointCloud (*input_, output, final_transformation_);
 }
 
 template <typename PointSource, typename PointTarget> void

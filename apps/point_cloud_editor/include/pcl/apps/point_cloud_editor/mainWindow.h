@@ -40,11 +40,17 @@
 /// @author  Yue Li and Matthew Hielsberg
 ///
 
-#ifndef MAIN_WINDOW_H_
-#define MAIN_WINDOW_H_
+#pragma once
 
 #include <QtGui>
 #include <QMainWindow>
+#include <QActionGroup>
+#include <QSpinBox>
+#include <QSlider>
+#include <QMessageBox>
+#include <QMenu>
+#include <QMenuBar>
+#include <QToolBar>
 #include <pcl/apps/point_cloud_editor/localTypes.h>
 
 // Forward declaration to prevent circular inclusion
@@ -93,7 +99,7 @@ class MainWindow : public QMainWindow
     int
     getSelectedSpinBoxValue ();
 
-  private slots:
+  private Q_SLOTS:
     void
     about ();
 
@@ -234,4 +240,3 @@ class MainWindow : public QMainWindow
     /// the slider used for adjusting moving speed.
      QSlider *move_speed_slider_;
 };
-#endif //MAIN_WINDOW_H_

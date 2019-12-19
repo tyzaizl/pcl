@@ -35,8 +35,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#ifndef PCL_VISUALUALIZATION_PCL_PLOTTER_H_
-#define	PCL_VISUALUALIZATION_PCL_PLOTTER_H_
+
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -49,7 +49,6 @@
 #include <pcl/point_cloud.h>
 #include <pcl/common/io.h>
 
-class PCLVisualizerInteractor;
 class vtkRenderWindow;
 class vtkRenderWindowInteractor;
 class vtkContextView;
@@ -77,14 +76,16 @@ namespace pcl
     class PCL_EXPORTS PCLPlotter
     {
       public:
-	
+        using Ptr = boost::shared_ptr<PCLPlotter>;
+        using ConstPtr = boost::shared_ptr<const PCLPlotter>;
+
         /**\brief A representation of polynomial function. i'th element of the vector denotes the coefficient of x^i of the polynomial in variable x. 
          */
-        typedef std::vector<double> PolynomialFunction;
+        using PolynomialFunction = std::vector<double>;
         
         /**\brief A representation of rational function, defined as the ratio of two polynomial functions. pair::first denotes the numerator and pair::second denotes the denominator of the Rational function. 
          */
-        typedef std::pair<PolynomialFunction, PolynomialFunction> RationalFunction;
+        using RationalFunction = std::pair<PolynomialFunction, PolynomialFunction>;
         
         /** \brief PCL Plotter constructor.  
           * \param[in] name Name of the window
@@ -108,24 +109,24 @@ namespace pcl
                      unsigned long size, 
                      char const * name = "Y Axis", 
                      int type  = vtkChart::LINE ,
-                     char const *color=NULL);
+                     char const *color=nullptr);
 	
         /** \brief Adds a plot with correspondences in vectors arrayX and arrayY. This is the vector version of the addPlotData function. 
-          * \param[in] array_X X coordinates of point correspondence array
-          * \param[in] array_Y Y coordinates of point correspondence array
-          * \param[in] size length of the array arrayX and arrayY
+          * \param[in] array_x X coordinates of point correspondence array
+          * \param[in] array_y Y coordinates of point correspondence array
           * \param[in] name name of the plot which appears in the legend when toggled on
           * \param[in] type type of the graph plotted. vtkChart::LINE for line plot, vtkChart::BAR for bar plot, and vtkChart::POINTS for a scattered point plot
           * \param[in] color a character array of 4 fields denoting the R,G,B and A component of the color of the plot ranging from 0 to 255. If this argument is not passed (or NULL is passed) the plot is colored based on a color scheme 
          */
         void 
-        addPlotData (std::vector<double> const &array_X, 
-                     std::vector<double>const &array_Y, 
+        addPlotData (std::vector<double> const &array_x, 
+                     std::vector<double>const &array_y, 
                      char const * name = "Y Axis", 
                      int type = vtkChart::LINE,
                      std::vector<char> const &color = std::vector<char> ());
         
-        /** \brief Adds a plot with correspondences in vector of pairs. The the first and second field of the pairs of the vector forms the correspondence. 
+        /** \brief Adds a plot with correspondences in vector of pairs. The the first and second field of the pairs of the vector forms the correspondence.
+          * \param plot_data
           * \param[in] name name of the plot which appears in the legend when toggled on
           * \param[in] type type of the graph plotted. vtkChart::LINE for line plot, vtkChart::BAR for bar plot, and vtkChart::POINTS for a scattered point plot
           * \param[in] color a character array of 4 fields denoting the R,G,B and A component of the color of the plot ranging from 0 to 255. If this argument is not passed (or NULL is passed) the plot is colored based on a color scheme 
@@ -188,7 +189,7 @@ namespace pcl
                      std::vector<char> const &color = std::vector<char>());
         
         /** \brief Adds a plot based on a space/tab delimited table provided in a file
-          * \param[in] filename name of the file containing the table. 1st column represents the values of X-Axis. Rest of the columns represent the corresponding values in Y-Axes. First row of the file is concidered for naming/labling of the plot. The plot-names should not contain any space in between.
+          * \param[in] filename name of the file containing the table. 1st column represents the values of X-Axis. Rest of the columns represent the corresponding values in Y-Axes. First row of the file is considered for naming/labeling of the plot. The plot-names should not contain any space in between.
           * \param[in] type type of the graph plotted. vtkChart::LINE for line plot, vtkChart::BAR for bar plot, and vtkChart::POINTS for a scattered point plot
           */
         void
@@ -416,15 +417,11 @@ namespace pcl
           {
             return (new ExitMainLoopTimerCallback);
           }
-          virtual void 
-          Execute (vtkObject*, unsigned long event_id, void* call_data);
+          void 
+          Execute (vtkObject*, unsigned long event_id, void* call_data) override;
 
           int right_timer_id;
-#if ((VTK_MAJOR_VERSION == 5) && (VTK_MINOR_VERSION <= 4))
-          PCLVisualizerInteractor *interactor;
-#else
           vtkRenderWindowInteractor *interactor;
-#endif
         };
         
         struct ExitCallback : public vtkCommand
@@ -433,8 +430,8 @@ namespace pcl
           {
             return new ExitCallback;
           }
-          virtual void 
-          Execute (vtkObject*, unsigned long event_id, void*);
+          void 
+          Execute (vtkObject*, unsigned long event_id, void*) override;
 
           PCLPlotter *plotter;
         };
@@ -465,6 +462,7 @@ namespace pcl
           * \param[in] data data who's frequency distribution is to be found
           * \param[in] nbins number of bins for the histogram
           * \param[out] histogram vector of pairs containing the histogram. The first field of the pair represent the middle value of the corresponding bin. The second field denotes the frequency of data in that bin.
+          * \note NaN values will be ignored!
           */
         void 
         computeHistogram (std::vector<double> const & data, int const nbins, std::vector<std::pair<double, double> > &histogram);
@@ -473,6 +471,3 @@ namespace pcl
 }
 
 #include <pcl/visualization/impl/pcl_plotter.hpp>
-
-#endif	/* PCL_VISUALUALIZATION_PCL_PLOTTER_H_ */
-

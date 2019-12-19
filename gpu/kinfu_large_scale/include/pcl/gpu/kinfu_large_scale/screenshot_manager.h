@@ -36,12 +36,11 @@
  *  Author: Francisco, Technical University Eindhoven, (f.j.mysurname.soriano <At > tue.nl)
  */
 
-#ifndef PCL_SCREENSHOT_MANAGER_H_
-#define PCL_SCREENSHOT_MANAGER_H_
+#pragma once
 
 #include <iostream>
 #include <fstream>
-#include <stdio.h>
+#include <cstdio>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -49,7 +48,6 @@
 #include <pcl/gpu/containers/device_array.h>
 #include <pcl/gpu/containers/kernel_containers.h>
 #include <pcl/gpu/kinfu_large_scale/pixel_rgb.h> 
-#include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp> 
 //#include <boost/graph/buffer_concepts.hpp>
 
@@ -69,7 +67,7 @@ namespace pcl
       {
         public:
 
-          typedef pcl::gpu::kinfuLS::PixelRGB PixelRGB;
+          using PixelRGB = pcl::gpu::kinfuLS::PixelRGB;
 
           /** Constructor */
           ScreenshotManager();
@@ -78,10 +76,9 @@ namespace pcl
           ~ScreenshotManager(){}
           
           /** \brief Sets Depth camera intrinsics
-            * \param[in] fx focal length x 
-            * \param[in] fy focal length y
-            * \param[in] cx principal point x
-            * \param[in] cy principal point y
+            * \param[in] focal focal length x 
+            * \param height
+            * \param width
             */
           void
           setCameraIntrinsics (float focal = 575.816f, float height = 480.0f, float width = 640.0f);
@@ -104,5 +101,3 @@ namespace pcl
     };
   }
 }
-
-#endif // PCL_SCREENSHOT_MANAGER_H_

@@ -36,11 +36,13 @@
 
 #pragma once
 
-#include <string>
-#include <boost/shared_ptr.hpp>
 #include <pcl/gpu/containers/kernel_containers.h>
 #include <pcl/gpu/kinfu/kinfu.h>
 
+#include <boost/shared_ptr.hpp>
+
+#include <memory>
+#include <string>
 
 /** \brief  class for  RGB-D SLAM Dataset and Benchmark
   * \author Anatoly Baskeheev, Itseez Ltd, (myname.mysurname@mycompany.com)
@@ -48,8 +50,9 @@
 class Evaluation
 {
 public:
-  typedef boost::shared_ptr<Evaluation> Ptr; 
-  typedef pcl::gpu::KinfuTracker::PixelRGB RGB;
+  using Ptr = boost::shared_ptr<Evaluation>; 
+  using ConstPtr = boost::shared_ptr<const Evaluation>;
+  using RGB = pcl::gpu::KinfuTracker::PixelRGB;
 
   Evaluation(const std::string& folder);
 
@@ -58,16 +61,20 @@ public:
 
   /** \brief Reads rgb frame from the folder   
     * \param stamp index of frame to read (stamps are not implemented)
+    * \param rgb24
     */
   bool grab (double stamp, pcl::gpu::PtrStepSz<const RGB>& rgb24);
 
   /** \brief Reads depth frame from the folder
     * \param stamp index of frame to read (stamps are not implemented)
+    * \param depth
     */
   bool grab (double stamp, pcl::gpu::PtrStepSz<const unsigned short>& depth);
 
   /** \brief Reads depth & rgb frame from the folder. Before calling this folder please call 'setMatchFile', or an error will be returned otherwise.
     * \param stamp index of accociated frame pair (stamps are not implemented)
+    * \param depth
+    * \param rgb24
     */
   bool grab (double stamp, pcl::gpu::PtrStepSz<const unsigned short>& depth, pcl::gpu::PtrStepSz<const RGB>& rgb24);
 
@@ -94,6 +101,6 @@ private:
   void readFile(const std::string& file, std::vector< std::pair<double, std::string> >& output);
 
   struct Impl;
-  boost::shared_ptr<Impl> impl_;
+  std::shared_ptr<Impl> impl_;
 };
 

@@ -1,5 +1,4 @@
-#ifndef PLC_GPU_PEOPLE_PERSON_ATTRIBS_H_
-#define PLC_GPU_PEOPLE_PERSON_ATTRIBS_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -17,7 +16,8 @@ namespace pcl
       class PCL_EXPORTS PersonAttribs
       {
         public:
-          typedef boost::shared_ptr<PersonAttribs> Ptr;
+          using Ptr = boost::shared_ptr<PersonAttribs>;
+          using ConstPtr = boost::shared_ptr<const PersonAttribs>;
 
           /** \brief Constructor creates generic values from **/
           PersonAttribs();
@@ -25,7 +25,7 @@ namespace pcl
           /**
            * \brief Read XML configuration file for a specific person
            * \param[in] is input stream of file
-           * \return 0 when successfull, -1 when an error occured, datastructure might become corrupted in the process
+           * \return 0 when successful, -1 when an error occurred, datastructure might become corrupted in the process
            **/
           int
           readPersonXMLConfig (std::istream& is);
@@ -46,5 +46,3 @@ namespace pcl
     }
   }
 }
-
-#endif /* PLC_GPU_PEOPLE_PERSON_ATTRIBS_H_ */

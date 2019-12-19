@@ -39,12 +39,22 @@
 /// display.
 /// @author  Yue Li and Matthew Hielsberg
 
-#ifndef CLOUD_H_
-#define CLOUD_H_
+#pragma once
 
 #include <QtGui/QColor>
 #include <pcl/apps/point_cloud_editor/localTypes.h>
 #include <pcl/apps/point_cloud_editor/statistics.h>
+#ifdef OPENGL_IS_A_FRAMEWORK
+# include <OpenGL/gl.h>
+# include <OpenGL/glu.h>
+#else
+#if _WIN32
+// Need this to pull in APIENTRY, etc.
+#include "windows.h"
+#endif
+# include <GL/gl.h>
+# include <GL/glu.h>
+#endif
 
 /// @brief A wrapper which allows to use any implementation of cloud provided by
 /// a third-party library.
@@ -79,9 +89,6 @@ class Cloud : public Statistics
     /// cloud object stored with the internal representation. The member
     /// variables of this object are initialized but not set.
     Cloud (const Cloud3D& cloud, bool register_stats=false);
-
-    /// @brief Destructor
-    ~Cloud ();
 
     /// @brief Equal Operator
     /// @details Deep copies all the state of the passed cloud to this cloud.
@@ -194,7 +201,7 @@ class Cloud : public Statistics
     /// a faster rendering mode; this also occurs if the selection object is
     /// empty.
     void
-    setSelection (SelectionPtr selection_ptr);
+    setSelection (const SelectionPtr& selection_ptr);
 
     /// @brief Sets the RGB values for coloring points in COLOR_BY_PURE mode.
     /// @param r the value for red color
@@ -348,7 +355,7 @@ class Cloud : public Statistics
     /// @param pts a vector used to store the points whose coordinates are
     /// transformed.
     void
-    getDisplaySpacePoints (std::vector<Point3D>& pts) const;
+    getDisplaySpacePoints (Point3DVector& pts) const;
 
     /// @brief Returns a const reference to the internal representation of this
     /// object.
@@ -362,7 +369,7 @@ class Cloud : public Statistics
 
     /// @brief Get statistics of the selected points in string.
     std::string
-    getStat () const;
+    getStat () const override;
 
     /// Default Point Size
     static const float DEFAULT_POINT_DISPLAY_SIZE_;
@@ -402,18 +409,14 @@ class Cloud : public Statistics
     /// The internal representation of the cloud
     Cloud3D cloud_;
 
-    /// @breif A weak pointer pointing to the selection object.
+    /// @brief A weak pointer pointing to the selection object.
     /// @details This implementation uses the weak pointer to allow for a lazy
     /// update of the cloud if the selection object is destroyed.
-    boost::weak_ptr<Selection> selection_wk_ptr_;
+    std::weak_ptr<Selection> selection_wk_ptr_;
 
     /// Flag that indicates whether a color ramp should be used (true) or not
     /// (false) when displaying the cloud
     bool use_color_ramp_;
-
-    /// Flag that indicates whether the cloud should be colored with its own
-    /// color
-    bool use_native_color_;
 
     /// The axis which the color ramp is to be applied when drawing the cloud
     Axis color_ramp_axis_;
@@ -465,8 +468,3 @@ class Cloud : public Statistics
     /// The translations on x, y, and z axis on the selected points.
     float select_translate_x_, select_translate_y_, select_translate_z_;
 };
-#endif // CLOUD_H_
-
-
-
-

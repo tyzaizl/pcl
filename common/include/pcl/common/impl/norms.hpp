@@ -88,7 +88,7 @@ L1_Norm (FloatVectorT a, FloatVectorT b, int dim)
 {
   float norm = 0.0f;
   for (int i = 0; i < dim; ++i)
-    norm += fabsf(a[i] - b[i]);
+    norm += std::abs(a[i] - b[i]);
   return norm;
 }
 
@@ -109,7 +109,7 @@ L2_Norm_SQR (FloatVectorT a, FloatVectorT b, int dim)
 template <typename FloatVectorT> inline float
 L2_Norm (FloatVectorT a, FloatVectorT b, int dim)
 {
-  return sqrtf(L2_Norm_SQR(a, b, dim));
+  return std::sqrt (L2_Norm_SQR(a, b, dim));
 }
 
 
@@ -118,7 +118,7 @@ Linf_Norm (FloatVectorT a, FloatVectorT b, int dim)
 {
   float norm = 0.0;
   for (int i = 0; i < dim; ++i)
-    norm = (std::max)(fabsf(a[i] - b[i]), norm);
+    norm = (std::max)(std::abs(a[i] - b[i]), norm);
   return norm;
 }
 
@@ -129,9 +129,9 @@ JM_Norm (FloatVectorT a, FloatVectorT b, int dim)
   float norm = 0.0;
 
   for (int i = 0; i < dim; ++i)
-    norm += (sqrtf (a[i]) - sqrtf (b[i])) * (sqrtf (a[i]) - sqrtf (b[i]));
+    norm += (std::sqrt (a[i]) - std::sqrt (b[i])) * (std::sqrt (a[i]) - std::sqrt (b[i]));
 
-  return sqrtf (norm);
+  return std::sqrt (norm);
 }
 
 
@@ -141,10 +141,10 @@ B_Norm (FloatVectorT a, FloatVectorT b, int dim)
   float norm = 0.0, result;
 
   for (int i = 0; i < dim; ++i)
-    norm += sqrtf (a[i] * b[i]);
+    norm += std::sqrt (a[i] * b[i]);
 
   if (norm > 0)
-    result = -logf (norm);
+    result = -std::log (norm);
   else
     result = 0;
 
@@ -158,7 +158,7 @@ Sublinear_Norm (FloatVectorT a, FloatVectorT b, int dim)
   float norm = 0.0;
 
   for (int i = 0; i < dim; ++i)
-    norm += sqrtf (fabsf (a[i] - b[i]));
+    norm += std::sqrt (std::abs (a[i] - b[i]));
 
   return norm;
 }
@@ -185,7 +185,7 @@ Div_Norm (FloatVectorT a, FloatVectorT b, int dim)
 
   for (int i = 0; i < dim; ++i)
     if ((a[i] / b[i]) > 0)
-      norm += (a[i] - b[i]) * logf (a[i] / b[i]);
+      norm += (a[i] - b[i]) * std::log (a[i] / b[i]);
     else
       norm += 0;
   return norm;
@@ -199,7 +199,7 @@ PF_Norm (FloatVectorT a, FloatVectorT b, int dim, float P1, float P2)
 
   for (int i = 0; i < dim; ++i)
     norm += (P1 * a[i] - P2 * b[i]) * (P1 * a[i] - P2 * b[i]);
-  return sqrtf (norm);
+  return std::sqrt (norm);
 }
 
 
@@ -209,7 +209,7 @@ K_Norm (FloatVectorT a, FloatVectorT b, int dim, float P1, float P2)
   float norm = 0.0;
 
   for (int i = 0; i < dim; ++i)
-    norm += fabsf (P1 * a[i] - P2 * b[i]);
+    norm += std::abs (P1 * a[i] - P2 * b[i]);
   return norm;
 }
 
@@ -221,7 +221,7 @@ KL_Norm (FloatVectorT a, FloatVectorT b, int dim)
 
   for (int i = 0; i < dim; ++i)
     if ( (b[i] != 0) && ((a[i] / b[i]) > 0) )
-      norm += a[i] * logf (a[i] / b[i]);
+      norm += a[i] * std::log (a[i] / b[i]);
     else
       norm += 0;
   return norm;

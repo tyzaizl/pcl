@@ -37,20 +37,14 @@
  *  Email  : jpapon@gmail.com
  */
 
-#ifndef PCL_OCTREE_POINTCLOUD_ADJACENCY_H_
-#define PCL_OCTREE_POINTCLOUD_ADJACENCY_H_
+#pragma once
 
-#include <pcl/console/print.h>
-#include <pcl/common/geometry.h>
 #include <pcl/octree/boost.h>
-#include <pcl/octree/octree_impl.h>
+#include <pcl/octree/octree_pointcloud.h>
 #include <pcl/octree/octree_pointcloud_adjacency_container.h>
 
 #include <set>
 #include <list>
-
-//DEBUG TODO REMOVE
-#include <pcl/common/time.h>
 
 namespace pcl
 {
@@ -86,67 +80,43 @@ namespace pcl
 
       public:
 
-        typedef OctreeBase<LeafContainerT, BranchContainerT> OctreeBaseT;
+        using OctreeBaseT = OctreeBase<LeafContainerT, BranchContainerT>;
 
-        typedef OctreePointCloudAdjacency<PointT, LeafContainerT, BranchContainerT> OctreeAdjacencyT;
-        typedef boost::shared_ptr<OctreeAdjacencyT> Ptr;
-        typedef boost::shared_ptr<const OctreeAdjacencyT> ConstPtr;
+        using OctreeAdjacencyT = OctreePointCloudAdjacency<PointT, LeafContainerT, BranchContainerT>;
+        using Ptr = boost::shared_ptr<OctreeAdjacencyT>;
+        using ConstPtr = boost::shared_ptr<const OctreeAdjacencyT>;
 
-        typedef OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeBaseT> OctreePointCloudT;
-        typedef typename OctreePointCloudT::LeafNode LeafNode;
-        typedef typename OctreePointCloudT::BranchNode BranchNode;
+        using OctreePointCloudT = OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeBaseT>;
+        using LeafNode = typename OctreePointCloudT::LeafNode;
+        using BranchNode = typename OctreePointCloudT::BranchNode;
 
-        typedef pcl::PointCloud<PointT> PointCloud;
-        typedef boost::shared_ptr<PointCloud> PointCloudPtr;
-        typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
-
-        // Iterators are friends
-        friend class OctreeIteratorBase<OctreeAdjacencyT>;
-        friend class OctreeDepthFirstIterator<OctreeAdjacencyT>;
-        friend class OctreeBreadthFirstIterator<OctreeAdjacencyT>;
-        friend class OctreeLeafNodeIterator<OctreeAdjacencyT>;
-
-        // Octree default iterators
-        typedef OctreeDepthFirstIterator<OctreeAdjacencyT> Iterator;
-        typedef const OctreeDepthFirstIterator<OctreeAdjacencyT> ConstIterator;
-
-        Iterator depth_begin (unsigned int max_depth_arg = 0) { return Iterator (this, max_depth_arg); }
-        const Iterator depth_end () { return Iterator (); }
-
-        // Octree leaf node iterators
-        typedef OctreeLeafNodeIterator<OctreeAdjacencyT> LeafNodeIterator;
-        typedef const OctreeLeafNodeIterator<OctreeAdjacencyT> ConstLeafNodeIterator;
-
-        LeafNodeIterator leaf_begin (unsigned int max_depth_arg = 0) { return LeafNodeIterator (this, max_depth_arg); }
-        const LeafNodeIterator leaf_end () { return LeafNodeIterator (); }
+        using PointCloud = pcl::PointCloud<PointT>;
+        using PointCloudPtr = typename PointCloud::Ptr;
+        using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
         // BGL graph
-        typedef boost::adjacency_list<boost::setS, boost::setS, boost::undirectedS, PointT, float> VoxelAdjacencyList;
-        typedef typename VoxelAdjacencyList::vertex_descriptor VoxelID;
-        typedef typename VoxelAdjacencyList::edge_descriptor EdgeID;
+        using VoxelAdjacencyList = boost::adjacency_list<boost::setS, boost::setS, boost::undirectedS, PointT, float>;
+        using VoxelID = typename VoxelAdjacencyList::vertex_descriptor;
+        using EdgeID = typename VoxelAdjacencyList::edge_descriptor;
 
         // Leaf vector - pointers to all leaves
-        typedef std::vector<LeafContainerT*> LeafVectorT;
+        using LeafVectorT = std::vector<LeafContainerT *>;
 
         // Fast leaf iterators that don't require traversing tree
-        typedef typename LeafVectorT::iterator iterator;
-        typedef typename LeafVectorT::const_iterator const_iterator;
+        using iterator = typename LeafVectorT::iterator;
+        using const_iterator = typename LeafVectorT::const_iterator;
 
         inline iterator begin () { return (leaf_vector_.begin ()); }
         inline iterator end ()   { return (leaf_vector_.end ()); }
-
+        inline LeafContainerT* at (std::size_t idx)   { return leaf_vector_.at (idx); }
+        
         // Size of neighbors
-        inline size_t size () const { return leaf_vector_.size (); }
+        inline std::size_t size () const { return leaf_vector_.size (); }
 
         /** \brief Constructor.
           *
           * \param[in] resolution_arg Octree resolution at lowest octree level (voxel size) */
         OctreePointCloudAdjacency (const double resolution_arg);
-
-        /** \brief Empty class destructor. */
-        virtual ~OctreePointCloudAdjacency ()
-        {
-        }
 
         /** \brief Adds points from cloud to the octree.
           *
@@ -179,7 +149,7 @@ namespace pcl
           * \param[in] transform_func A boost:function pointer to the transform to be used. The transform must have one
           * parameter (a point) which it modifies in place. */
         void
-        setTransformFunction (boost::function<void (PointT &p)> transform_func)
+        setTransformFunction (std::function<void (PointT &p)> transform_func)
         {
           transform_func_ = transform_func;
         }
@@ -200,8 +170,8 @@ namespace pcl
           * \param[in] point_idx_arg The index representing the point in the dataset given by setInputCloud() to be added
           *
           * \note This virtual implementation allows the use of a transform function to compute keys. */
-         virtual void
-         addPointIdx (const int point_idx_arg);
+         void
+         addPointIdx (const int point_idx_arg) override;
 
         /** \brief Fills in the neighbors fields for new voxels.
           *
@@ -238,12 +208,10 @@ namespace pcl
         using OctreePointCloudT::max_y_;
         using OctreePointCloudT::max_z_;
 
-        StopWatch timer_;
-
         /// Local leaf pointer vector used to make iterating through leaves fast.
         LeafVectorT leaf_vector_;
 
-        boost::function<void (PointT &p)> transform_func_;
+        std::function<void (PointT &p)> transform_func_;
 
     };
 
@@ -251,9 +219,5 @@ namespace pcl
 
 }
 
-//#ifdef PCL_NO_PRECOMPILE
+// Note: Do not precompile this octree type because it is typically used with custom leaf containers.
 #include <pcl/octree/impl/octree_pointcloud_adjacency.hpp>
-//#endif
-
-#endif // PCL_OCTREE_POINTCLOUD_ADJACENCY_H_
-

@@ -73,28 +73,28 @@ pcl::FPFHEstimation<PointInT, PointNT, PointOutT>::computePointSPFHSignature (
   float hist_incr = 100.0f / static_cast<float>(indices.size () - 1);
 
   // Iterate over all the points in the neighborhood
-  for (size_t idx = 0; idx < indices.size (); ++idx)
+  for (const int &index : indices)
   {
     // Avoid unnecessary returns
-    if (p_idx == indices[idx])
+    if (p_idx == index)
         continue;
 
     // Compute the pair P to NNi
-    if (!computePairFeatures (cloud, normals, p_idx, indices[idx], pfh_tuple[0], pfh_tuple[1], pfh_tuple[2], pfh_tuple[3]))
+    if (!computePairFeatures (cloud, normals, p_idx, index, pfh_tuple[0], pfh_tuple[1], pfh_tuple[2], pfh_tuple[3]))
         continue;
 
     // Normalize the f1, f2, f3 features and push them in the histogram
-    int h_index = static_cast<int> (floor (nr_bins_f1 * ((pfh_tuple[0] + M_PI) * d_pi_)));
+    int h_index = static_cast<int> (std::floor (nr_bins_f1 * ((pfh_tuple[0] + M_PI) * d_pi_)));
     if (h_index < 0)           h_index = 0;
     if (h_index >= nr_bins_f1) h_index = nr_bins_f1 - 1;
     hist_f1 (row, h_index) += hist_incr;
 
-    h_index = static_cast<int> (floor (nr_bins_f2 * ((pfh_tuple[1] + 1.0) * 0.5)));
+    h_index = static_cast<int> (std::floor (nr_bins_f2 * ((pfh_tuple[1] + 1.0) * 0.5)));
     if (h_index < 0)           h_index = 0;
     if (h_index >= nr_bins_f2) h_index = nr_bins_f2 - 1;
     hist_f2 (row, h_index) += hist_incr;
 
-    h_index = static_cast<int> (floor (nr_bins_f3 * ((pfh_tuple[2] + 1.0) * 0.5)));
+    h_index = static_cast<int> (std::floor (nr_bins_f3 * ((pfh_tuple[2] + 1.0) * 0.5)));
     if (h_index < 0)           h_index = 0;
     if (h_index >= nr_bins_f3) h_index = nr_bins_f3 - 1;
     hist_f3 (row, h_index) += hist_incr;
@@ -121,7 +121,7 @@ pcl::FPFHEstimation<PointInT, PointNT, PointOutT>::weightPointSPFHSignature (
   fpfh_histogram.setZero (nr_bins_f1 + nr_bins_f2 + nr_bins_f3);
 
   // Use the entire patch
-  for (size_t idx = 0, data_size = indices.size (); idx < data_size; ++idx)
+  for (std::size_t idx = 0, data_size = indices.size (); idx < data_size; ++idx)
   {
     // Minus the query point itself
     if (dists[idx] == 0)
@@ -187,7 +187,7 @@ pcl::FPFHEstimation<PointInT, PointNT, PointOutT>::computeSPFHSignatures (std::v
   if (surface_ != input_ ||
       indices_->size () != surface_->points.size ())
   { 
-    for (size_t idx = 0; idx < indices_->size (); ++idx)
+    for (std::size_t idx = 0; idx < indices_->size (); ++idx)
     {
       int p_idx = (*indices_)[idx];
       if (this->searchForNeighbors (p_idx, search_parameter_, nn_indices, nn_dists) == 0)
@@ -199,12 +199,12 @@ pcl::FPFHEstimation<PointInT, PointNT, PointOutT>::computeSPFHSignatures (std::v
   else
   {
     // Special case: When a feature must be computed at every point, there is no need for a neighborhood search
-    for (size_t idx = 0; idx < indices_->size (); ++idx)
+    for (std::size_t idx = 0; idx < indices_->size (); ++idx)
       spfh_indices.insert (static_cast<int> (idx));
   }
 
   // Initialize the arrays that will store the SPFH signatures
-  size_t data_size = spfh_indices.size ();
+  std::size_t data_size = spfh_indices.size ();
   hist_f1.setZero (data_size, nr_bins_f1_);
   hist_f2.setZero (data_size, nr_bins_f2_);
   hist_f3.setZero (data_size, nr_bins_f3_);
@@ -246,11 +246,11 @@ pcl::FPFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut
   if (input_->is_dense)
   {
     // Iterate over the entire index vector
-    for (size_t idx = 0; idx < indices_->size (); ++idx)
+    for (std::size_t idx = 0; idx < indices_->size (); ++idx)
     {
       if (this->searchForNeighbors ((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0)
       {
-        for (int d = 0; d < fpfh_histogram_.size (); ++d)
+        for (Eigen::Index d = 0; d < fpfh_histogram_.size (); ++d)
           output.points[idx].histogram[d] = std::numeric_limits<float>::quiet_NaN ();
     
         output.is_dense = false;
@@ -259,26 +259,26 @@ pcl::FPFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut
 
       // ... and remap the nn_indices values so that they represent row indices in the spfh_hist_* matrices 
       // instead of indices into surface_->points
-      for (size_t i = 0; i < nn_indices.size (); ++i)
-        nn_indices[i] = spfh_hist_lookup[nn_indices[i]];
+      for (int &nn_index : nn_indices)
+        nn_index = spfh_hist_lookup[nn_index];
 
       // Compute the FPFH signature (i.e. compute a weighted combination of local SPFH signatures) ...
       weightPointSPFHSignature (hist_f1_, hist_f2_, hist_f3_, nn_indices, nn_dists, fpfh_histogram_);
 
       // ...and copy it into the output cloud
-      for (int d = 0; d < fpfh_histogram_.size (); ++d)
+      for (Eigen::Index d = 0; d < fpfh_histogram_.size (); ++d)
         output.points[idx].histogram[d] = fpfh_histogram_[d];
     }
   }
   else
   {
     // Iterate over the entire index vector
-    for (size_t idx = 0; idx < indices_->size (); ++idx)
+    for (std::size_t idx = 0; idx < indices_->size (); ++idx)
     {
       if (!isFinite ((*input_)[(*indices_)[idx]]) ||
           this->searchForNeighbors ((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0)
       {
-        for (int d = 0; d < fpfh_histogram_.size (); ++d)
+        for (Eigen::Index d = 0; d < fpfh_histogram_.size (); ++d)
           output.points[idx].histogram[d] = std::numeric_limits<float>::quiet_NaN ();
     
         output.is_dense = false;
@@ -287,14 +287,14 @@ pcl::FPFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut
 
       // ... and remap the nn_indices values so that they represent row indices in the spfh_hist_* matrices 
       // instead of indices into surface_->points
-      for (size_t i = 0; i < nn_indices.size (); ++i)
-        nn_indices[i] = spfh_hist_lookup[nn_indices[i]];
+      for (int &nn_index : nn_indices)
+        nn_index = spfh_hist_lookup[nn_index];
 
       // Compute the FPFH signature (i.e. compute a weighted combination of local SPFH signatures) ...
       weightPointSPFHSignature (hist_f1_, hist_f2_, hist_f3_, nn_indices, nn_dists, fpfh_histogram_);
 
       // ...and copy it into the output cloud
-      for (int d = 0; d < fpfh_histogram_.size (); ++d)
+      for (Eigen::Index d = 0; d < fpfh_histogram_.size (); ++d)
         output.points[idx].histogram[d] = fpfh_histogram_[d];
     }
   }

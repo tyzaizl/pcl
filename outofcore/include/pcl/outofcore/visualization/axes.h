@@ -1,5 +1,4 @@
-#ifndef PCL_OUTOFCORE_AXES_H_
-#define PCL_OUTOFCORE_AXES_H_
+#pragma once
 
 // C++
 #include <iostream>
@@ -9,6 +8,7 @@
 #include "object.h"
 
 // VTK
+#include <vtkVersion.h>
 #include <vtkActor.h>
 #include <vtkTubeFilter.h>
 #include <vtkAxes.h>
@@ -31,6 +31,7 @@ public:
     axes_ = vtkSmartPointer<vtkAxes>::New ();
     axes_->SetOrigin (0, 0, 0);
     axes_->SetScaleFactor (size);
+    axes_->Update ();
 
     vtkSmartPointer<vtkFloatArray> axes_colors = vtkSmartPointer<vtkFloatArray>::New ();
     axes_colors->Allocate (6);
@@ -42,17 +43,16 @@ public:
     axes_colors->InsertNextValue (1.0);
 
     vtkSmartPointer<vtkPolyData> axes_data = axes_->GetOutput ();
-    axes_data->Update ();
     axes_data->GetPointData ()->SetScalars (axes_colors);
 
     vtkSmartPointer<vtkTubeFilter> axes_tubes = vtkSmartPointer<vtkTubeFilter>::New ();
-    axes_tubes->SetInput (axes_data);
+    axes_tubes->SetInputData (axes_data);
     axes_tubes->SetRadius (axes_->GetScaleFactor () / 100.0);
     axes_tubes->SetNumberOfSides (6);
 
     vtkSmartPointer<vtkPolyDataMapper> axes_mapper = vtkSmartPointer<vtkPolyDataMapper>::New ();
     axes_mapper->SetScalarModeToUsePointData ();
-    axes_mapper->SetInput (axes_tubes->GetOutput ());
+    axes_mapper->SetInputData (axes_tubes->GetOutput ());
 
     axes_actor_ = vtkSmartPointer<vtkActor>::New ();
     axes_actor_->GetProperty ()->SetLighting (false);
@@ -84,6 +84,3 @@ private:
   vtkSmartPointer<vtkActor> axes_actor_;
 
 };
-
-#endif
-

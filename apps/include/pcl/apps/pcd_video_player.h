@@ -37,7 +37,7 @@
 #include <ui_pcd_video_player.h>
 
 #include <iostream>
-#include <time.h>
+#include <ctime>
 
 // QT4
 #include <QMainWindow>
@@ -45,7 +45,6 @@
 #include <QTimer>
 
 // Boost
-#include <boost/thread/thread.hpp>
 #include <boost/filesystem.hpp>
 
 // PCL
@@ -95,16 +94,16 @@ class PCDVideoPlayer : public QMainWindow
 {
   Q_OBJECT
   public:
-    typedef pcl::PointCloud<pcl::PointXYZRGBA> Cloud;
-    typedef Cloud::Ptr CloudPtr;
-    typedef Cloud::ConstPtr CloudConstPtr;
+    using Cloud = pcl::PointCloud<pcl::PointXYZRGBA>;
+    using CloudPtr = Cloud::Ptr;
+    using CloudConstPtr = Cloud::ConstPtr;
 
     PCDVideoPlayer ();
 
     ~PCDVideoPlayer () {}
 
   protected:
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> vis_;
+    pcl::visualization::PCLVisualizer::Ptr vis_;
     pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_;
 
     QMutex mtx_;
@@ -128,14 +127,14 @@ class PCDVideoPlayer : public QMainWindow
     /** \brief Indicate that the timeoutSlot needs to reload the pointcloud */
     bool cloud_modified_;
 
-    /** \brief Indicate that files should play continiously */
+    /** \brief Indicate that files should play continuously */
     bool play_mode_;
     /** \brief In play mode only update if speed_counter_ == speed_value */
     unsigned int speed_counter_;
     /** \brief Fixes the speed in steps of 5ms, default 5, gives 5+1 * 5ms = 30ms = 33,3 Hz playback speed */
     unsigned int speed_value_;
 
-  public slots:
+  public Q_SLOTS:
     void 
     playButtonPressed ()
     { play_mode_ = true; }
@@ -159,7 +158,7 @@ class PCDVideoPlayer : public QMainWindow
     void
     indexSliderValueChanged (int value);
 
-  private slots:
+  private Q_SLOTS:
     void
     timeoutSlot ();
 

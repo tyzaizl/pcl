@@ -1,17 +1,17 @@
-#ifndef PCL_TRACKING_PARTICLE_FILTER_H_
-#define PCL_TRACKING_PARTICLE_FILTER_H_
+#pragma once
+
+#include <boost/shared_ptr.hpp>
 
 #include <pcl/tracking/tracking.h>
 #include <pcl/tracking/tracker.h>
 #include <pcl/tracking/coherence.h>
 #include <pcl/filters/passthrough.h>
-#include <pcl/octree/octree.h>
+#include <pcl/octree/octree_pointcloud_changedetector.h>
 
 #include <Eigen/Dense>
 
 namespace pcl
 {
-
   namespace tracking
   {
     /** \brief @b ParticleFilterTracker tracks the PointCloud which is given by
@@ -31,25 +31,28 @@ namespace pcl
         using Tracker<PointInT, StateT>::input_;
         using Tracker<PointInT, StateT>::indices_;
         using Tracker<PointInT, StateT>::getClassName;
-        
-        typedef Tracker<PointInT, StateT> BaseClass;
-        
-        typedef typename Tracker<PointInT, StateT>::PointCloudIn PointCloudIn;
-        typedef typename PointCloudIn::Ptr PointCloudInPtr;
-        typedef typename PointCloudIn::ConstPtr PointCloudInConstPtr;
 
-        typedef typename Tracker<PointInT, StateT>::PointCloudState PointCloudState;
-        typedef typename PointCloudState::Ptr PointCloudStatePtr;
-        typedef typename PointCloudState::ConstPtr PointCloudStateConstPtr;
+        using Ptr = boost::shared_ptr<ParticleFilterTracker<PointInT, StateT>>;
+        using ConstPtr = boost::shared_ptr<const ParticleFilterTracker<PointInT, StateT>>;
 
-        typedef PointCoherence<PointInT> Coherence;
-        typedef boost::shared_ptr< Coherence > CoherencePtr;
-        typedef boost::shared_ptr< const Coherence > CoherenceConstPtr;
-
-        typedef PointCloudCoherence<PointInT> CloudCoherence;
-        typedef boost::shared_ptr< CloudCoherence > CloudCoherencePtr;
-        typedef boost::shared_ptr< const CloudCoherence > CloudCoherenceConstPtr;
+        using BaseClass = Tracker<PointInT, StateT>;
         
+        using PointCloudIn = typename Tracker<PointInT, StateT>::PointCloudIn;
+        using PointCloudInPtr = typename PointCloudIn::Ptr;
+        using PointCloudInConstPtr = typename PointCloudIn::ConstPtr;
+
+        using PointCloudState = typename Tracker<PointInT, StateT>::PointCloudState;
+        using PointCloudStatePtr = typename PointCloudState::Ptr;
+        using PointCloudStateConstPtr = typename PointCloudState::ConstPtr;
+
+        using Coherence = PointCoherence<PointInT>;
+        using CoherencePtr = typename Coherence::Ptr;
+        using CoherenceConstPtr = typename Coherence::ConstPtr;
+
+        using CloudCoherence = PointCloudCoherence<PointInT>;
+        using CloudCoherencePtr = typename CloudCoherence::Ptr;
+        using CloudCoherenceConstPtr = typename CloudCoherence::ConstPtr;
+
         /** \brief Empty constructor. */
         ParticleFilterTracker ()
         : iteration_num_ (1)
@@ -58,14 +61,10 @@ namespace pcl
         , ref_ ()
         , particles_ ()
         , coherence_ ()
-        , step_noise_covariance_ ()
-        , initial_noise_covariance_ ()
-        , initial_noise_mean_ ()
         , resample_likelihood_thr_ (0.0)
         , occlusion_angle_thr_ (M_PI / 2.0)
         , alpha_ (15.0)
         , representative_state_ ()
-        , trans_ ()
         , use_normal_ (false)
         , motion_ ()
         , motion_ratio_ (0.25)
@@ -198,7 +197,7 @@ namespace pcl
 	        * This function returns the particle that represents the transform between the reference point cloud at the 
           * beginning and the best guess about its location in the most recent frame.
 	        */
-        virtual inline StateT getResult () const { return representative_state_; }
+        inline StateT getResult () const override { return representative_state_; }
         
         /** \brief Convert a state to affine transformation from the world coordinates frame.
           * \param[in] particle an instance of StateT.
@@ -211,7 +210,7 @@ namespace pcl
         /** \brief Get a pointer to a pointcloud of the particles. */
         inline PointCloudStatePtr getParticles () const { return particles_; }
 
-        /** \brief Normalize the weight of a particle using \f$ exp(1- alpha ( w - w_{min}) / (w_max - w_min)) \f$
+        /** \brief Normalize the weight of a particle using \f$ std::exp(1- alpha ( w - w_{min}) / (w_max - w_min)) \f$
           * \note This method is described in [P.Azad et. al, ICRA11].
           * \param[in] w the weight to be normalized
           * \param[in] w_min the minimum weight of the particles
@@ -219,7 +218,7 @@ namespace pcl
           */
         inline double normalizeParticleWeight (double w, double w_min, double w_max)
         {
-          return exp (1.0 - alpha_ * (w - w_min) / (w_max - w_min));
+          return std::exp (1.0 - alpha_ * (w - w_min) / (w_max - w_min));
         }
 
         /** \brief Set the value of alpha.
@@ -352,7 +351,7 @@ namespace pcl
 
         
         /** \brief This method should get called before starting the actual computation. */
-        virtual bool initCompute ();
+        bool initCompute () override;
         
         /** \brief Weighting phase of particle filter method. Calculate the likelihood of all of the particles and set the weights. */
         virtual void weight ();
@@ -372,11 +371,11 @@ namespace pcl
         void initParticles (bool reset);
         
         /** \brief Track the pointcloud using particle filter method. */
-        virtual void computeTracking ();
+        void computeTracking () override;
         
         /** \brief Implementation of "sample with replacement" using Walker's alias method.
             about Walker's alias method, you can check the paper below:
-            @article{355749,
+             article{355749},
              author = {Walker, Alastair J.},
              title = {An Efficient Method for Generating Discrete
              Random Variables with General Distributions},
@@ -481,7 +480,7 @@ namespace pcl
         std::vector<PointCloudInPtr> transed_reference_vector_;
 
         /** \brief Change detector used as a trigger to track. */
-        boost::shared_ptr<pcl::octree::OctreePointCloudChangeDetector<PointInT> > change_detector_;
+        typename pcl::octree::OctreePointCloudChangeDetector<PointInT>::Ptr change_detector_;
 
         /** \brief A flag to be true when change of pointclouds is detected. */
         bool changed_;
@@ -508,5 +507,3 @@ namespace pcl
 #ifdef PCL_NO_PRECOMPILE
 #include <pcl/tracking/impl/particle_filter.hpp>
 #endif
-
-#endif //PCL_TRACKING_PARTICLE_FILTER_H_

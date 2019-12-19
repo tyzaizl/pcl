@@ -38,17 +38,14 @@
 #ifndef OCTREE_COMPRESSION_HPP
 #define OCTREE_COMPRESSION_HPP
 
-#include <pcl/octree/octree_pointcloud.h>
 #include <pcl/compression/entropy_range_coder.h>
 
 #include <iterator>
 #include <iostream>
 #include <vector>
-#include <string.h>
+#include <cstring>
 #include <iostream>
-#include <stdio.h>
-
-using namespace pcl::octree;
+#include <cstdio>
 
 namespace pcl
 {
@@ -77,10 +74,10 @@ namespace pcl
         cloud_with_color_ = false;
         std::vector<pcl::PCLPointField> fields;
         int rgba_index = -1;
-        rgba_index = pcl::getFieldIndex (*this->input_, "rgb", fields);
+        rgba_index = pcl::getFieldIndex<PointT> ("rgb", fields);
         if (rgba_index == -1)
         {
-          rgba_index = pcl::getFieldIndex (*this->input_, "rgba", fields);
+          rgba_index = pcl::getFieldIndex<PointT> ("rgba", fields);
         }
         if (rgba_index >= 0)
         {
@@ -138,7 +135,6 @@ namespace pcl
 
         // prepare for next frame
         this->switchBuffers ();
-        i_frame_ = false;
 
         // reset object count
         object_count_ = 0;
@@ -155,16 +151,18 @@ namespace pcl
           else
             PCL_INFO ("Encoding Frame: Prediction frame\n");
           PCL_INFO ("Number of encoded points: %ld\n", point_count_);
-          PCL_INFO ("XYZ compression percentage: %f%%\n", bytes_per_XYZ / (3.0f * sizeof(float)) * 100.0f);
+          PCL_INFO ("XYZ compression percentage: %f%%\n", bytes_per_XYZ / (3.0f * sizeof (float)) * 100.0f);
           PCL_INFO ("XYZ bytes per point: %f bytes\n", bytes_per_XYZ);
           PCL_INFO ("Color compression percentage: %f%%\n", bytes_per_color / (sizeof (int)) * 100.0f);
           PCL_INFO ("Color bytes per point: %f bytes\n", bytes_per_color);
-          PCL_INFO ("Size of uncompressed point cloud: %f kBytes\n", static_cast<float> (point_count_) * (sizeof (int) + 3.0f  * sizeof (float)) / 1024);
-          PCL_INFO ("Size of compressed point cloud: %d kBytes\n", (compressed_point_data_len_ + compressed_color_data_len_) / (1024));
-          PCL_INFO ("Total bytes per point: %f\n", bytes_per_XYZ + bytes_per_color);
-          PCL_INFO ("Total compression percentage: %f\n", (bytes_per_XYZ + bytes_per_color) / (sizeof (int) + 3.0f * sizeof(float)) * 100.0f);
+          PCL_INFO ("Size of uncompressed point cloud: %f kBytes\n", static_cast<float> (point_count_) * (sizeof (int) + 3.0f * sizeof (float)) / 1024.0f);
+          PCL_INFO ("Size of compressed point cloud: %f kBytes\n", static_cast<float> (compressed_point_data_len_ + compressed_color_data_len_) / 1024.0f);
+          PCL_INFO ("Total bytes per point: %f bytes\n", bytes_per_XYZ + bytes_per_color);
+          PCL_INFO ("Total compression percentage: %f%%\n", (bytes_per_XYZ + bytes_per_color) / (sizeof (int) + 3.0f * sizeof (float)) * 100.0f);
           PCL_INFO ("Compression ratio: %f\n\n", static_cast<float> (sizeof (int) + 3.0f * sizeof (float)) / static_cast<float> (bytes_per_XYZ + bytes_per_color));
         }
+        
+        i_frame_ = false;
       } else {
         if (b_show_statistics_)
         PCL_INFO ("Info: Dropping empty point cloud\n");
@@ -192,9 +190,9 @@ namespace pcl
       cloud_with_color_ = false;
       std::vector<pcl::PCLPointField> fields;
       int rgba_index = -1;
-      rgba_index = pcl::getFieldIndex (*output_, "rgb", fields);
+      rgba_index = pcl::getFieldIndex<PointT> ("rgb", fields);
       if (rgba_index == -1)
-        rgba_index = pcl::getFieldIndex (*output_, "rgba", fields);
+        rgba_index = pcl::getFieldIndex<PointT> ("rgba", fields);
       if (rgba_index >= 0)
       {
         point_color_offset_ = static_cast<unsigned char> (fields[rgba_index].offset);
@@ -224,7 +222,7 @@ namespace pcl
 
       // assign point cloud properties
       output_->height = 1;
-      output_->width = static_cast<uint32_t> (cloud_arg->points.size ());
+      output_->width = static_cast<std::uint32_t> (cloud_arg->points.size ());
       output_->is_dense = false;
 
       if (b_show_statistics_)
@@ -235,17 +233,17 @@ namespace pcl
         PCL_INFO ("*** POINTCLOUD DECODING ***\n");
         PCL_INFO ("Frame ID: %d\n", frame_ID_);
         if (i_frame_)
-          PCL_INFO ("Encoding Frame: Intra frame\n");
+          PCL_INFO ("Decoding Frame: Intra frame\n");
         else
-          PCL_INFO ("Encoding Frame: Prediction frame\n");
-        PCL_INFO ("Number of encoded points: %ld\n", point_count_);
+          PCL_INFO ("Decoding Frame: Prediction frame\n");
+        PCL_INFO ("Number of decoded points: %ld\n", point_count_);
         PCL_INFO ("XYZ compression percentage: %f%%\n", bytes_per_XYZ / (3.0f * sizeof (float)) * 100.0f);
         PCL_INFO ("XYZ bytes per point: %f bytes\n", bytes_per_XYZ);
         PCL_INFO ("Color compression percentage: %f%%\n", bytes_per_color / (sizeof (int)) * 100.0f);
         PCL_INFO ("Color bytes per point: %f bytes\n", bytes_per_color);
         PCL_INFO ("Size of uncompressed point cloud: %f kBytes\n", static_cast<float> (point_count_) * (sizeof (int) + 3.0f * sizeof (float)) / 1024.0f);
         PCL_INFO ("Size of compressed point cloud: %f kBytes\n", static_cast<float> (compressed_point_data_len_ + compressed_color_data_len_) / 1024.0f);
-        PCL_INFO ("Total bytes per point: %d bytes\n", static_cast<int> (bytes_per_XYZ + bytes_per_color));
+        PCL_INFO ("Total bytes per point: %f bytes\n", bytes_per_XYZ + bytes_per_color);
         PCL_INFO ("Total compression percentage: %f%%\n", (bytes_per_XYZ + bytes_per_color) / (sizeof (int) + 3.0f * sizeof (float)) * 100.0f);
         PCL_INFO ("Compression ratio: %f\n\n", static_cast<float> (sizeof (int) + 3.0f * sizeof (float)) / static_cast<float> (bytes_per_XYZ + bytes_per_color));
       }
@@ -255,8 +253,8 @@ namespace pcl
     template<typename PointT, typename LeafT, typename BranchT, typename OctreeT> void
     OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::entropyEncoding (std::ostream& compressed_tree_data_out_arg)
     {
-      uint64_t binary_tree_data_vector_size;
-      uint64_t point_avg_color_data_vector_size;
+      std::uint64_t binary_tree_data_vector_size;
+      std::uint64_t point_avg_color_data_vector_size;
 
       compressed_point_data_len_ = 0;
       compressed_color_data_len_ = 0;
@@ -280,9 +278,9 @@ namespace pcl
 
       if (!do_voxel_grid_enDecoding_)
       {
-        uint64_t pointCountDataVector_size;
-        uint64_t point_diff_data_vector_size;
-        uint64_t point_diff_color_data_vector_size;
+        std::uint64_t pointCountDataVector_size;
+        std::uint64_t point_diff_data_vector_size;
+        std::uint64_t point_diff_color_data_vector_size;
 
         // encode amount of points per voxel
         pointCountDataVector_size = point_count_data_vector_.size ();
@@ -315,8 +313,8 @@ namespace pcl
     template<typename PointT, typename LeafT, typename BranchT, typename OctreeT> void
     OctreePointCloudCompression<PointT, LeafT, BranchT, OctreeT>::entropyDecoding (std::istream& compressed_tree_data_in_arg)
     {
-      uint64_t binary_tree_data_vector_size;
-      uint64_t point_avg_color_data_vector_size;
+      std::uint64_t binary_tree_data_vector_size;
+      std::uint64_t point_avg_color_data_vector_size;
 
       compressed_point_data_len_ = 0;
       compressed_color_data_len_ = 0;
@@ -339,9 +337,9 @@ namespace pcl
 
       if (!do_voxel_grid_enDecoding_)
       {
-        uint64_t point_count_data_vector_size;
-        uint64_t point_diff_data_vector_size;
-        uint64_t point_diff_color_data_vector_size;
+        std::uint64_t point_count_data_vector_size;
+        std::uint64_t point_diff_data_vector_size;
+        std::uint64_t point_diff_color_data_vector_size;
 
         // decode amount of points per voxel
         compressed_tree_data_in_arg.read (reinterpret_cast<char*> (&point_count_data_vector_size), sizeof (point_count_data_vector_size));
@@ -512,22 +510,21 @@ namespace pcl
         const OctreeKey& key_arg)
     {
       double lowerVoxelCorner[3];
-      std::size_t pointCount, i, cloudSize;
       PointT newPoint;
 
-      pointCount = 1;
+      std::size_t pointCount = 1;
 
       if (!do_voxel_grid_enDecoding_)
       {
         // get current cloud size
-        cloudSize = output_->points.size ();
+        std::size_t cloudSize = output_->points.size ();
 
         // get amount of point to be decoded
         pointCount = *point_count_data_vector_iterator_;
         point_count_data_vector_iterator_++;
 
         // increase point cloud by amount of voxel points
-        for (i = 0; i < pointCount; i++)
+        for (std::size_t i = 0; i < pointCount; i++)
           output_->points.push_back (newPoint);
 
         // calculcate position of lower voxel corner

@@ -37,8 +37,8 @@
  * $Id$
  *
  */
-#ifndef PCL_INTENSITY_GRADIENT_H_
-#define PCL_INTENSITY_GRADIENT_H_
+
+#pragma once
 
 #include <pcl/features/feature.h>
 #include <pcl/common/intensity.h>
@@ -56,8 +56,8 @@ namespace pcl
   class IntensityGradientEstimation : public FeatureFromNormals<PointInT, PointNT, PointOutT>
   {
     public:
-      typedef boost::shared_ptr<IntensityGradientEstimation<PointInT, PointNT, PointOutT, IntensitySelectorT> > Ptr;
-      typedef boost::shared_ptr<const IntensityGradientEstimation<PointInT, PointNT, PointOutT, IntensitySelectorT> > ConstPtr;
+      using Ptr = boost::shared_ptr<IntensityGradientEstimation<PointInT, PointNT, PointOutT, IntensitySelectorT> >;
+      using ConstPtr = boost::shared_ptr<const IntensityGradientEstimation<PointInT, PointNT, PointOutT, IntensitySelectorT> >;
       using Feature<PointInT, PointOutT>::feature_name_;
       using Feature<PointInT, PointOutT>::getClassName;
       using Feature<PointInT, PointOutT>::indices_;
@@ -66,7 +66,7 @@ namespace pcl
       using Feature<PointInT, PointOutT>::search_parameter_;
       using FeatureFromNormals<PointInT, PointNT, PointOutT>::normals_;
 
-      typedef typename Feature<PointInT, PointOutT>::PointCloudOut PointCloudOut;
+      using PointCloudOut = typename Feature<PointInT, PointOutT>::PointCloudOut;
 
       /** \brief Empty constructor. */
       IntensityGradientEstimation () : intensity_ (), threads_ (0)
@@ -86,12 +86,13 @@ namespace pcl
         *  \param output the resultant point cloud that contains the intensity gradient vectors
         */
       void
-      computeFeature (PointCloudOut &output);
+      computeFeature (PointCloudOut &output) override;
 
       /** \brief Estimate the intensity gradient around a given point based on its spatial neighborhood of points
         * \param cloud a point cloud dataset containing XYZI coordinates (Cartesian coordinates + intensity)
         * \param indices the indices of the neighoring points in the dataset
         * \param point the 3D Cartesian coordinates of the point at which to estimate the gradient
+        * \param mean_intensity
         * \param normal the 3D surface normal of the given point
         * \param gradient the resultant 3D gradient vector
         */
@@ -114,5 +115,3 @@ namespace pcl
 #ifdef PCL_NO_PRECOMPILE
 #include <pcl/features/impl/intensity_gradient.hpp>
 #endif
-
-#endif // #ifndef PCL_INTENSITY_GRADIENT_H_

@@ -36,8 +36,7 @@
  *
  */
 
-#ifndef PCL_RECOGNITION_MODEL_LIBRARY_H_
-#define PCL_RECOGNITION_MODEL_LIBRARY_H_
+#pragma once
 
 #include "auxiliary.h"
 #include <pcl/recognition/ransac_based/voxel_structure.h>
@@ -59,15 +58,15 @@ namespace pcl
     class PCL_EXPORTS ModelLibrary
     {
       public:
-        typedef pcl::PointCloud<pcl::PointXYZ> PointCloudIn;
-        typedef pcl::PointCloud<pcl::Normal> PointCloudN;
+        using PointCloudIn = pcl::PointCloud<pcl::PointXYZ>;
+        using PointCloudN = pcl::PointCloud<pcl::Normal>;
 
         /** \brief Stores some information about the model. */
         class Model
         {
           public:
             Model (const PointCloudIn& points, const PointCloudN& normals, float voxel_size, const std::string& object_name,
-                   float frac_of_points_for_registration, void* user_data = NULL)
+                   float frac_of_points_for_registration, void* user_data = nullptr)
             : obj_name_(object_name),
               user_data_ (user_data)
             {
@@ -97,7 +96,7 @@ namespace pcl
               aux::mult3 (octree_center_of_mass_, 1.0f/static_cast<float> (num_octree_points));
 
               int num_points_for_registration = static_cast<int> (static_cast<float> (num_octree_points)*frac_of_points_for_registration);
-              points_for_registration_.resize (static_cast<size_t> (num_points_for_registration));
+              points_for_registration_.resize (static_cast<std::size_t> (num_points_for_registration));
 
               // Prepare for random point sampling
               std::vector<int> ids (num_octree_points);
@@ -105,7 +104,7 @@ namespace pcl
                 ids[i] = i;
 
               // The random generator
-              pcl::common::UniformGenerator<int> randgen (0, num_octree_points - 1, static_cast<uint32_t> (time (NULL)));
+              pcl::common::UniformGenerator<int> randgen (0, num_octree_points - 1, static_cast<std::uint32_t> (time (nullptr)));
 
               // Randomly sample some points from the octree
               for ( int i = 0 ; i < num_points_for_registration ; ++i )
@@ -171,9 +170,9 @@ namespace pcl
             void* user_data_;
         };
 
-        typedef std::list<std::pair<const ORROctree::Node::Data*, const ORROctree::Node::Data*> > node_data_pair_list;
-        typedef std::map<const Model*, node_data_pair_list> HashTableCell;
-        typedef VoxelStructure<HashTableCell, float> HashTable;
+        using node_data_pair_list = std::list<std::pair<const ORROctree::Node::Data*, const ORROctree::Node::Data*> >;
+        using HashTableCell = std::map<const Model*, node_data_pair_list>;
+        using HashTable = VoxelStructure<HashTableCell, float>;
 
       public:
         /** \brief This class is used by 'ObjRecRANSAC' to maintain the object models to be recognized. Normally, you do not need to use
@@ -197,7 +196,7 @@ namespace pcl
           max_coplanarity_angle_ = max_coplanarity_angle_degrees*AUX_DEG_TO_RADIANS;
         }
 
-        /** \biref Call this method in order NOT to add co-planar point pairs to the hash table. The default behavior
+        /** \brief Call this method in order NOT to add co-planar point pairs to the hash table. The default behavior
           * is ignoring co-planar points on. */
         inline void
         ignoreCoplanarPointPairsOn ()
@@ -205,7 +204,7 @@ namespace pcl
           ignore_coplanar_opps_ = true;
         }
 
-        /** \biref Call this method in order to add all point pairs (co-planar as well) to the hash table. The default
+        /** \brief Call this method in order to add all point pairs (co-planar as well) to the hash table. The default
           * behavior is ignoring co-planar points on. */
         inline void
         ignoreCoplanarPointPairsOff ()
@@ -218,13 +217,13 @@ namespace pcl
           * \param[in] points represents the model to be added.
           * \param[in] normals are the normals at the model points.
           * \param[in] object_name is the unique name of the object to be added.
-          * \param[in] num_points_for_registration is the number of points used for fast ICP registration prior to hypothesis testing
+          * \param[in] frac_of_points_for_registration is the number of points used for fast ICP registration prior to hypothesis testing
           * \param[in] user_data is a pointer to some data (can be NULL)
           *
           * Returns true if model successfully added and false otherwise (e.g., if object_name is not unique). */
         bool
         addModel (const PointCloudIn& points, const PointCloudN& normals, const std::string& object_name,
-                  float frac_of_points_for_registration, void* user_data = NULL);
+                  float frac_of_points_for_registration, void* user_data = nullptr);
 
         /** \brief Returns the hash table built by this instance. */
         inline const HashTable&
@@ -240,7 +239,7 @@ namespace pcl
           if ( it != models_.end () )
             return (it->second);
 
-          return (NULL);
+          return (nullptr);
         }
 
         inline const std::map<std::string,Model*>&
@@ -270,5 +269,3 @@ namespace pcl
     };
   } // namespace recognition
 } // namespace pcl
-
-#endif // PCL_RECOGNITION_MODEL_LIBRARY_H_

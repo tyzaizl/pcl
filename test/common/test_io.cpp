@@ -43,12 +43,14 @@
 using namespace pcl;
 using namespace std;
 
-typedef PointCloud <PointXYZRGBA>      CloudXYZRGBA;
-typedef PointCloud <PointXYZRGB>       CloudXYZRGB;
-typedef PointCloud <PointXYZRGBNormal> CloudXYZRGBNormal;
+using CloudXYZRGBA = PointCloud<PointXYZRGBA>;
+using CloudXYZRGB = PointCloud<PointXYZRGB>;
+using CloudXYZRGBNormal = PointCloud<PointXYZRGBNormal>;
+using CloudXYZ = PointCloud<PointXYZ>;
 
 PointXYZRGBA pt_xyz_rgba, pt_xyz_rgba2;
 PointXYZRGB pt_xyz_rgb;
+PointXYZ pt_xyz;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 TEST (PCL, concatenateFields)
@@ -85,7 +87,8 @@ TEST (PCL, copyPointCloud)
 
   CloudXYZRGBNormal cloud_xyz_rgb_normal;
   pcl::copyPointCloud (cloud_xyz_rgba, cloud_xyz_rgb_normal);
-  EXPECT_EQ (int (cloud_xyz_rgb_normal.size ()), 5);
+  ASSERT_METADATA_EQ (cloud_xyz_rgba, cloud_xyz_rgb_normal);
+  ASSERT_EQ (int (cloud_xyz_rgb_normal.size ()), 5);
   for (int i = 0; i < 5; ++i)
   {
     EXPECT_XYZ_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
@@ -93,10 +96,10 @@ TEST (PCL, copyPointCloud)
     EXPECT_EQ (cloud_xyz_rgba[i].rgba, cloud_xyz_rgb_normal[i].rgba);
   }
 
-  vector<int> indices;
+  std::vector<int> indices;
   indices.push_back (0); indices.push_back (1); 
   pcl::copyPointCloud (cloud_xyz_rgba, indices, cloud_xyz_rgb_normal);
-  EXPECT_EQ (int (cloud_xyz_rgb_normal.size ()), 2);
+  ASSERT_EQ (int (cloud_xyz_rgb_normal.size ()), 2);
   for (int i = 0; i < 2; ++i)
   {
     EXPECT_XYZ_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
@@ -104,10 +107,10 @@ TEST (PCL, copyPointCloud)
     EXPECT_EQ (cloud_xyz_rgba[i].rgba, cloud_xyz_rgb_normal[i].rgba);
   }
 
-  vector<int, Eigen::aligned_allocator<int> > indices_aligned;
+  std::vector<int, Eigen::aligned_allocator<int> > indices_aligned;
   indices_aligned.push_back (1); indices_aligned.push_back (2); indices_aligned.push_back (3); 
   pcl::copyPointCloud (cloud_xyz_rgba, indices_aligned, cloud_xyz_rgb_normal);
-  EXPECT_EQ (int (cloud_xyz_rgb_normal.size ()), 3);
+  ASSERT_EQ (int (cloud_xyz_rgb_normal.size ()), 3);
   for (int i = 0; i < 3; ++i)
   {
     EXPECT_XYZ_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
@@ -117,7 +120,7 @@ TEST (PCL, copyPointCloud)
 
   PointIndices pindices;
   pindices.indices.push_back (0); pindices.indices.push_back (2); pindices.indices.push_back (4);
-  EXPECT_EQ (int (cloud_xyz_rgb_normal.size ()), 3);
+  ASSERT_EQ (int (cloud_xyz_rgb_normal.size ()), 3);
   for (int i = 0; i < 3; ++i)
   {
     EXPECT_XYZ_EQ (cloud_xyz_rgba[i], cloud_xyz_rgb_normal[i]);
@@ -127,6 +130,8 @@ TEST (PCL, copyPointCloud)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
 TEST (PCL, concatenatePointCloud)
 {
   CloudXYZRGBA cloud_xyz_rgba;
@@ -204,13 +209,7 @@ TEST (PCL, concatenatePointCloud)
     EXPECT_EQ (cloud_all[i].rgba, cloud_xyz_rgba[i].rgba);
   }
   for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
-  {
     EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].r, 0);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].g, 0);
-    EXPECT_FLOAT_EQ (cloud_all[cloud_xyz_rgba.size () + i].b, 0);
-    EXPECT_EQ (cloud_all[cloud_xyz_rgba.size () + i].rgba, 0);
-  }
 
   cloud1.fields[rgb_idx].name = "rgba";
   // regular vs _
@@ -317,6 +316,116 @@ TEST (PCL, concatenatePointCloud)
     EXPECT_EQ (cloud_all[cloud_xyz_rgb.size () + i].rgba, 0);
   }
 }
+#pragma GCC diagnostic pop
+
+///////////////////////////////////////////////////////////////////////////////////////////
+TEST (PCL, concatenatePointCloud2)
+{
+  CloudXYZRGBA cloud_xyz_rgba;
+  cloud_xyz_rgba.push_back (pt_xyz_rgba);
+  cloud_xyz_rgba.push_back (pt_xyz_rgba);
+  cloud_xyz_rgba.push_back (pt_xyz_rgba);
+  cloud_xyz_rgba.push_back (pt_xyz_rgba);
+  cloud_xyz_rgba.push_back (pt_xyz_rgba);
+
+  CloudXYZRGBA cloud_xyz_rgba2;
+  cloud_xyz_rgba2.push_back (pt_xyz_rgba2);
+  cloud_xyz_rgba2.push_back (pt_xyz_rgba2);
+
+  pcl::PCLPointCloud2 cloud1, cloud2, cloud_out, cloud_out2, cloud_out3, cloud_out4;
+  pcl::toPCLPointCloud2 (cloud_xyz_rgba, cloud1);
+  pcl::toPCLPointCloud2 (cloud_xyz_rgba2, cloud2);
+
+  // Regular
+  EXPECT_TRUE (pcl::concatenate (cloud1, cloud2, cloud_out));
+
+  CloudXYZRGBA cloud_all;
+  pcl::fromPCLPointCloud2 (cloud_out, cloud_all);
+
+  EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
+  for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
+  {
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgba[i]);
+    EXPECT_RGBA_EQ (cloud_all[i], cloud_xyz_rgba[i]);
+  }
+  for (int i = 0; i < int (cloud_xyz_rgba2.size ()); ++i)
+  {
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgba2[i]);
+    EXPECT_RGBA_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgba2[i]);
+  }
+
+  // RGB != RGBA
+  CloudXYZRGB cloud_xyz_rgb;
+  cloud_xyz_rgb.push_back (pt_xyz_rgb);
+  cloud_xyz_rgb.push_back (pt_xyz_rgb);
+
+  pcl::toPCLPointCloud2 (cloud_xyz_rgb, cloud2);
+  EXPECT_TRUE (pcl::concatenate (cloud1, cloud2, cloud_out2));
+
+  pcl::fromPCLPointCloud2 (cloud_out2, cloud_all);
+
+  EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgba2.size ());
+  for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
+  {
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgba[i]);
+    EXPECT_RGBA_EQ (cloud_all[i], cloud_xyz_rgba[i]);
+  }
+  for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
+  {
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
+    EXPECT_RGBA_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
+  }
+
+  // _ vs regular
+  int rgb_idx = pcl::getFieldIndex (cloud1, "rgba");
+  cloud1.fields[rgb_idx].name = "_";
+  EXPECT_FALSE (pcl::concatenate (cloud1, cloud2, cloud_out3));
+  cloud1.fields[rgb_idx].name = "rgba";
+
+  // regular vs _
+  rgb_idx = pcl::getFieldIndex (cloud2, "rgb");
+  cloud2.fields[rgb_idx].name = "_";
+  EXPECT_FALSE (pcl::concatenate (cloud1, cloud2, cloud_out4));
+
+  // _ vs _
+  rgb_idx = pcl::getFieldIndex (cloud1, "rgba");
+  cloud1.fields[rgb_idx].name = "_";
+  pcl::toPCLPointCloud2 (cloud_xyz_rgb, cloud2);
+  rgb_idx = pcl::getFieldIndex (cloud2, "rgb");
+  cloud2.fields[rgb_idx].name = "_";
+
+  EXPECT_TRUE (pcl::concatenate (cloud1, cloud2, cloud_out3));
+
+  pcl::fromPCLPointCloud2 (cloud_out3, cloud_all);
+
+  EXPECT_EQ (cloud_all.size (), cloud_xyz_rgba.size () + cloud_xyz_rgb.size ());
+  for (int i = 0; i < int (cloud_xyz_rgba.size ()); ++i)
+  {
+    EXPECT_XYZ_EQ (cloud_all[i], cloud_xyz_rgba[i]);
+    // Data doesn't get modified
+    EXPECT_RGBA_EQ (cloud_all[i], cloud_xyz_rgba[i]);
+  }
+  for (int i = 0; i < int (cloud_xyz_rgb.size ()); ++i)
+  {
+    EXPECT_XYZ_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
+    EXPECT_RGBA_EQ (cloud_all[cloud_xyz_rgba.size () + i], cloud_xyz_rgb[i]);
+  }
+  cloud1.fields[rgb_idx].name = "rgba";
+  cloud2.fields[rgb_idx].name = "rgba";
+
+  // _ vs regular
+  rgb_idx = pcl::getFieldIndex (cloud1, "rgba");
+
+  cloud1.fields[rgb_idx].name = "_";
+  pcl::toPCLPointCloud2 (cloud_xyz_rgb, cloud2);
+  EXPECT_FALSE (pcl::concatenate (cloud2, cloud1, cloud_out3));
+  cloud1.fields[rgb_idx].name = "rgba";
+
+  // regular vs _
+  rgb_idx = pcl::getFieldIndex (cloud2, "rgb");
+  cloud2.fields[rgb_idx].name = "_";
+  EXPECT_FALSE (pcl::concatenate (cloud2, cloud1, cloud_out4));
+}
 
 TEST (PCL, CopyPointCloudWithIndicesAndRGBToRGBA)
 {
@@ -330,11 +439,28 @@ TEST (PCL, CopyPointCloudWithIndicesAndRGBToRGBA)
   pcl::copyPointCloud (cloud_xyz_rgba, indices, cloud_xyz_rgb);
 
   EXPECT_EQ (indices.size (), cloud_xyz_rgb.size ());
-  for (size_t i = 0; i < indices.size (); ++i)
+  for (std::size_t i = 0; i < indices.size (); ++i)
   {
     EXPECT_XYZ_EQ (cloud_xyz_rgb[i], cloud_xyz_rgba[indices[i]]);
     EXPECT_EQ (cloud_xyz_rgb[i].rgba, cloud_xyz_rgba[indices[i]].rgba);
   }
+}
+
+TEST (PCL, CopyPointCloudWithSameTypes)
+{
+  CloudXYZ cloud_in (5, 1, pt_xyz);
+  CloudXYZ cloud_in_empty;
+  CloudXYZ cloud_out;
+
+  pcl::copyPointCloud (cloud_in, cloud_out);
+
+  ASSERT_EQ (cloud_in.size (), cloud_out.size ());
+  for (std::size_t i = 0; i < cloud_out.size (); ++i)
+    EXPECT_XYZ_EQ (cloud_in[i], cloud_out[i]);
+
+  pcl::copyPointCloud (cloud_in_empty, cloud_out);
+
+  ASSERT_EQ (0, cloud_out.size ());
 }
 
 /* ---[ */
@@ -364,6 +490,10 @@ main (int argc, char** argv)
   pt_xyz_rgb.g = 10;
   pt_xyz_rgb.b = 0;
   pt_xyz_rgb.a = 255;
+
+  pt_xyz.x = 4;
+  pt_xyz.y = 1;
+  pt_xyz.z = 5;
 
   testing::InitGoogleTest (&argc, argv);
   return (RUN_ALL_TESTS ());

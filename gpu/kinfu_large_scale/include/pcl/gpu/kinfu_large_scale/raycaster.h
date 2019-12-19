@@ -35,10 +35,7 @@
  *
  */
 
-
-#ifndef PCL_KINFU_TSDF_RAYCASTERLS_H_
-#define PCL_KINFU_TSDF_RAYCASTERLS_H_
-
+#pragma once
 
 #include <pcl/pcl_macros.h>
 #include <pcl/point_types.h>
@@ -64,10 +61,11 @@ namespace pcl
       struct PCL_EXPORTS RayCaster
       {
       public:
-        typedef boost::shared_ptr<RayCaster> Ptr;
-        typedef pcl::gpu::DeviceArray2D<float> MapArr;
-        typedef pcl::gpu::DeviceArray2D<PixelRGB> View;
-        typedef pcl::gpu::DeviceArray2D<unsigned short> Depth;     
+        using Ptr = boost::shared_ptr<RayCaster>;
+        using ConstPtr = boost::shared_ptr<const RayCaster>;
+        using MapArr = pcl::gpu::DeviceArray2D<float>;
+        using View = pcl::gpu::DeviceArray2D<PixelRGB>;
+        using Depth = pcl::gpu::DeviceArray2D<unsigned short>;     
 
         /** \brief Image with height */ 
         const int cols, rows;      
@@ -88,9 +86,10 @@ namespace pcl
         void
         setIntrinsics(float fx = 525.f, float fy = 525.f, float cx = -1, float cy = -1);
         
-        /** \brief Runs raycasting algorithm from given camera pose. It writes results to internal fiels.
+        /** \brief Runs raycasting algorithm from given camera pose. It writes results to internal files.
           * \param[in] volume tsdf volume container
           * \param[in] camera_pose camera pose
+          * \param buffer
           */ 
         void 
         run(const TsdfVolume& volume, const Eigen::Affine3f& camera_pose, tsdf_buffer* buffer);
@@ -109,7 +108,7 @@ namespace pcl
         generateSceneView(View& view, const Eigen::Vector3f& light_source_pose) const;
 
         /** \brief Generates depth image using data raycasted by run method. So call it before.
-          * \param[out] view output array for depth image        
+          * \param[out] depth output array for depth image        
           */
         void
         generateDepthImage(Depth& depth) const;
@@ -148,7 +147,7 @@ namespace pcl
         Eigen::Vector3f volume_size_;
 
 public:
-EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  PCL_MAKE_ALIGNED_OPERATOR_NEW
 
       };
       
@@ -158,5 +157,3 @@ EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     }
   }
 }
-
-#endif /* PCL_KINFU_TSDF_RAYCASTER_H_ */

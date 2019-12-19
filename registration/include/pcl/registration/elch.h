@@ -38,9 +38,9 @@
  *
  */
 
-#ifndef PCL_ELCH_H_
-#define PCL_ELCH_H_
+#pragma once
 
+#include <pcl/pcl_macros.h>
 #include <pcl/pcl_base.h>
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -62,31 +62,31 @@ namespace pcl
     class ELCH : public PCLBase<PointT>
     {
       public:
-        typedef boost::shared_ptr< ELCH<PointT> > Ptr;
-        typedef boost::shared_ptr< const ELCH<PointT> > ConstPtr;
+        using Ptr = boost::shared_ptr<ELCH<PointT> >;
+        using ConstPtr = boost::shared_ptr<const ELCH<PointT> >;
 
-        typedef pcl::PointCloud<PointT> PointCloud;
-        typedef typename PointCloud::Ptr PointCloudPtr;
-        typedef typename PointCloud::ConstPtr PointCloudConstPtr;
+        using PointCloud = pcl::PointCloud<PointT>;
+        using PointCloudPtr = typename PointCloud::Ptr;
+        using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
         struct Vertex
         {
           Vertex () : cloud () {}
           PointCloudPtr cloud;
+          Eigen::Affine3f transform;
         };
 
         /** \brief graph structure to hold the SLAM graph */
-        typedef boost::adjacency_list<
+        using LoopGraph = boost::adjacency_list<
           boost::listS, boost::eigen_vecS, boost::undirectedS,
           Vertex,
-          boost::no_property>
-        LoopGraph;
+          boost::no_property>;
 
-        typedef boost::shared_ptr< LoopGraph > LoopGraphPtr;
+        using LoopGraphPtr = boost::shared_ptr<LoopGraph>;
 
-        typedef typename pcl::Registration<PointT, PointT> Registration;
-        typedef typename Registration::Ptr RegistrationPtr;
-        typedef typename Registration::ConstPtr RegistrationConstPtr;
+        using Registration = pcl::Registration<PointT, PointT>;
+        using RegistrationPtr = typename Registration::Ptr;
+        using RegistrationConstPtr = typename Registration::ConstPtr;
 
         /** \brief Empty constructor. */
         ELCH () : 
@@ -94,13 +94,12 @@ namespace pcl
           loop_start_ (0), 
           loop_end_ (0), 
           reg_ (new pcl::IterativeClosestPoint<PointT, PointT>), 
-          loop_transform_ (),
           compute_loop_ (true),
           vd_ ()
         {};
       
         /** \brief Empty destructor */
-        virtual ~ELCH () {}
+        ~ELCH () {}
 
         /** \brief Add a new point cloud to the internal graph.
          * \param[in] cloud the new point cloud
@@ -196,7 +195,7 @@ namespace pcl
           compute_loop_ = false;
         }
 
-        /** \brief Computes now poses for all point clouds by closing the loop
+        /** \brief Computes new poses for all point clouds by closing the loop
          * between start and end point cloud. This will transform all given point
          * clouds for now!
          */
@@ -212,11 +211,10 @@ namespace pcl
 
       private:
         /** \brief graph structure for the internal optimization graph */
-        typedef boost::adjacency_list<
+        using LOAGraph = boost::adjacency_list<
           boost::listS, boost::vecS, boost::undirectedS,
           boost::no_property,
-          boost::property< boost::edge_weight_t, double > >
-        LOAGraph;
+          boost::property< boost::edge_weight_t, double > >;
 
         /**
          * graph balancer algorithm computes the weights
@@ -248,11 +246,9 @@ namespace pcl
         typename boost::graph_traits<LoopGraph>::vertex_descriptor vd_;
 
       public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+        PCL_MAKE_ALIGNED_OPERATOR_NEW
     };
   }
 }
 
 #include <pcl/registration/impl/elch.hpp>
-
-#endif // PCL_ELCH_H_

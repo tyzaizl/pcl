@@ -18,26 +18,28 @@
 #if !defined(OPENNURBS_EXTENSIONS_INC_)
 #define OPENNURBS_EXTENSIONS_INC_
 
+#include <pcl/pcl_exports.h>
+
 /*
 Description:
   Used to store user data information in an ONX_Model.
 */
-class ON_CLASS ONX_Model_UserData
+class PCL_EXPORTS ON_CLASS ONX_Model_UserData
 {
 public:
 #if defined(ON_DLL_EXPORTS) || defined(ON_DLL_IMPORTS)
   // See comments at the top of opennurbs_extensions.cpp for details.
 
   // new/delete
-  void* operator new(size_t);
+  void* operator new(std::size_t);
   void  operator delete(void*);
 
   // array new/delete
-  void* operator new[] (size_t);
+  void* operator new[] (std::size_t);
   void  operator delete[] (void*);
 
   // in place new/delete
-  void* operator new(size_t,void*);
+  void* operator new(std::size_t,void*);
   void  operator delete(void*,void*);
 #endif
 
@@ -64,22 +66,22 @@ public:
 Description:
   Used to store geometry table object definition and attributes in an ONX_Model.
 */
-class ON_CLASS ONX_Model_Object
+class PCL_EXPORTS ON_CLASS ONX_Model_Object
 {
 public:
 #if defined(ON_DLL_EXPORTS) || defined(ON_DLL_IMPORTS)
   // See comments at the top of opennurbs_extensions.cpp for details.
 
   // new/delete
-  void* operator new(size_t);
+  void* operator new(std::size_t);
   void  operator delete(void*);
 
   // array new/delete
-  void* operator new[] (size_t);
+  void* operator new[] (std::size_t);
   void  operator delete[] (void*);
 
   // in place new/delete
-  void* operator new(size_t,void*);
+  void* operator new(std::size_t,void*);
   void  operator delete(void*,void*);
 #endif
 
@@ -106,22 +108,22 @@ private:
 Description:
   Used to store render light table light definition and attributes in an ONX_Model.
 */
-class ON_CLASS ONX_Model_RenderLight
+class PCL_EXPORTS ON_CLASS ONX_Model_RenderLight
 {
 public:
 #if defined(ON_DLL_EXPORTS) || defined(ON_DLL_IMPORTS)
   // See comments at the top of opennurbs_extensions.cpp for details.
 
   // new/delete
-  void* operator new(size_t);
+  void* operator new(std::size_t);
   void  operator delete(void*);
 
   // array new/delete
-  void* operator new[] (size_t);
+  void* operator new[] (std::size_t);
   void  operator delete[] (void*);
 
   // in place new/delete
-  void* operator new(size_t,void*);
+  void* operator new(std::size_t,void*);
   void  operator delete(void*,void*);
 #endif
 
@@ -172,22 +174,22 @@ Description:
   read from 3dm archives.  Please study example_read.cpp for
   details.
 */
-class ON_CLASS ONX_Model
+class PCL_EXPORTS ON_CLASS ONX_Model
 {
 public:
 #if defined(ON_DLL_EXPORTS) || defined(ON_DLL_IMPORTS)
   // See comments at the top of opennurbs_extensions.cpp for details.
 
   // new/delete
-  void* operator new(size_t);
+  void* operator new(std::size_t);
   void  operator delete(void*);
 
   // array new/delete
-  void* operator new[] (size_t);
+  void* operator new[] (std::size_t);
   void  operator delete[] (void*);
 
   // in place new/delete
-  void* operator new(size_t,void*);
+  void* operator new(std::size_t,void*);
   void  operator delete(void*,void*);
 #endif
 
@@ -469,7 +471,7 @@ public:
   ON_UuidIndexList m_idef_id_index;
 
   // length of archive returned by ON_BinaryArchive::Read3dmEndMark()
-  size_t m_file_length;
+  std::size_t m_file_length;
 
   // Number of crc errors found during archive reading.
   // If > 0, then the archive is corrupt.

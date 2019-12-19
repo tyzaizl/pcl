@@ -134,30 +134,30 @@ pcl::VFHEstimation<PointInT, PointNT, PointOutT>::computePointSPFHSignature (con
     hist_incr_size_component = 0.0;
 
   // Iterate over all the points in the neighborhood
-  for (size_t idx = 0; idx < indices.size (); ++idx)
+  for (const int &index : indices)
   {
     // Compute the pair P to NNi
-    if (!computePairFeatures (centroid_p, centroid_n, cloud.points[indices[idx]].getVector4fMap (),
-                              normals.points[indices[idx]].getNormalVector4fMap (), pfh_tuple[0], pfh_tuple[1],
+    if (!computePairFeatures (centroid_p, centroid_n, cloud.points[index].getVector4fMap (),
+                              normals.points[index].getNormalVector4fMap (), pfh_tuple[0], pfh_tuple[1],
                               pfh_tuple[2], pfh_tuple[3]))
       continue;
 
     // Normalize the f1, f2, f3, f4 features and push them in the histogram
-    int h_index = static_cast<int> (floor (nr_bins_f1_ * ((pfh_tuple[0] + M_PI) * d_pi_)));
+    int h_index = static_cast<int> (std::floor (nr_bins_f1_ * ((pfh_tuple[0] + M_PI) * d_pi_)));
     if (h_index < 0)
       h_index = 0;
     if (h_index >= nr_bins_f1_)
       h_index = nr_bins_f1_ - 1;
     hist_f1_ (h_index) += hist_incr;
 
-    h_index = static_cast<int> (floor (nr_bins_f2_ * ((pfh_tuple[1] + 1.0) * 0.5)));
+    h_index = static_cast<int> (std::floor (nr_bins_f2_ * ((pfh_tuple[1] + 1.0) * 0.5)));
     if (h_index < 0)
       h_index = 0;
     if (h_index >= nr_bins_f2_)
       h_index = nr_bins_f2_ - 1;
     hist_f2_ (h_index) += hist_incr;
 
-    h_index = static_cast<int> (floor (nr_bins_f3_ * ((pfh_tuple[2] + 1.0) * 0.5)));
+    h_index = static_cast<int> (std::floor (nr_bins_f3_ * ((pfh_tuple[2] + 1.0) * 0.5)));
     if (h_index < 0)
       h_index = 0;
     if (h_index >= nr_bins_f3_)
@@ -165,7 +165,7 @@ pcl::VFHEstimation<PointInT, PointNT, PointOutT>::computePointSPFHSignature (con
     hist_f3_ (h_index) += hist_incr;
 
     if (normalize_distances_)
-      h_index = static_cast<int> (floor (nr_bins_f4_ * (pfh_tuple[3] / distance_normalization_factor)));
+      h_index = static_cast<int> (std::floor (nr_bins_f4_ * (pfh_tuple[3] / distance_normalization_factor)));
     else
       h_index = static_cast<int> (pcl_round (pfh_tuple[3] * 100));
 
@@ -182,7 +182,7 @@ template <typename PointInT, typename PointNT, typename PointOutT> void
 pcl::VFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut &output)
 {
   // ---[ Step 1a : compute the centroid in XYZ space
-  Eigen::Vector4f xyz_centroid;
+  Eigen::Vector4f xyz_centroid (0, 0, 0, 0);
 
   if (use_given_centroid_) 
     xyz_centroid = centroid_to_use_;
@@ -200,7 +200,7 @@ pcl::VFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut 
   {
     if (normals_->is_dense)
     {
-      for (size_t i = 0; i < indices_->size (); ++i)
+      for (std::size_t i = 0; i < indices_->size (); ++i)
       {
         normal_centroid += normals_->points[(*indices_)[i]].getNormalVector4fMap ();
         cp++;
@@ -209,13 +209,13 @@ pcl::VFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut 
     // NaN or Inf values could exist => check for them
     else
     {
-      for (size_t i = 0; i < indices_->size (); ++i)
+      for (std::size_t i = 0; i < indices_->size (); ++i)
       {
-        if (!pcl_isfinite (normals_->points[(*indices_)[i]].normal[0])
+        if (!std::isfinite (normals_->points[(*indices_)[i]].normal[0])
             ||
-            !pcl_isfinite (normals_->points[(*indices_)[i]].normal[1])
+            !std::isfinite (normals_->points[(*indices_)[i]].normal[1])
             ||
-            !pcl_isfinite (normals_->points[(*indices_)[i]].normal[2]))
+            !std::isfinite (normals_->points[(*indices_)[i]].normal[2]))
           continue;
         normal_centroid += normals_->points[(*indices_)[i]].getNormalVector4fMap ();
         cp++;
@@ -238,19 +238,19 @@ pcl::VFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut 
   output.height = 1;
 
   // Estimate the FPFH at nn_indices[0] using the entire cloud and copy the resultant signature
-  for (int d = 0; d < hist_f1_.size (); ++d)
+  for (Eigen::Index d = 0; d < hist_f1_.size (); ++d)
     output.points[0].histogram[d + 0] = hist_f1_[d];
 
-  size_t data_size = hist_f1_.size ();
-  for (int d = 0; d < hist_f2_.size (); ++d)
+  std::size_t data_size = hist_f1_.size ();
+  for (Eigen::Index d = 0; d < hist_f2_.size (); ++d)
     output.points[0].histogram[d + data_size] = hist_f2_[d];
 
   data_size += hist_f2_.size ();
-  for (int d = 0; d < hist_f3_.size (); ++d)
+  for (Eigen::Index d = 0; d < hist_f3_.size (); ++d)
     output.points[0].histogram[d + data_size] = hist_f3_[d];
 
   data_size += hist_f3_.size ();
-  for (int d = 0; d < hist_f4_.size (); ++d)
+  for (Eigen::Index d = 0; d < hist_f4_.size (); ++d)
     output.points[0].histogram[d + data_size] = hist_f4_[d];
 
   // ---[ Step 2 : obtain the viewpoint component
@@ -262,14 +262,14 @@ pcl::VFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut 
   else
     hist_incr = 1.0;
 
-  for (size_t i = 0; i < indices_->size (); ++i)
+  for (std::size_t i = 0; i < indices_->size (); ++i)
   {
     Eigen::Vector4f normal (normals_->points[(*indices_)[i]].normal[0],
                             normals_->points[(*indices_)[i]].normal[1],
                             normals_->points[(*indices_)[i]].normal[2], 0);
     // Normalize
     double alpha = (normal.dot (d_vp_p) + 1.0) * 0.5;
-    int fi = static_cast<int> (floor (alpha * static_cast<double> (hist_vp_.size ())));
+    int fi = static_cast<int> (std::floor (alpha * static_cast<double> (hist_vp_.size ())));
     if (fi < 0)
       fi = 0;
     if (fi > (static_cast<int> (hist_vp_.size ()) - 1))
@@ -279,7 +279,7 @@ pcl::VFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut 
   }
   data_size += hist_f4_.size ();
   // Copy the resultant signature
-  for (int d = 0; d < hist_vp_.size (); ++d)
+  for (Eigen::Index d = 0; d < hist_vp_.size (); ++d)
     output.points[0].histogram[d + data_size] = hist_vp_[d];
 }
 

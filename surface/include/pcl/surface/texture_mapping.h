@@ -37,9 +37,9 @@
  *
  */
 
-#ifndef PCL_SURFACE_TEXTURE_MAPPING_H_
-#define PCL_SURFACE_TEXTURE_MAPPING_H_
+#pragma once
 
+#include <pcl/pcl_macros.h>
 #include <pcl/surface/reconstruction.h>
 #include <pcl/common/transforms.h>
 #include <pcl/TextureMesh.h>
@@ -62,8 +62,8 @@ namespace pcl
       */
     struct Camera
     {
-      Camera () : pose (), focal_length (), focal_length_w (-1), focal_length_h (-1),
-        center_w (-1), center_h (-1), height (), width (), texture_file () {}
+      Camera () : focal_length (), focal_length_w (-1), focal_length_h (-1),
+        center_w (-1), center_h (-1), height (), width () {}
       Eigen::Affine3f pose;
       double focal_length;
       double focal_length_w;  // optional
@@ -74,7 +74,7 @@ namespace pcl
       double width;
       std::string texture_file;
 
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      PCL_MAKE_ALIGNED_OPERATOR_NEW
     };
 
     /** \brief Structure that links a uv coordinate to its 3D point and face.
@@ -86,7 +86,7 @@ namespace pcl
       int idx_face; // Face corresponding to that projection
     };
     
-    typedef std::vector<Camera, Eigen::aligned_allocator<Camera> > CameraVector;
+    using CameraVector = std::vector<Camera, Eigen::aligned_allocator<Camera> >;
     
   }
   
@@ -99,23 +99,23 @@ namespace pcl
   {
     public:
      
-      typedef boost::shared_ptr< PointInT > Ptr;
-      typedef boost::shared_ptr< const PointInT > ConstPtr;
+      using Ptr = boost::shared_ptr<TextureMapping<PointInT> >;
+      using ConstPtr = boost::shared_ptr<const TextureMapping<PointInT> >;
 
-      typedef pcl::PointCloud<PointInT> PointCloud;
-      typedef typename PointCloud::Ptr PointCloudPtr;
-      typedef typename PointCloud::ConstPtr PointCloudConstPtr;
+      using PointCloud = pcl::PointCloud<PointInT>;
+      using PointCloudPtr = typename PointCloud::Ptr;
+      using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
-      typedef pcl::octree::OctreePointCloudSearch<PointInT> Octree;
-      typedef typename Octree::Ptr OctreePtr;
-      typedef typename Octree::ConstPtr OctreeConstPtr;
+      using Octree = pcl::octree::OctreePointCloudSearch<PointInT>;
+      using OctreePtr = typename Octree::Ptr;
+      using OctreeConstPtr = typename Octree::ConstPtr;
       
-      typedef pcl::texture_mapping::Camera Camera;
-      typedef pcl::texture_mapping::UvIndex UvIndex;
+      using Camera = pcl::texture_mapping::Camera;
+      using UvIndex = pcl::texture_mapping::UvIndex;
 
       /** \brief Constructor. */
       TextureMapping () :
-        f_ (), vector_field_ (), tex_files_ (), tex_material_ ()
+        f_ ()
       {
       }
 
@@ -143,7 +143,7 @@ namespace pcl
       {
         vector_field_ = Eigen::Vector3f (x, y, z);
         // normalize vector field
-        vector_field_ = vector_field_ / std::sqrt (vector_field_.dot (vector_field_));
+        vector_field_ /= std::sqrt (vector_field_.dot (vector_field_));
       }
 
       /** \brief Set texture files
@@ -193,7 +193,7 @@ namespace pcl
         * \returns false if the point is not visible by the camera
         */
       inline bool
-      getPointUVCoordinates (const pcl::PointXYZ &pt, const Camera &cam, Eigen::Vector2f &UV_coordinates)
+      getPointUVCoordinates (const PointInT &pt, const Camera &cam, Eigen::Vector2f &UV_coordinates)
       {
         // if the point is in front of the camera
         if (pt.z > 0)
@@ -243,7 +243,7 @@ namespace pcl
         * \returns true if the point is occluded.
         */
       inline bool
-      isPointOccluded (const pcl::PointXYZ &pt, const OctreePtr octree);
+      isPointOccluded (const PointInT &pt, const OctreePtr octree);
 
       /** \brief Remove occluded points from a point cloud
         * \param[in] input_cloud the cloud on which to perform occlusion detection
@@ -326,7 +326,7 @@ namespace pcl
       /** \brief Segment and texture faces by camera visibility. Face-based segmentation.
         * \details With N camera, faces will be arranged into N+1 groups: 1 for each camera, plus 1 for faces not visible from any camera.
         * The mesh will also contain uv coordinates for each face
-        * \param[in/out] tex_mesh input mesh that needs sorting. Should contain only 1 sub-mesh.
+        * \param mesh input mesh that needs sorting. Should contain only 1 sub-mesh.
         * \param[in] cameras vector containing the cameras used for texture mapping.
         */
       void 
@@ -351,7 +351,7 @@ namespace pcl
         * \param[in] p2 the second point
         * \param[in] p3 the third point
         */
-      std::vector<Eigen::Vector2f>
+      std::vector<Eigen::Vector2f, Eigen::aligned_allocator<Eigen::Vector2f> >
       mapTexture2Face (const Eigen::Vector3f &p1, const Eigen::Vector3f &p2, const Eigen::Vector3f &p3);
 
       /** \brief Returns the circumcenter of a triangle and the circle's radius.
@@ -363,7 +363,7 @@ namespace pcl
         * \param[out] radius the radius of the circumscribed circle.
         */
       inline void
-      getTriangleCircumcenterAndSize (const pcl::PointXY &p1, const pcl::PointXY &p2, const pcl::PointXY &p3, pcl::PointXY &circomcenter, double &radius);
+      getTriangleCircumcenterAndSize (const pcl::PointXY &p1, const pcl::PointXY &p2, const pcl::PointXY &p3, pcl::PointXY &circumcenter, double &radius);
  
       
       /** \brief Returns the centroid of a triangle and the corresponding circumscribed circle's radius.
@@ -385,7 +385,7 @@ namespace pcl
         * \returns false if the point is not visible by the camera
         */
       inline bool
-      getPointUVCoordinates (const pcl::PointXYZ &pt, const Camera &cam, pcl::PointXY &UV_coordinates);
+      getPointUVCoordinates (const PointInT &pt, const Camera &cam, pcl::PointXY &UV_coordinates);
 
       /** \brief Returns true if all the vertices of one face are projected on the camera's image plane.
         * \param[in] camera camera on which to project the face.
@@ -398,7 +398,7 @@ namespace pcl
         */
       inline bool
       isFaceProjected (const Camera &camera, 
-                       const pcl::PointXYZ &p1, const pcl::PointXYZ &p2, const pcl::PointXYZ &p3, 
+                       const PointInT &p1, const PointInT &p2, const PointInT &p3, 
                        pcl::PointXY &proj1, pcl::PointXY &proj2, pcl::PointXY &proj3);
 
       /** \brief Returns True if a point lays within a triangle
@@ -419,9 +419,6 @@ namespace pcl
       }
 
     public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      PCL_MAKE_ALIGNED_OPERATOR_NEW
   };
 }
-
-#endif /* TEXTURE_MAPPING_H_ */
-

@@ -48,7 +48,7 @@ main (int argc, char *argv[])
   PointCloud2Vector3d (cloud, data.interior);
   pcl::visualization::PointCloudColorHandlerCustom<Point> handler (cloud, 0, 255, 0);
   viewer.addPointCloud<Point> (cloud, handler, "cloud_cylinder");
-  printf ("  %zu points in data set\n", cloud->size ());
+  printf ("  %lu points in data set\n", cloud->size ());
 
   // ############################################################################
   // fit B-spline surface
@@ -174,7 +174,7 @@ PointCloud2Vector3d (pcl::PointCloud<Point>::Ptr cloud, pcl::on_nurbs::vector_ve
   for (unsigned i = 0; i < cloud->size (); i++)
   {
     Point &p = cloud->at (i);
-    if (!pcl_isnan (p.x) && !pcl_isnan (p.y) && !pcl_isnan (p.z))
+    if (!std::isnan (p.x) && !std::isnan (p.y) && !std::isnan (p.z))
       data.push_back (Eigen::Vector3d (p.x, p.y, p.z));
   }
 }

@@ -36,13 +36,11 @@
  * $Id$
  */
 
-#ifndef PCL_OCTREE_SEARCH_H_
-#define PCL_OCTREE_SEARCH_H_
+#pragma once
 
 #include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
 
-#include "octree_pointcloud.h"
+#include <pcl/octree/octree_pointcloud.h>
 
 namespace pcl
 {
@@ -59,35 +57,29 @@ namespace pcl
     {
       public:
         // public typedefs
-        typedef boost::shared_ptr<std::vector<int> > IndicesPtr;
-        typedef boost::shared_ptr<const std::vector<int> > IndicesConstPtr;
+        using IndicesPtr = boost::shared_ptr<std::vector<int> >;
+        using IndicesConstPtr = boost::shared_ptr<const std::vector<int> >;
 
-        typedef pcl::PointCloud<PointT> PointCloud;
-        typedef boost::shared_ptr<PointCloud> PointCloudPtr;
-        typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
+        using PointCloud = pcl::PointCloud<PointT>;
+        using PointCloudPtr = typename PointCloud::Ptr;
+        using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
         // Boost shared pointers
-        typedef boost::shared_ptr<OctreePointCloudSearch<PointT, LeafContainerT, BranchContainerT> > Ptr;
-        typedef boost::shared_ptr<const OctreePointCloudSearch<PointT, LeafContainerT, BranchContainerT> > ConstPtr;
+        using Ptr = boost::shared_ptr<OctreePointCloudSearch<PointT, LeafContainerT, BranchContainerT> >;
+        using ConstPtr = boost::shared_ptr<const OctreePointCloudSearch<PointT, LeafContainerT, BranchContainerT> >;
 
         // Eigen aligned allocator
-        typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > AlignedPointTVector;
+        using AlignedPointTVector = std::vector<PointT, Eigen::aligned_allocator<PointT> >;
 
-        typedef OctreePointCloud<PointT, LeafContainerT, BranchContainerT> OctreeT;
-        typedef typename OctreeT::LeafNode LeafNode;
-        typedef typename OctreeT::BranchNode BranchNode;
+        using OctreeT = OctreePointCloud<PointT, LeafContainerT, BranchContainerT>;
+        using LeafNode = typename OctreeT::LeafNode;
+        using BranchNode = typename OctreeT::BranchNode;
 
         /** \brief Constructor.
           * \param[in] resolution octree resolution at lowest octree level
           */
         OctreePointCloudSearch (const double resolution) :
           OctreePointCloud<PointT, LeafContainerT, BranchContainerT> (resolution)
-        {
-        }
-
-        /** \brief Empty class constructor. */
-        virtual
-        ~OctreePointCloudSearch ()
         {
         }
 
@@ -243,6 +235,7 @@ namespace pcl
 
 
         /** \brief Search for points within rectangular search area
+         * Points exactly on the edges of the search rectangle are included.
          * \param[in] min_pt lower corner of search area
          * \param[in] max_pt upper corner of search area
          * \param[out] k_indices the resultant point indices
@@ -264,7 +257,7 @@ namespace pcl
         public:
           /** \brief Empty constructor  */
           prioBranchQueueEntry () :
-              node (), point_distance (0), key ()
+              node (), point_distance (0)
           {
           }
 
@@ -582,24 +575,17 @@ namespace pcl
           {
             if (x < z)
               return a;
-            else
-              return c;
+            return c;
           }
-          else
-          {
-            if (y < z)
-              return b;
-            else
-              return c;
-          }
-
-          return 0;
+          if (y < z)
+            return b;
+          return c;
         }
 
       };
   }
 }
 
-#define PCL_INSTANTIATE_OctreePointCloudSearch(T) template class PCL_EXPORTS pcl::octree::OctreePointCloudSearch<T>;
-
-#endif    // PCL_OCTREE_SEARCH_H_
+#ifdef PCL_NO_PRECOMPILE
+#include <pcl/octree/impl/octree_search.hpp>
+#endif

@@ -37,8 +37,7 @@
  *
  */
 
-#ifndef PCL_SEGMENTATION_SAC_SEGMENTATION_H_
-#define PCL_SEGMENTATION_SAC_SEGMENTATION_H_
+#pragma once
 
 #include <pcl/pcl_base.h>
 #include <pcl/PointIndices.h>
@@ -71,13 +70,13 @@ namespace pcl
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
 
-      typedef pcl::PointCloud<PointT> PointCloud;
-      typedef typename PointCloud::Ptr PointCloudPtr;
-      typedef typename PointCloud::ConstPtr PointCloudConstPtr;
-      typedef typename pcl::search::Search<PointT>::Ptr SearchPtr;
+      using PointCloud = pcl::PointCloud<PointT>;
+      using PointCloudPtr = typename PointCloud::Ptr;
+      using PointCloudConstPtr = typename PointCloud::ConstPtr;
+      using SearchPtr = typename pcl::search::Search<PointT>::Ptr;
 
-      typedef typename SampleConsensus<PointT>::Ptr SampleConsensusPtr;
-      typedef typename SampleConsensusModel<PointT>::Ptr SampleConsensusModelPtr;
+      using SampleConsensusPtr = typename SampleConsensus<PointT>::Ptr;
+      using SampleConsensusModelPtr = typename SampleConsensusModel<PointT>::Ptr;
 
       /** \brief Empty constructor. 
         * \param[in] random if true set the random seed to the current time, else set to 12345 (default: false)
@@ -102,7 +101,7 @@ namespace pcl
       }
 
       /** \brief Empty destructor. */
-      virtual ~SACSegmentation () { /*srv_.reset ();*/ };
+      ~SACSegmentation () { /*srv_.reset ();*/ };
 
       /** \brief The type of model to use (user given parameter).
         * \param[in] model the model type (check \a model_types.h)
@@ -197,6 +196,7 @@ namespace pcl
 
       /** \brief Set the maximum distance allowed when drawing random samples
         * \param[in] radius the maximum distance (L2 norm)
+        * \param search
         */
       inline void
       setSamplesMaxDist (const double &radius, SearchPtr search)
@@ -236,7 +236,7 @@ namespace pcl
       getEpsAngle () const { return (eps_angle_); }
 
       /** \brief Base method for segmentation of a model in a PointCloud given by <setInputCloud (), setIndices ()>
-        * \param[in] inliers the resultant point indices that support the model found (inliers)
+        * \param[out] inliers the resultant point indices that support the model found (inliers)
         * \param[out] model_coefficients the resultant model coefficients
         */
       virtual void 
@@ -321,17 +321,17 @@ namespace pcl
       using PCLBase<PointT>::input_;
       using PCLBase<PointT>::indices_;
 
-      typedef typename SACSegmentation<PointT>::PointCloud PointCloud;
-      typedef typename PointCloud::Ptr PointCloudPtr;
-      typedef typename PointCloud::ConstPtr PointCloudConstPtr;
+      using PointCloud = typename SACSegmentation<PointT>::PointCloud;
+      using PointCloudPtr = typename PointCloud::Ptr;
+      using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
-      typedef typename pcl::PointCloud<PointNT> PointCloudN;
-      typedef typename PointCloudN::Ptr PointCloudNPtr;
-      typedef typename PointCloudN::ConstPtr PointCloudNConstPtr;
+      using PointCloudN = pcl::PointCloud<PointNT>;
+      using PointCloudNPtr = typename PointCloudN::Ptr;
+      using PointCloudNConstPtr = typename PointCloudN::ConstPtr;
 
-      typedef typename SampleConsensus<PointT>::Ptr SampleConsensusPtr;
-      typedef typename SampleConsensusModel<PointT>::Ptr SampleConsensusModelPtr;
-      typedef typename SampleConsensusModelFromNormals<PointT, PointNT>::Ptr SampleConsensusModelFromNormalsPtr;
+      using SampleConsensusPtr = typename SampleConsensus<PointT>::Ptr;
+      using SampleConsensusModelPtr = typename SampleConsensusModel<PointT>::Ptr;
+      using SampleConsensusModelFromNormalsPtr = typename SampleConsensusModelFromNormals<PointT, PointNT>::Ptr;
 
       /** \brief Empty constructor.
         * \param[in] random if true set the random seed to the current time, else set to 12345 (default: false)
@@ -341,8 +341,8 @@ namespace pcl
         , normals_ ()
         , distance_weight_ (0.1)
         , distance_from_origin_ (0)
-        , min_angle_ ()
-        , max_angle_ ()
+        , min_angle_ (0.0)
+        , max_angle_ (M_PI_2)
       {};
 
       /** \brief Provide a pointer to the input dataset that contains the point normals of 
@@ -369,7 +369,8 @@ namespace pcl
       getNormalDistanceWeight () const { return (distance_weight_); }
 
       /** \brief Set the minimum opning angle for a cone model.
-        * \param oa the opening angle which we need minumum to validate a cone model.
+        * \param min_angle the opening angle which we need minimum to validate a cone model.
+        * \param max_angle the opening angle which we need maximum to validate a cone model.
         */
       inline void
       setMinMaxOpeningAngle (const double &min_angle, const double &max_angle)
@@ -378,7 +379,7 @@ namespace pcl
         max_angle_ = max_angle;
       }
  
-      /** \brief Get the opening angle which we need minumum to validate a cone model. */
+      /** \brief Get the opening angle which we need minimum to validate a cone model. */
       inline void
       getMinMaxOpeningAngle (double &min_angle, double &max_angle)
       {
@@ -415,17 +416,15 @@ namespace pcl
       /** \brief Initialize the Sample Consensus model and set its parameters.
         * \param[in] model_type the type of SAC model that is to be used
         */
-      virtual bool 
-      initSACModel (const int model_type);
+      bool 
+      initSACModel (const int model_type) override;
 
       /** \brief Class get name method. */
-      virtual std::string 
-      getClassName () const { return ("SACSegmentationFromNormals"); }
+      std::string 
+      getClassName () const override { return ("SACSegmentationFromNormals"); }
   };
 }
 
 #ifdef PCL_NO_PRECOMPILE
 #include <pcl/segmentation/impl/sac_segmentation.hpp>
 #endif
-
-#endif  //#ifndef PCL_SEGMENTATION_SAC_SEGMENTATION_H_

@@ -68,10 +68,12 @@ pcl::PFHEstimation<PointInT, PointNT, PointOutT>::computePointPFHSignature (
   float hist_incr = 100.0f / static_cast<float> (indices.size () * (indices.size () - 1) / 2);
 
   std::pair<int, int> key;
+  bool key_found = false;
+
   // Iterate over all the points in the neighborhood
-  for (size_t i_idx = 0; i_idx < indices.size (); ++i_idx)
+  for (std::size_t i_idx = 0; i_idx < indices.size (); ++i_idx)
   {
-    for (size_t j_idx = 0; j_idx < i_idx; ++j_idx)
+    for (std::size_t j_idx = 0; j_idx < i_idx; ++j_idx)
     {
       // If the 3D points are invalid, don't bother estimating, just continue
       if (!isFinite (cloud.points[indices[i_idx]]) || !isFinite (cloud.points[indices[j_idx]]))
@@ -94,15 +96,20 @@ pcl::PFHEstimation<PointInT, PointNT, PointOutT>::computePointPFHSignature (
         key = std::pair<int, int> (p1, p2);
 
         // Check to see if we already estimated this pair in the global hashmap
-        std::map<std::pair<int, int>, Eigen::Vector4f, std::less<std::pair<int, int> >, Eigen::aligned_allocator<Eigen::Vector4f> >::iterator fm_it = feature_map_.find (key);
+        std::map<std::pair<int, int>, Eigen::Vector4f, std::less<>, Eigen::aligned_allocator<std::pair<const std::pair<int, int>, Eigen::Vector4f> > >::iterator fm_it = feature_map_.find (key);
         if (fm_it != feature_map_.end ())
+        {
           pfh_tuple_ = fm_it->second;
+          key_found = true;
+        }
         else
         {
           // Compute the pair NNi to NNj
           if (!computePairFeatures (cloud, normals, indices[i_idx], indices[j_idx],
                                     pfh_tuple_[0], pfh_tuple_[1], pfh_tuple_[2], pfh_tuple_[3]))
             continue;
+
+          key_found = false;
         }
       }
       else
@@ -111,29 +118,29 @@ pcl::PFHEstimation<PointInT, PointNT, PointOutT>::computePointPFHSignature (
           continue;
 
       // Normalize the f1, f2, f3 features and push them in the histogram
-      f_index_[0] = static_cast<int> (floor (nr_split * ((pfh_tuple_[0] + M_PI) * d_pi_)));
+      f_index_[0] = static_cast<int> (std::floor (nr_split * ((pfh_tuple_[0] + M_PI) * d_pi_)));
       if (f_index_[0] < 0)         f_index_[0] = 0;
       if (f_index_[0] >= nr_split) f_index_[0] = nr_split - 1;
 
-      f_index_[1] = static_cast<int> (floor (nr_split * ((pfh_tuple_[1] + 1.0) * 0.5)));
+      f_index_[1] = static_cast<int> (std::floor (nr_split * ((pfh_tuple_[1] + 1.0) * 0.5)));
       if (f_index_[1] < 0)         f_index_[1] = 0;
       if (f_index_[1] >= nr_split) f_index_[1] = nr_split - 1;
 
-      f_index_[2] = static_cast<int> (floor (nr_split * ((pfh_tuple_[2] + 1.0) * 0.5)));
+      f_index_[2] = static_cast<int> (std::floor (nr_split * ((pfh_tuple_[2] + 1.0) * 0.5)));
       if (f_index_[2] < 0)         f_index_[2] = 0;
       if (f_index_[2] >= nr_split) f_index_[2] = nr_split - 1;
 
       // Copy into the histogram
       h_index = 0;
       h_p     = 1;
-      for (int d = 0; d < 3; ++d)
+      for (const int &d : f_index_)
       {
-        h_index += h_p * f_index_[d];
+        h_index += h_p * d;
         h_p     *= nr_split;
       }
       pfh_histogram[h_index] += hist_incr;
 
-      if (use_cache_)
+      if (use_cache_ && !key_found)
       {
         // Save the value in the hashmap
         feature_map_[key] = pfh_tuple_;
@@ -143,8 +150,8 @@ pcl::PFHEstimation<PointInT, PointNT, PointOutT>::computePointPFHSignature (
         // Check to see if we need to remove an element due to exceeding max_size
         if (key_list_.size () > max_cache_size_)
         {
-          // Remove the last element.
-          feature_map_.erase (key_list_.back ());
+          // Remove the oldest element.
+          feature_map_.erase (key_list_.front ());
           key_list_.pop ();
         }
       }
@@ -173,11 +180,11 @@ pcl::PFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut 
   if (input_->is_dense)
   {
     // Iterating over the entire index vector
-    for (size_t idx = 0; idx < indices_->size (); ++idx)
+    for (std::size_t idx = 0; idx < indices_->size (); ++idx)
     {
       if (this->searchForNeighbors ((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0)
       {
-        for (int d = 0; d < pfh_histogram_.size (); ++d)
+        for (Eigen::Index d = 0; d < pfh_histogram_.size (); ++d)
           output.points[idx].histogram[d] = std::numeric_limits<float>::quiet_NaN ();
 
         output.is_dense = false;
@@ -188,19 +195,19 @@ pcl::PFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut 
       computePointPFHSignature (*surface_, *normals_, nn_indices, nr_subdiv_, pfh_histogram_);
 
       // Copy into the resultant cloud
-      for (int d = 0; d < pfh_histogram_.size (); ++d)
+      for (Eigen::Index d = 0; d < pfh_histogram_.size (); ++d)
         output.points[idx].histogram[d] = pfh_histogram_[d];
     }
   }
   else
   {
     // Iterating over the entire index vector
-    for (size_t idx = 0; idx < indices_->size (); ++idx)
+    for (std::size_t idx = 0; idx < indices_->size (); ++idx)
     {
       if (!isFinite ((*input_)[(*indices_)[idx]]) ||
           this->searchForNeighbors ((*indices_)[idx], search_parameter_, nn_indices, nn_dists) == 0)
       {
-        for (int d = 0; d < pfh_histogram_.size (); ++d)
+        for (Eigen::Index d = 0; d < pfh_histogram_.size (); ++d)
           output.points[idx].histogram[d] = std::numeric_limits<float>::quiet_NaN ();
 
         output.is_dense = false;
@@ -211,7 +218,7 @@ pcl::PFHEstimation<PointInT, PointNT, PointOutT>::computeFeature (PointCloudOut 
       computePointPFHSignature (*surface_, *normals_, nn_indices, nr_subdiv_, pfh_histogram_);
 
       // Copy into the resultant cloud
-      for (int d = 0; d < pfh_histogram_.size (); ++d)
+      for (Eigen::Index d = 0; d < pfh_histogram_.size (); ++d)
         output.points[idx].histogram[d] = pfh_histogram_[d];
     }
   }

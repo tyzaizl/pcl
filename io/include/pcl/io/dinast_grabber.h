@@ -37,8 +37,7 @@
  *
  */
 
-#ifndef PCL_IO_DINAST_GRABBER_
-#define PCL_IO_DINAST_GRABBER_
+#pragma once
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -47,6 +46,9 @@
 #include <pcl/console/print.h>
 #include <libusb-1.0/libusb.h>
 #include <boost/circular_buffer.hpp>
+
+#include <mutex>
+#include <thread>
 
 namespace pcl
 {
@@ -57,7 +59,7 @@ namespace pcl
   class PCL_EXPORTS DinastGrabber: public Grabber
   {
     // Define callback signature typedefs
-    typedef void (sig_cb_dinast_point_cloud) (const boost::shared_ptr<const pcl::PointCloud<pcl::PointXYZI> >&);
+    using sig_cb_dinast_point_cloud = void (const pcl::PointCloud<pcl::PointXYZI>::ConstPtr &);
     
     public:
       /** \brief Constructor that sets up the grabber constants.
@@ -66,34 +68,34 @@ namespace pcl
       DinastGrabber (const int device_position=1);
 
       /** \brief Destructor. It never throws. */
-      virtual ~DinastGrabber () throw ();
+      ~DinastGrabber () throw ();
 
       /** \brief Check if the grabber is running
         * \return true if grabber is running / streaming. False otherwise.
         */
-      virtual bool 
-      isRunning () const;
+      bool 
+      isRunning () const override;
       
       /** \brief Returns the name of the concrete subclass, DinastGrabber.
         * \return DinastGrabber.
         */
-      virtual std::string
-      getName () const
+      std::string
+      getName () const override
       { return (std::string ("DinastGrabber")); }
       
       /** \brief Start the data acquisition process.
         */
-      virtual void
-      start ();
+      void
+      start () override;
 
       /** \brief Stop the data acquisition process.
         */
-      virtual void
-      stop ();
+      void
+      stop () override;
       
       /** \brief Obtain the number of frames per second (FPS). */
-      virtual float 
-      getFramesPerSecond () const;
+      float 
+      getFramesPerSecond () const override;
 
       /** \brief Get the version number of the currently opened device
         */
@@ -118,6 +120,7 @@ namespace pcl
       
       /** \brief Send a RX data packet request
         * \param[in] req_code the request to send (the request field for the setup packet)
+        * \param buffer
         * \param[in] length the length field for the setup packet. The data buffer should be at least this size.
         */
       bool
@@ -127,6 +130,7 @@ namespace pcl
 
       /** \brief Send a TX data packet request
         * \param[in] req_code the request to send (the request field for the setup packet)
+        * \param buffer
         * \param[in] length the length field for the setup packet. The data buffer should be at least this size.
         */
       bool
@@ -148,7 +152,7 @@ namespace pcl
       readImage ();
       
       /** \brief Obtains XYZI Point Cloud from the image of the camera
-        * \param[out] the point cloud from the image data
+        * \return the point cloud from the image data
         */
       pcl::PointCloud<pcl::PointXYZI>::Ptr
       getXYZIPointCloud ();
@@ -205,11 +209,9 @@ namespace pcl
       
       bool running_;
       
-      boost::thread capture_thread_;
+      std::thread capture_thread_;
       
-      mutable boost::mutex capture_mutex_;
+      mutable std::mutex capture_mutex_;
       boost::signals2::signal<sig_cb_dinast_point_cloud>* point_cloud_signal_;
   };
 } //namespace pcl
-
-#endif // PCL_IO_DINAST_GRABBER_

@@ -79,14 +79,14 @@ pcl::isPointIn2DPolygon (const PointT &point, const pcl::PointCloud<PointT> &pol
   // Create a X-Y projected representation for within bounds polygonal checking
   int k0, k1, k2;
   // Determine the best plane to project points onto
-  k0 = (fabs (model_coefficients[0] ) > fabs (model_coefficients[1])) ? 0  : 1;
-  k0 = (fabs (model_coefficients[k0]) > fabs (model_coefficients[2])) ? k0 : 2;
+  k0 = (std::abs (model_coefficients[0] ) > std::abs (model_coefficients[1])) ? 0  : 1;
+  k0 = (std::abs (model_coefficients[k0]) > std::abs (model_coefficients[2])) ? k0 : 2;
   k1 = (k0 + 1) % 3;
   k2 = (k0 + 2) % 3;
   // Project the convex hull
   pcl::PointCloud<PointT> xy_polygon;
   xy_polygon.points.resize (polygon.points.size ());
-  for (size_t i = 0; i < polygon.points.size (); ++i)
+  for (std::size_t i = 0; i < polygon.points.size (); ++i)
   {
     Eigen::Vector4f pt (polygon.points[i].x, polygon.points[i].y, polygon.points[i].z, 0);
     xy_polygon.points[i].x = pt[k1];
@@ -110,6 +110,7 @@ pcl::isXYPointIn2DXYPolygon (const PointT &point, const pcl::PointCloud<PointT> 
   double x1, x2, y1, y2;
 
   int nr_poly_points = static_cast<int> (polygon.points.size ());
+  // start with the last point to make the check last point<->first point the first one
   double xold = polygon.points[nr_poly_points - 1].x;
   double yold = polygon.points[nr_poly_points - 1].y;
   for (int i = 0; i < nr_poly_points; i++)
@@ -139,29 +140,6 @@ pcl::isXYPointIn2DXYPolygon (const PointT &point, const pcl::PointCloud<PointT> 
     yold = ynew;
   }
 
-  // And a last check for the polygon line formed by the last and the first points
-  double xnew = polygon.points[0].x;
-  double ynew = polygon.points[0].y;
-  if (xnew > xold)
-  {
-    x1 = xold;
-    x2 = xnew;
-    y1 = yold;
-    y2 = ynew;
-  }
-  else
-  {
-    x1 = xnew;
-    x2 = xold;
-    y1 = ynew;
-    y2 = yold;
-  }
-
-  if ( (xnew < point.x) == (point.x <= xold) && (point.y - y1) * (x2 - x1) < (y2 - y1) * (point.x - x1) )
-  {
-    in_poly = !in_poly;
-  }
-
   return (in_poly);
 }
 
@@ -179,7 +157,7 @@ pcl::ExtractPolygonalPrismData<PointT>::segment (pcl::PointIndices &output)
 
   if (static_cast<int> (planar_hull_->points.size ()) < min_pts_hull_)
   {
-    PCL_ERROR ("[pcl::%s::segment] Not enough points (%zu) in the hull!\n", getClassName ().c_str (), planar_hull_->points.size ());
+    PCL_ERROR ("[pcl::%s::segment] Not enough points (%lu) in the hull!\n", getClassName ().c_str (), planar_hull_->points.size ());
     output.indices.clear ();
     return;
   }
@@ -228,14 +206,14 @@ pcl::ExtractPolygonalPrismData<PointT>::segment (pcl::PointIndices &output)
   // Create a X-Y projected representation for within bounds polygonal checking
   int k0, k1, k2;
   // Determine the best plane to project points onto
-  k0 = (fabs (model_coefficients[0] ) > fabs (model_coefficients[1])) ? 0  : 1;
-  k0 = (fabs (model_coefficients[k0]) > fabs (model_coefficients[2])) ? k0 : 2;
+  k0 = (std::abs (model_coefficients[0] ) > std::abs (model_coefficients[1])) ? 0  : 1;
+  k0 = (std::abs (model_coefficients[k0]) > std::abs (model_coefficients[2])) ? k0 : 2;
   k1 = (k0 + 1) % 3;
   k2 = (k0 + 2) % 3;
   // Project the convex hull
   pcl::PointCloud<PointT> polygon;
   polygon.points.resize (planar_hull_->points.size ());
-  for (size_t i = 0; i < planar_hull_->points.size (); ++i)
+  for (std::size_t i = 0; i < planar_hull_->points.size (); ++i)
   {
     Eigen::Vector4f pt (planar_hull_->points[i].x, planar_hull_->points[i].y, planar_hull_->points[i].z, 0);
     polygon.points[i].x = pt[k1];
@@ -248,7 +226,7 @@ pcl::ExtractPolygonalPrismData<PointT>::segment (pcl::PointIndices &output)
 
   output.indices.resize (indices_->size ());
   int l = 0;
-  for (size_t i = 0; i < projected_points.points.size (); ++i)
+  for (std::size_t i = 0; i < projected_points.points.size (); ++i)
   {
     // Check the distance to the user imposed limits from the table planar model
     double distance = pointToPlaneDistanceSigned (input_->points[(*indices_)[i]], model_coefficients);

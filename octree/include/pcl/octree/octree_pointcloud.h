@@ -36,19 +36,14 @@
  * $Id$
  */
 
-#ifndef PCL_OCTREE_POINTCLOUD_H
-#define PCL_OCTREE_POINTCLOUD_H
+#pragma once
 
-#include "octree_base.h"
-//#include "octree2buf_base.h"
+#include <pcl/octree/octree_base.h>
 
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-#include <queue>
 #include <vector>
-#include <algorithm>
-#include <iostream>
 
 namespace pcl
 {
@@ -76,62 +71,36 @@ namespace pcl
 
     class OctreePointCloud : public OctreeT
     {
-        // iterators are friends
-        friend class OctreeIteratorBase<OctreeT> ;
-        friend class OctreeDepthFirstIterator<OctreeT> ;
-        friend class OctreeBreadthFirstIterator<OctreeT> ;
-        friend class OctreeLeafNodeIterator<OctreeT> ;
-
       public:
-        typedef OctreeT Base;
+        using Base = OctreeT;
 
-        typedef typename OctreeT::LeafNode LeafNode;
-        typedef typename OctreeT::BranchNode BranchNode;
-
-        // Octree default iterators
-        typedef OctreeDepthFirstIterator<OctreeT> Iterator;
-        typedef const OctreeDepthFirstIterator<OctreeT> ConstIterator;
-
-        // Octree leaf node iterators
-        typedef OctreeLeafNodeIterator<OctreeT> LeafNodeIterator;
-        typedef const OctreeLeafNodeIterator<OctreeT> ConstLeafNodeIterator;
-
-        // Octree depth-first iterators
-        typedef OctreeDepthFirstIterator<OctreeT> DepthFirstIterator;
-        typedef const OctreeDepthFirstIterator<OctreeT> ConstDepthFirstIterator;
-
-        // Octree breadth-first iterators
-        typedef OctreeBreadthFirstIterator<OctreeT> BreadthFirstIterator;
-        typedef const OctreeBreadthFirstIterator<OctreeT> ConstBreadthFirstIterator;
+        using LeafNode = typename OctreeT::LeafNode;
+        using BranchNode = typename OctreeT::BranchNode;
 
         /** \brief Octree pointcloud constructor.
          * \param[in] resolution_arg octree resolution at lowest octree level
          */
         OctreePointCloud (const double resolution_arg);
 
-        /** \brief Empty deconstructor. */
-        virtual
-        ~OctreePointCloud ();
-
         // public typedefs
-        typedef boost::shared_ptr<std::vector<int> > IndicesPtr;
-        typedef boost::shared_ptr<const std::vector<int> > IndicesConstPtr;
+        using IndicesPtr = boost::shared_ptr<std::vector<int> >;
+        using IndicesConstPtr = boost::shared_ptr<const std::vector<int> >;
 
-        typedef pcl::PointCloud<PointT> PointCloud;
-        typedef boost::shared_ptr<PointCloud> PointCloudPtr;
-        typedef boost::shared_ptr<const PointCloud> PointCloudConstPtr;
+        using PointCloud = pcl::PointCloud<PointT>;
+        using PointCloudPtr = typename PointCloud::Ptr;
+        using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
         // public typedefs for single/double buffering
-        typedef OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeBase<LeafContainerT> > SingleBuffer;
-       // typedef OctreePointCloud<PointT, LeafContainerT, BranchContainerT, Octree2BufBase<LeafContainerT> > DoubleBuffer;
+        using SingleBuffer = OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeBase<LeafContainerT> >;
+       // using DoubleBuffer = OctreePointCloud<PointT, LeafContainerT, BranchContainerT, Octree2BufBase<LeafContainerT> >;
 
         // Boost shared pointers
-        typedef boost::shared_ptr<OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT> > Ptr;
-        typedef boost::shared_ptr<const OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT> > ConstPtr;
+        using Ptr = boost::shared_ptr<OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT> >;
+        using ConstPtr = boost::shared_ptr<const OctreePointCloud<PointT, LeafContainerT, BranchContainerT, OctreeT> >;
 
         // Eigen aligned allocator
-        typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > AlignedPointTVector;
-        typedef std::vector<PointXYZ, Eigen::aligned_allocator<PointXYZ> > AlignedPointXYZVector;
+        using AlignedPointTVector = std::vector<PointT, Eigen::aligned_allocator<PointT> >;
+        using AlignedPointXYZVector = std::vector<PointXYZ, Eigen::aligned_allocator<PointXYZ> >;
 
         /** \brief Provide a pointer to the input data set.
          * \param[in] cloud_arg the const boost shared pointer to a PointCloud message
@@ -386,7 +355,7 @@ namespace pcl
          * \param[out] max_pt upper bound of voxel
          */
         inline void
-        getVoxelBounds (OctreeIteratorBase<OctreeT>& iterator, Eigen::Vector3f &min_pt, Eigen::Vector3f &max_pt)
+        getVoxelBounds (const OctreeIteratorBase<OctreeT>& iterator, Eigen::Vector3f &min_pt, Eigen::Vector3f &max_pt) const
         {
           this->genVoxelBoundsFromOctreeKey (iterator.getCurrentOctreeKey (),
               iterator.getCurrentOctreeDepth (), min_pt, max_pt);
@@ -397,12 +366,12 @@ namespace pcl
          *  \param maxObjsPerLeaf: maximum number of DataT objects per leaf
          * */
         inline void
-        enableDynamicDepth ( size_t maxObjsPerLeaf )
+        enableDynamicDepth ( std::size_t maxObjsPerLeaf )
         {
           assert(this->leaf_count_==0);
           max_objs_per_leaf_ = maxObjsPerLeaf;
 
-          this->dynamic_depth_enabled_ = static_cast<bool> (max_objs_per_leaf_>0);
+          this->dynamic_depth_enabled_ = max_objs_per_leaf_ > 0;
         }
 
 
@@ -576,6 +545,3 @@ namespace pcl
 #ifdef PCL_NO_PRECOMPILE
 #include <pcl/octree/impl/octree_pointcloud.hpp>
 #endif
-
-#endif
-

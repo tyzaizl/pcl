@@ -37,6 +37,8 @@
  *
  */
 
+#include <thread>
+
 #include <pcl/common/common.h>
 #include <pcl/console/time.h>
 #include <pcl/common/angles.h>
@@ -70,6 +72,7 @@
 using namespace pcl;
 using namespace pcl::console;
 using namespace std;
+using namespace std::chrono_literals;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT>
@@ -126,13 +129,13 @@ class ObjectSelection
     keyboard_callback (const visualization::KeyboardEvent&, void*)
     {
       //if (event.getKeyCode())
-      //  cout << "the key \'" << event.getKeyCode() << "\' (" << event.getKeyCode() << ") was";
+      //  std::cout << "the key \'" << event.getKeyCode() << "\' (" << event.getKeyCode() << ") was";
       //else
-      //  cout << "the special key \'" << event.getKeySym() << "\' was";
+      //  std::cout << "the special key \'" << event.getKeySym() << "\' was";
       //if (event.keyDown())
-      //  cout << " pressed" << endl;
+      //  std::cout << " pressed" << std::endl;
       //else
-      //  cout << " released" << endl;
+      //  std::cout << " released" << std::endl;
     }
     
     /////////////////////////////////////////////////////////////////////////
@@ -141,7 +144,7 @@ class ObjectSelection
     {
       if (mouse_event.getType() == visualization::MouseEvent::MouseButtonPress && mouse_event.getButton() == visualization::MouseEvent::LeftButton)
       {
-        cout << "left button pressed @ " << mouse_event.getX () << " , " << mouse_event.getY () << endl;
+        std::cout << "left button pressed @ " << mouse_event.getX () << " , " << mouse_event.getY () << std::endl;
       }
     }
 
@@ -189,23 +192,24 @@ class ObjectSelection
       exppd.setHeightLimits (0.001, 0.5);           // up to half a meter
       exppd.segment (*points_above_plane);
 
-      vector<PointIndices> euclidean_label_indices;
+      std::vector<PointIndices> euclidean_label_indices;
       // Prefer a faster method if the cloud is organized, over EuclidanClusterExtraction
       if (cloud_->isOrganized ())
       {
         // Use an organized clustering segmentation to extract the individual clusters
-        typename EuclideanClusterComparator<PointT, Normal, Label>::Ptr euclidean_cluster_comparator (new EuclideanClusterComparator<PointT, Normal, Label>);
+        typename EuclideanClusterComparator<PointT, Label>::Ptr euclidean_cluster_comparator (new EuclideanClusterComparator<PointT, Label>);
         euclidean_cluster_comparator->setInputCloud (cloud);
         euclidean_cluster_comparator->setDistanceThreshold (0.03f, false);
         // Set the entire scene to false, and the inliers of the objects located on top of the plane to true
         Label l; l.label = 0;
         PointCloud<Label>::Ptr scene (new PointCloud<Label> (cloud->width, cloud->height, l));
         // Mask the objects that we want to split into clusters
-        for (int i = 0; i < static_cast<int> (points_above_plane->indices.size ()); ++i)
-          scene->points[points_above_plane->indices[i]].label = 1;
+        for (const int &index : points_above_plane->indices)
+          scene->points[index].label = 1;
         euclidean_cluster_comparator->setLabels (scene);
 
-        vector<bool> exclude_labels (2);  exclude_labels[0] = true; exclude_labels[1] = false;
+        typename EuclideanClusterComparator<PointT, Label>::ExcludeLabelSetPtr exclude_labels (new typename EuclideanClusterComparator<PointT, Label>::ExcludeLabelSet);
+        exclude_labels->insert (0);
         euclidean_cluster_comparator->setExcludeLabels (exclude_labels);
 
         OrganizedConnectedComponentSegmentation<PointT, Label> euclidean_segmentation (euclidean_cluster_comparator);
@@ -227,21 +231,21 @@ class ObjectSelection
         ec.setIndices (points_above_plane);
         ec.extract (euclidean_label_indices);
         
-        print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%zu", euclidean_label_indices.size ()); print_info (" clusters]\n");
+        print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%lu", euclidean_label_indices.size ()); print_info (" clusters]\n");
       }
 
       // For each cluster found
       bool cluster_found = false;
-      for (size_t i = 0; i < euclidean_label_indices.size (); i++)
+      for (const auto &euclidean_label_index : euclidean_label_indices)
       {
         if (cluster_found)
           break;
         // Check if the point that we picked belongs to it
-        for (size_t j = 0; j < euclidean_label_indices[i].indices.size (); ++j)
+        for (std::size_t j = 0; j < euclidean_label_index.indices.size (); ++j)
         {
-          if (picked_idx != euclidean_label_indices[i].indices[j])
+          if (picked_idx != euclidean_label_index.indices[j])
             continue;
-          copyPointCloud (*cloud, euclidean_label_indices[i].indices, object);
+          copyPointCloud (*cloud, euclidean_label_index.indices, object);
           cluster_found = true;
           break;
         }
@@ -258,9 +262,9 @@ class ObjectSelection
       object.reset ();
 
       // Segment out all planes
-      vector<ModelCoefficients> model_coefficients;
-      vector<PointIndices> inlier_indices, boundary_indices;
-      vector<PlanarRegion<PointT>, Eigen::aligned_allocator<PlanarRegion<PointT> > > regions;
+      std::vector<ModelCoefficients> model_coefficients;
+      std::vector<PointIndices> inlier_indices, boundary_indices;
+      std::vector<PlanarRegion<PointT>, Eigen::aligned_allocator<PlanarRegion<PointT> > > regions;
 
       // Prefer a faster method if the cloud is organized, over RANSAC
       if (cloud_->isOrganized ())
@@ -270,7 +274,7 @@ class ObjectSelection
         // Estimate normals
         PointCloud<Normal>::Ptr normal_cloud (new PointCloud<Normal>);
         estimateNormals (cloud_, *normal_cloud);
-        print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%zu", normal_cloud->size ()); print_info (" points]\n");
+        print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%lu", normal_cloud->size ()); print_info (" points]\n");
 
         OrganizedMultiPlaneSegmentation<PointT, Normal, Label> mps;
         mps.setMinInliers (1000);
@@ -284,7 +288,7 @@ class ObjectSelection
 
         // Use one of the overloaded segmentAndRefine calls to get all the information that we want out
         PointCloud<Label>::Ptr labels (new PointCloud<Label>);
-        vector<PointIndices> label_indices;
+        std::vector<PointIndices> label_indices;
         mps.segmentAndRefine (regions, model_coefficients, inlier_indices, labels, label_indices, boundary_indices);
       }
       else
@@ -313,7 +317,7 @@ class ObjectSelection
           print_highlight (stderr, "Searching for the largest plane (%2.0d) ", i++);
           TicToc tt; tt.tic ();
           seg.segment (*inliers, coefficients);
-          print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%zu", inliers->indices.size ()); print_info (" points]\n");
+          print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%lu", inliers->indices.size ()); print_info (" points]\n");
  
           // No datasets could be found anymore
           if (inliers->indices.empty ())
@@ -335,12 +339,12 @@ class ObjectSelection
           cloud_segmented.swap (cloud_remaining);
         }
       }
-      print_highlight ("Number of planar regions detected: %zu for a cloud of %zu points\n", regions.size (), cloud_->size ());
+      print_highlight ("Number of planar regions detected: %lu for a cloud of %lu points\n", regions.size (), cloud_->size ());
 
-      double max_dist = numeric_limits<double>::max ();
+      double max_dist = std::numeric_limits<double>::max ();
       // Compute the distances from all the planar regions to the picked point, and select the closest region
       int idx = -1;
-      for (size_t i = 0; i < regions.size (); ++i)
+      for (std::size_t i = 0; i < regions.size (); ++i)
       {
         double dist = pointToPlaneDistance (picked_point, regions[i].getCoefficients ()); 
         if (dist < max_dist)
@@ -358,7 +362,7 @@ class ObjectSelection
         if (cloud_->isOrganized ())
         {
           approximatePolygon (regions[idx], region, 0.01f, false, true);
-          print_highlight ("Planar region: %zu points initial, %zu points after refinement.\n", regions[idx].getContour ().size (), region.getContour ().size ());
+          print_highlight ("Planar region: %lu points initial, %lu points after refinement.\n", regions[idx].getContour ().size (), region.getContour ().size ());
         }
         else
         {
@@ -384,7 +388,7 @@ class ObjectSelection
           PointCloud<PointT> plane_hull;
           chull.reconstruct (plane_hull);
           region.setContour (plane_hull);
-          print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%zu", plane_hull.size ()); print_info (" points]\n");
+          print_info ("[done, "); print_value ("%g", tt.toc ()); print_info (" ms : "); print_value ("%lu", plane_hull.size ()); print_info (" points]\n");
         }
 
       }
@@ -413,8 +417,8 @@ class ObjectSelection
       if (idx == -1)
         return;
 
-      vector<int> indices (1);
-      vector<float> distances (1);
+      std::vector<int> indices (1);
+      std::vector<float> distances (1);
 
       // Get the point that was picked
       PointT picked_pt;
@@ -434,7 +438,7 @@ class ObjectSelection
       if (image_viewer_)
       {
         // Get the [u, v] in pixel coordinates for the ImageViewer. Remember that 0,0 is bottom left.
-        uint32_t width  = search_->getInputCloud ()->width,
+        std::uint32_t width  = search_->getInputCloud ()->width,
                  height = search_->getInputCloud ()->height;
         int v = height - indices[0] / width,
             u = indices[0] % width;
@@ -457,16 +461,13 @@ class ObjectSelection
         return;
       }
       // Else, draw it on screen
-      else
-      {
-        cloud_viewer_->addPolygon (region, 0.0, 0.0, 1.0, "region");
-        cloud_viewer_->setShapeRenderingProperties (visualization::PCL_VISUALIZER_LINE_WIDTH, 10, "region");
+      cloud_viewer_->addPolygon (region, 0.0, 0.0, 1.0, "region");
+      cloud_viewer_->setShapeRenderingProperties (visualization::PCL_VISUALIZER_LINE_WIDTH, 10, "region");
 
-        // Draw in image space
-        if (image_viewer_)
-        {
-          image_viewer_->addPlanarPolygon (search_->getInputCloud (), region, 0.0, 0.0, 1.0, "refined_region", 1.0);
-        }
+      // Draw in image space
+      if (image_viewer_)
+      {
+        image_viewer_->addPlanarPolygon (search_->getInputCloud (), region, 0.0, 0.0, 1.0, "refined_region", 1.0);
       }
 
       // If no object could be determined, exit
@@ -475,23 +476,20 @@ class ObjectSelection
         PCL_ERROR ("No object detected. Please select another point or relax the thresholds and continue.\n");
         return;
       }
-      else
+      // Visualize the object in 3D...
+      visualization::PointCloudColorHandlerCustom<PointT> red (object_, 255, 0, 0);
+      if (!cloud_viewer_->updatePointCloud (object_, red, "object"))
+        cloud_viewer_->addPointCloud (object_, red, "object");
+      // ...and 2D
+      if (image_viewer_)
       {
-        // Visualize the object in 3D...
-        visualization::PointCloudColorHandlerCustom<PointT> red (object_, 255, 0, 0);
-        if (!cloud_viewer_->updatePointCloud (object_, red, "object"))
-          cloud_viewer_->addPointCloud (object_, red, "object");
-        // ...and 2D
-        if (image_viewer_)
-        {
-          image_viewer_->removeLayer ("object");
-          image_viewer_->addMask (search_->getInputCloud (), *object_, "object");
-        }
-
-        // ...and 2D
-        if (image_viewer_)
-          image_viewer_->addRectangle (search_->getInputCloud (), *object_);
+        image_viewer_->removeLayer ("object");
+        image_viewer_->addMask (search_->getInputCloud (), *object_, "object");
       }
+
+      // ...and 2D
+      if (image_viewer_)
+        image_viewer_->addRectangle (search_->getInputCloud (), *object_);
     }
     
     /////////////////////////////////////////////////////////////////////////
@@ -516,7 +514,7 @@ class ObjectSelection
           if (image_viewer_->wasStopped ())
             break;
         }
-        boost::this_thread::sleep (boost::posix_time::microseconds (100));
+        std::this_thread::sleep_for(100us);
       }
     }
     
@@ -529,9 +527,9 @@ class ObjectSelection
       if (cloud_->isOrganized ())
       {
         // If the dataset is organized, and has RGB data, create an image viewer
-        vector<pcl::PCLPointField> fields;
+        std::vector<pcl::PCLPointField> fields;
         int rgba_index = -1;
-        rgba_index = getFieldIndex (*cloud_, "rgba", fields);
+        rgba_index = getFieldIndex<PointT> ("rgba", fields);
        
         if (rgba_index >= 0)
         {
@@ -545,7 +543,7 @@ class ObjectSelection
           int poff = fields[rgba_index].offset;
           // BGR to RGB
           rgb_data_ = new unsigned char [cloud_->width * cloud_->height * 3];
-          for (uint32_t i = 0; i < cloud_->width * cloud_->height; ++i)
+          for (std::uint32_t i = 0; i < cloud_->width * cloud_->height; ++i)
           {
             RGB rgb;
             memcpy (&rgb, reinterpret_cast<unsigned char*> (&cloud_->points[i]) + poff, sizeof (rgb));
@@ -584,7 +582,7 @@ class ObjectSelection
         return (false);
       }
       print_info ("[done, "); print_value ("%g", tt.toc ()); 
-      print_info (" ms : "); print_value ("%zu", cloud_->size ()); print_info (" points]\n");
+      print_info (" ms : "); print_value ("%lu", cloud_->size ()); print_info (" points]\n");
       
       if (cloud_->isOrganized ())
         search_.reset (new search::OrganizedNeighbor<PointT>);
@@ -609,8 +607,8 @@ class ObjectSelection
       }
     }
 
-    boost::shared_ptr<visualization::PCLVisualizer> cloud_viewer_;
-    boost::shared_ptr<visualization::ImageViewer> image_viewer_;
+    visualization::PCLVisualizer::Ptr cloud_viewer_;
+    visualization::ImageViewer::Ptr image_viewer_;
     
     typename PointCloud<PointT>::Ptr cloud_;
     typename search::Search<PointT>::Ptr search_;

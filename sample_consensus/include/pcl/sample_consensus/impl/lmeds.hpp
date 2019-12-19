@@ -65,7 +65,7 @@ pcl::LeastMedianSquares<PointT>::computeModel (int debug_verbosity_level)
   int n_inliers_count = 0;
 
   unsigned skipped_count = 0;
-  // supress infinite loops by just allowing 10 x maximum allowed iterations for invalid model parameters!
+  // suppress infinite loops by just allowing 10 x maximum allowed iterations for invalid model parameters!
   const unsigned max_skip = max_iterations_ * 10;
   
   // Iterate
@@ -100,7 +100,7 @@ pcl::LeastMedianSquares<PointT>::computeModel (int debug_verbosity_level)
 
     std::sort (distances.begin (), distances.end ());
     // d_cur_penalty = median (distances)
-    size_t mid = sac_model_->getIndices ()->size () / 2;
+    std::size_t mid = sac_model_->getIndices ()->size () / 2;
     if (mid >= distances.size ())
     {
       //iterations_++;
@@ -155,14 +155,14 @@ pcl::LeastMedianSquares<PointT>::computeModel (int debug_verbosity_level)
 
   if (distances.size () != indices.size ())
   {
-    PCL_ERROR ("[pcl::LeastMedianSquares::computeModel] Estimated distances (%zu) differs than the normal of indices (%zu).\n", distances.size (), indices.size ());
+    PCL_ERROR ("[pcl::LeastMedianSquares::computeModel] Estimated distances (%lu) differs than the normal of indices (%lu).\n", distances.size (), indices.size ());
     return (false);
   }
 
   inliers_.resize (distances.size ());
   // Get the inliers for the best model found
   n_inliers_count = 0;
-  for (size_t i = 0; i < distances.size (); ++i)
+  for (std::size_t i = 0; i < distances.size (); ++i)
     if (distances[i] <= threshold_)
       inliers_[n_inliers_count++] = indices[i];
 
@@ -170,7 +170,7 @@ pcl::LeastMedianSquares<PointT>::computeModel (int debug_verbosity_level)
   inliers_.resize (n_inliers_count);
 
   if (debug_verbosity_level > 0)
-    PCL_DEBUG ("[pcl::LeastMedianSquares::computeModel] Model: %zu size, %d inliers.\n", model_.size (), n_inliers_count);
+    PCL_DEBUG ("[pcl::LeastMedianSquares::computeModel] Model: %lu size, %d inliers.\n", model_.size (), n_inliers_count);
 
   return (true);
 }

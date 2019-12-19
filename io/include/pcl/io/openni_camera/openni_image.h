@@ -33,11 +33,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  *
  */
+
+#pragma once
+ 
 #include <pcl/pcl_config.h>
 #ifdef HAVE_OPENNI
-
-#ifndef __OPENNI_IMAGE__
-#define __OPENNI_IMAGE__
 
 #include <pcl/pcl_exports.h>
 #include "openni.h"
@@ -58,15 +58,15 @@ namespace openni_wrapper
   class PCL_EXPORTS Image
   {
   public:
-    typedef boost::shared_ptr<Image> Ptr;
-    typedef boost::shared_ptr<const Image> ConstPtr;
+    using Ptr = boost::shared_ptr<Image>;
+    using ConstPtr = boost::shared_ptr<const Image>;
 
-    typedef enum
+    enum Encoding
     {
       BAYER_GRBG,
       YUV422,
       RGB
-    } Encoding;
+    };
 
     /**
      * @author Suat Gedikli
@@ -87,7 +87,7 @@ namespace openni_wrapper
      * @param[in] input_height height of input image
      * @param[in] output_width width of desired output image
      * @param[in] output_height height of desired output image
-     * @return wheter the resizing is supported or not.
+     * @return whether the resizing is supported or not.
      */
     virtual bool isResizingSupported (unsigned input_width, unsigned input_height,
                                       unsigned output_width, unsigned output_height) const = 0;
@@ -169,7 +169,7 @@ namespace openni_wrapper
   } ;
 
   Image::Image (boost::shared_ptr<xn::ImageMetaData> image_meta_data) throw ()
-  : image_md_ (image_meta_data)
+  : image_md_ (std::move(image_meta_data))
   {
   }
 
@@ -206,4 +206,3 @@ namespace openni_wrapper
   }
 } // namespace
 #endif
-#endif //__OPENNI_IMAGE__

@@ -35,8 +35,7 @@
  *
  */
 
-#ifndef PCL_IO_IFS_IO_H_
-#define PCL_IO_IFS_IO_H_
+#pragma once
 
 #include <pcl/point_cloud.h>
 #include <pcl/PCLPointCloud2.h>
@@ -174,7 +173,7 @@ namespace pcl
              const std::string &cloud_name = "cloud")
       {
         pcl::PCLPointCloud2 blob;
-        pcl::fromPCLPointCloud2<PointT> (blob, cloud);
+        pcl::toPCLPointCloud2<PointT> (cloud, blob);
         return (write (file_name, blob, cloud_name));
       }
   };
@@ -254,5 +253,3 @@ namespace pcl
     }
   }
 }
-
-#endif  //#ifndef PCL_IO_IFS_IO_H_

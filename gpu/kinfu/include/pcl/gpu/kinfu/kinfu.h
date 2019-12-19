@@ -35,8 +35,7 @@
  *
  */
 
-#ifndef PCL_KINFU_KINFUTRACKER_HPP_
-#define PCL_KINFU_KINFUTRACKER_HPP_
+#pragma once
 
 #include <pcl/pcl_macros.h>
 #include <pcl/gpu/containers/device_array.h>
@@ -68,13 +67,13 @@ namespace pcl
     {
       public:
         /** \brief Pixel type for rendered image. */
-        typedef pcl::gpu::PixelRGB PixelRGB;
+        using PixelRGB = pcl::gpu::PixelRGB;
 
-        typedef DeviceArray2D<PixelRGB> View;
-        typedef DeviceArray2D<unsigned short> DepthMap;
+        using View = DeviceArray2D<PixelRGB>;
+        using DepthMap = DeviceArray2D<unsigned short>;
 
-        typedef pcl::PointXYZ PointType;
-        typedef pcl::Normal NormalType;
+        using PointType = pcl::PointXYZ;
+        using NormalType = pcl::Normal;
 
         /** \brief Constructor
           * \param[in] rows height of depth image
@@ -101,7 +100,7 @@ namespace pcl
         getDepthIntrinsics (float& fx, float& fy, float& cx, float& cy);
         
 
-        /** \brief Sets initial camera pose relative to volume coordiante space
+        /** \brief Sets initial camera pose relative to volume coordinate space
           * \param[in] pose Initial camera pose
           */
         void
@@ -109,7 +108,7 @@ namespace pcl
                         
 		/** \brief Sets truncation threshold for depth image for ICP step only! This helps 
 		  *  to filter measurements that are outside tsdf volume. Pass zero to disable the truncation.
-          * \param[in] max_icp_distance_ Maximal distance, higher values are reset to zero (means no measurement). 
+          * \param[in] max_icp_distance Maximal distance, higher values are reset to zero (means no measurement). 
           */
         void
         setDepthTruncationForICP (float max_icp_distance = 0.f);
@@ -143,10 +142,11 @@ namespace pcl
         rows ();
 
         /** \brief Processes next frame.
-          * \param[in] Depth next frame with values in millimeters
+          * \param[in] depth next frame with values in millimeters
+          * \param hint
           * \return true if can render 3D view.
           */
-        bool operator() (const DepthMap& depth, Eigen::Affine3f* hint=NULL);
+        bool operator() (const DepthMap& depth, Eigen::Affine3f* hint=nullptr);
 
         /** \brief Processes next frame (both depth and color integration). Please call initColorIntegration before invpoking this.
           * \param[in] depth next depth frame with values in millimeters
@@ -163,7 +163,7 @@ namespace pcl
         getCameraPose (int time = -1) const;
 
         /** \brief Returns number of poses including initial */
-        size_t
+        std::size_t
         getNumberOfPoses () const;
 
         /** \brief Returns TSDF volume storage */
@@ -205,13 +205,13 @@ namespace pcl
         enum { LEVELS = 3 };
 
         /** \brief ICP Correspondences  map type */
-        typedef DeviceArray2D<int> CorespMap;
+        using CorespMap = DeviceArray2D<int>;
 
         /** \brief Vertex or Normal Map type */
-        typedef DeviceArray2D<float> MapArr;
+        using MapArr = DeviceArray2D<float>;
         
-        typedef Eigen::Matrix<float, 3, 3, Eigen::RowMajor> Matrix3frm;
-        typedef Eigen::Vector3f Vector3f;
+        using Matrix3frm = Eigen::Matrix<float, 3, 3, Eigen::RowMajor>;
+        using Vector3f = Eigen::Vector3f;
 
         /** \brief Height of input depth image. */
         int rows_;
@@ -280,7 +280,7 @@ namespace pcl
         /** \brief Camera movement threshold. TSDF is integrated iff a camera movement metric exceedes some value. */
         float integration_metric_threshold_;
 
-        /** \brief ICP step is completelly disabled. Inly integratio now */
+        /** \brief ICP step is completely disabled. Only integration now. */
         bool disable_icp_;
         
         /** \brief Allocates all GPU internal buffers.
@@ -296,10 +296,8 @@ namespace pcl
         reset ();
 
 public:
-EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  PCL_MAKE_ALIGNED_OPERATOR_NEW
 
     };
   }
 };
-
-#endif /* PCL_KINFU_KINFUTRACKER_HPP_ */

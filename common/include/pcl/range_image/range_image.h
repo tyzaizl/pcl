@@ -35,8 +35,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PCL_RANGE_IMAGE_H_
-#define PCL_RANGE_IMAGE_H_
+#pragma once
 
 #include <pcl/point_cloud.h>
 #include <pcl/pcl_macros.h>
@@ -56,10 +55,10 @@ namespace pcl
   {
     public:
       // =====TYPEDEFS=====
-      typedef pcl::PointCloud<PointWithRange> BaseClass;
-      typedef std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> > VectorOfEigenVector3f;
-      typedef boost::shared_ptr<RangeImage> Ptr;
-      typedef boost::shared_ptr<const RangeImage> ConstPtr;
+      using BaseClass = pcl::PointCloud<PointWithRange>;
+      using VectorOfEigenVector3f = std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f> >;
+      using Ptr = boost::shared_ptr<RangeImage>;
+      using ConstPtr = boost::shared_ptr<const RangeImage>;
       
       enum CoordinateFrame
       {
@@ -72,7 +71,7 @@ namespace pcl
       /** Constructor */
       PCL_EXPORTS RangeImage ();
       /** Destructor */
-      PCL_EXPORTS virtual ~RangeImage ();
+      PCL_EXPORTS virtual ~RangeImage () = default;
       
       // =====STATIC VARIABLES=====
       /** The maximum number of openmp threads that can be used in this class */
@@ -203,7 +202,6 @@ namespace pcl
         *                             individual pixels in the image in the x-direction
         * \param angular_resolution_y the angular difference (in radians) between the
         *                             individual pixels in the image in the y-direction
-        * \param angular_resolution the angle (in radians) between each sample in the depth image
         * \param point_cloud_center the center of bounding sphere
         * \param point_cloud_radius the radius of the bounding sphere
         * \param sensor_pose an affine matrix defining the pose of the sensor (defaults to
@@ -350,7 +348,7 @@ namespace pcl
       getTransformationToWorldSystem () const { return to_world_system_;}
       
       /** Getter for the angular resolution of the range image in x direction in radians per pixel.
-       *  Provided for downwards compatability */
+       *  Provided for downwards compatibility */
       inline float
       getAngularResolution () const { return angular_resolution_x_;}
       
@@ -537,7 +535,7 @@ namespace pcl
       inline bool
       getNormalForClosestNeighbors (int x, int y, int radius, const Eigen::Vector3f& point,
                                     int no_of_nearest_neighbors, Eigen::Vector3f& normal,
-                                    Eigen::Vector3f* point_on_plane=NULL, int step_size=1) const;
+                                    Eigen::Vector3f* point_on_plane=nullptr, int step_size=1) const;
       
       /** Same as above, using default values */
       inline bool
@@ -550,9 +548,9 @@ namespace pcl
                              int no_of_closest_neighbors, int step_size,
                              float& max_closest_neighbor_distance_squared,
                              Eigen::Vector3f& normal, Eigen::Vector3f& mean, Eigen::Vector3f& eigen_values,
-                             Eigen::Vector3f* normal_all_neighbors=NULL,
-                             Eigen::Vector3f* mean_all_neighbors=NULL,
-                             Eigen::Vector3f* eigen_values_all_neighbors=NULL) const;
+                             Eigen::Vector3f* normal_all_neighbors=nullptr,
+                             Eigen::Vector3f* mean_all_neighbors=nullptr,
+                             Eigen::Vector3f* eigen_values_all_neighbors=nullptr) const;
       
       // Return the squared distance to the n-th neighbors of the point at x,y
       inline float
@@ -747,7 +745,7 @@ namespace pcl
       getViewingDirection (const Eigen::Vector3f& point, Eigen::Vector3f& viewing_direction) const;
       
       /** Return a newly created Range image.
-       *  Can be reimplmented in derived classes like RangeImagePlanar to return an image of the same type. */
+       *  Can be reimplemented in derived classes like RangeImagePlanar to return an image of the same type. */
       PCL_EXPORTS virtual RangeImage* 
       getNew () const { return new RangeImage; }
 
@@ -760,8 +758,8 @@ namespace pcl
       // BaseClass:
       //   roslib::Header header;
       //   std::vector<PointT> points;
-      //   uint32_t width;
-      //   uint32_t height;
+      //   std::uint32_t width;
+      //   std::uint32_t height;
       //   bool is_dense;
 
       static bool debug; /**< Just for... well... debugging purposes. :-) */
@@ -772,9 +770,9 @@ namespace pcl
       Eigen::Affine3f to_world_system_;        /**< Inverse of to_range_image_system_ */
       float angular_resolution_x_;             /**< Angular resolution of the range image in x direction in radians per pixel */
       float angular_resolution_y_;             /**< Angular resolution of the range image in y direction in radians per pixel */
-      float angular_resolution_x_reciprocal_;  /**< 1.0/angular_resolution_x_ - provided for better performace of
+      float angular_resolution_x_reciprocal_;  /**< 1.0/angular_resolution_x_ - provided for better performance of
                                                 *   multiplication compared to division */
-      float angular_resolution_y_reciprocal_;  /**< 1.0/angular_resolution_y_ - provided for better performace of
+      float angular_resolution_y_reciprocal_;  /**< 1.0/angular_resolution_y_ - provided for better performance of
                                                 *   multiplication compared to division */
       int image_offset_x_, image_offset_y_;    /**< Position of the top left corner of the range image compared to
                                                 *   an image of full size (360x180 degrees) */
@@ -797,7 +795,7 @@ namespace pcl
       static inline float
       asinLookUp (float value);
       
-      /** Query the atan2 lookup table */
+      /** Query the std::atan2 lookup table */
       static inline float
       atan2LookUp (float y, float x);
      
@@ -807,7 +805,7 @@ namespace pcl
 
 
     public:
-      EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+      PCL_MAKE_ALIGNED_OPERATOR_NEW
   };
 
   /**
@@ -841,5 +839,3 @@ namespace pcl
 
 
 #include <pcl/range_image/impl/range_image.hpp>  // Definitions of templated and inline functions
-
-#endif  //#ifndef PCL_RANGE_IMAGE_H_

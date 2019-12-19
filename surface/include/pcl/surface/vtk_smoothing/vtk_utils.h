@@ -36,8 +36,7 @@
  *
  */
 
-#ifndef VTK_UTILS_H_
-#define VTK_UTILS_H_
+#pragma once
 
 #include <pcl/pcl_macros.h>
 #include <pcl/PolygonMesh.h>
@@ -50,11 +49,13 @@ namespace pcl
     public:
       /** \brief Convert a PCL PolygonMesh to a VTK vtkPolyData.
         * \param[in] triangles PolygonMesh to be converted to vtkPolyData, stored in the object.
+        * \param[out] triangles_out_vtk
         */
       static int
       convertToVTK (const pcl::PolygonMesh &triangles, vtkSmartPointer<vtkPolyData> &triangles_out_vtk);
 
       /** \brief Convert the vtkPolyData object back to PolygonMesh.
+        * \param[in] vtk_polygons
         * \param[out] triangles the PolygonMesh to store the vtkPolyData in.
         */
       static void
@@ -77,5 +78,3 @@ namespace pcl
       mesh2vtk (const pcl::PolygonMesh& mesh, vtkSmartPointer<vtkPolyData> &poly_data);
   };
 }
-
-#endif /* VTK_UTILS_H_ */

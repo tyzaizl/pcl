@@ -61,12 +61,12 @@ pcl::RandomSampleConsensus<PointT>::computeModel (int)
   std::vector<int> selection;
   Eigen::VectorXf model_coefficients;
 
-  double log_probability  = log (1.0 - probability_);
+  double log_probability  = std::log (1.0 - probability_);
   double one_over_indices = 1.0 / static_cast<double> (sac_model_->getIndices ()->size ());
 
   int n_inliers_count = 0;
   unsigned skipped_count = 0;
-  // supress infinite loops by just allowing 10 x maximum allowed iterations for invalid model parameters!
+  // suppress infinite loops by just allowing 10 x maximum allowed iterations for invalid model parameters!
   const unsigned max_skip = max_iterations_ * 10;
   
   // Iterate
@@ -105,12 +105,12 @@ pcl::RandomSampleConsensus<PointT>::computeModel (int)
       model_              = selection;
       model_coefficients_ = model_coefficients;
 
-      // Compute the k parameter (k=log(z)/log(1-w^n))
+      // Compute the k parameter (k=std::log(z)/std::log(1-w^n))
       double w = static_cast<double> (n_best_inliers_count) * one_over_indices;
       double p_no_outliers = 1.0 - pow (w, static_cast<double> (selection.size ()));
       p_no_outliers = (std::max) (std::numeric_limits<double>::epsilon (), p_no_outliers);       // Avoid division by -Inf
       p_no_outliers = (std::min) (1.0 - std::numeric_limits<double>::epsilon (), p_no_outliers);   // Avoid division by 0.
-      k = log_probability / log (p_no_outliers);
+      k = log_probability / std::log (p_no_outliers);
     }
 
     ++iterations_;
@@ -122,7 +122,7 @@ pcl::RandomSampleConsensus<PointT>::computeModel (int)
     }
   }
 
-  PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] Model: %zu size, %d inliers.\n", model_.size (), n_best_inliers_count);
+  PCL_DEBUG ("[pcl::RandomSampleConsensus::computeModel] Model: %lu size, %d inliers.\n", model_.size (), n_best_inliers_count);
 
   if (model_.empty ())
   {

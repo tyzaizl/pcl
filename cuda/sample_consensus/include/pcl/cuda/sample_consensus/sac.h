@@ -35,8 +35,7 @@
  *
  */
 
-#ifndef PCL_CUDA_SAMPLE_CONSENSUS_H_
-#define PCL_CUDA_SAMPLE_CONSENSUS_H_
+#pragma once
 
 #include <pcl/cuda/sample_consensus/sac_model.h>
 #include <pcl/cuda/point_cloud.h>
@@ -50,24 +49,24 @@ namespace pcl
     template <template <typename> class Storage>
     class SampleConsensus
     {
-      typedef typename SampleConsensusModel<Storage>::Ptr SampleConsensusModelPtr;
-      typedef typename SampleConsensusModel<Storage>::Hypotheses Hypotheses;
+      using SampleConsensusModelPtr = typename SampleConsensusModel<Storage>::Ptr;
+      using Hypotheses = typename SampleConsensusModel<Storage>::Hypotheses;
 
-      typedef typename SampleConsensusModel<Storage>::Indices Indices;
-      typedef typename SampleConsensusModel<Storage>::IndicesPtr IndicesPtr;
-      typedef typename SampleConsensusModel<Storage>::IndicesConstPtr IndicesConstPtr;
+      using Indices = typename SampleConsensusModel<Storage>::Indices;
+      using IndicesPtr = typename SampleConsensusModel<Storage>::IndicesPtr;
+      using IndicesConstPtr = typename SampleConsensusModel<Storage>::IndicesConstPtr;
 
       private:
         /** \brief Constructor for base SAC. */
         SampleConsensus () {};
 
       public:
-        typedef typename Storage<float>::type Coefficients;
-        typedef boost::shared_ptr <Coefficients> CoefficientsPtr;
-        typedef boost::shared_ptr <const Coefficients> CoefficientsConstPtr;
+        using Coefficients = typename Storage<float>::type;
+        using CoefficientsPtr = boost::shared_ptr <Coefficients>;
+        using CoefficientsConstPtr = boost::shared_ptr <const Coefficients>;
 
-        typedef boost::shared_ptr<SampleConsensus> Ptr;
-        typedef boost::shared_ptr<const SampleConsensus> ConstPtr;
+        using Ptr = boost::shared_ptr<SampleConsensus>;
+        using ConstPtr = boost::shared_ptr<const SampleConsensus>;
 
         /** \brief Constructor for base SAC.
           * \param model a Sample Consensus model
@@ -128,13 +127,13 @@ namespace pcl
         virtual bool 
         computeModel (int debug_verbosity_level = 0) = 0;
 
-        /** \brief Get a set of randomly selected indices.
+        /* \brief Get a set of randomly selected indices.
           * \param indices the input indices vector
           * \param nr_samples the desired number of point indices to randomly select
           * \param indices_subset the resultant output set of randomly selected indices
           */
-  /*      inline void
-        getRandomSamples (const IndicesPtr &indices, size_t nr_samples, 
+/*      inline void
+        getRandomSamples (const IndicesPtr &indices, std::size_t nr_samples, 
                           std::set<int> &indices_subset)
         {
           indices_subset.clear ();
@@ -149,15 +148,14 @@ namespace pcl
         getModel (Indices &model) { model = model_; }
 
         /** \brief Return the best set of inliers found so far for this model. 
-          * \param inliers the resultant set of inliers
           */
-  //      inline void 
-  //      getInliers (std::vector<int> &inliers) { inliers = inliers_; }
+  //    inline void 
+  //    getInliers (std::vector<int> &inliers) { inliers = inliers_; }
         inline IndicesPtr 
         getInliers () { return inliers_; }
 
-  //      inline void 
-  //      getInliersStencil (Indices &inliers) { inliers = inliers_stencil_; }
+  //    inline void 
+  //    getInliersStencil (Indices &inliers) { inliers = inliers_stencil_; }
         inline IndicesPtr
         getInliersStencil () { return inliers_stencil_; }
 
@@ -198,5 +196,3 @@ namespace pcl
     };
   } // namespace
 } // namespace
-
-#endif  //#ifndef PCL_CUDA_SAMPLE_CONSENSUS_H_

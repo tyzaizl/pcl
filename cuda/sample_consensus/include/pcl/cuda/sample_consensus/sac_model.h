@@ -35,8 +35,7 @@
  *
  */
 
-#ifndef PCL_CUDA_SAMPLE_CONSENSUS_MODEL_H_
-#define PCL_CUDA_SAMPLE_CONSENSUS_MODEL_H_
+#pragma once
 
 #include <float.h>
 #include <thrust/sequence.h>
@@ -76,7 +75,7 @@ namespace pcl
 #ifdef __CUDACC__
             return (isnan (pt.x) | isnan (pt.y) | isnan (pt.z)) == 1; 
 #else
-            return (pcl_isnan (pt.x) | pcl_isnan (pt.y) | pcl_isnan (pt.z)) == 1;
+            return (std::isnan (pt.x) | std::isnan (pt.y) | std::isnan (pt.z)) == 1;
 #endif
         }
     };
@@ -88,24 +87,24 @@ namespace pcl
     class SampleConsensusModel
     {
       public:
-        typedef PointCloudAOS<Storage> PointCloud;
-        typedef typename PointCloud::Ptr PointCloudPtr;
-        typedef typename PointCloud::ConstPtr PointCloudConstPtr;
+        using PointCloud = PointCloudAOS<Storage>;
+        using PointCloudPtr = typename PointCloud::Ptr;
+        using PointCloudConstPtr = typename PointCloud::ConstPtr;
 
-        typedef boost::shared_ptr<SampleConsensusModel> Ptr;
-        typedef boost::shared_ptr<const SampleConsensusModel> ConstPtr;
+        using Ptr = boost::shared_ptr<SampleConsensusModel>;
+        using ConstPtr = boost::shared_ptr<const SampleConsensusModel>;
 
-        typedef typename Storage<int>::type Indices;
-        typedef boost::shared_ptr<typename Storage<int>::type> IndicesPtr;
-        typedef boost::shared_ptr<const typename Storage<int>::type> IndicesConstPtr;
+        using Indices = typename Storage<int>::type;
+        using IndicesPtr = boost::shared_ptr<typename Storage<int>::type>;
+        using IndicesConstPtr = boost::shared_ptr<const typename Storage<int>::type>;
 
-        typedef typename Storage<float>::type Coefficients;
-        typedef boost::shared_ptr <Coefficients> CoefficientsPtr;
-        typedef boost::shared_ptr <const Coefficients> CoefficientsConstPtr;
+        using Coefficients = typename Storage<float>::type;
+        using CoefficientsPtr = boost::shared_ptr <Coefficients>;
+        using CoefficientsConstPtr = boost::shared_ptr <const Coefficients>;
 
-        typedef typename Storage<float4>::type Hypotheses;
-        //TODO: should be vector<int> instead of int. but currently, only 1point plane model supports this
-        typedef typename Storage<int>::type Samples;
+        using Hypotheses = typename Storage<float4>::type;
+        //TODO: should be std::vector<int> instead of int. but currently, only 1point plane model supports this
+        using Samples = typename Storage<int>::type;
 
       private:
         /** \brief Empty constructor for base SampleConsensusModel. */
@@ -123,10 +122,10 @@ namespace pcl
           setInputCloud (cloud);
         }
 
-        /** \brief Constructor for base SampleConsensusModel.
-          * \param cloud the input point cloud dataset
-          * \param indices a vector of point indices to be used from \a cloud
-          */
+        /* \brief Constructor for base SampleConsensusModel.
+         * \param cloud the input point cloud dataset
+         * \param indices a vector of point indices to be used from \a cloud
+         */
   /*      SampleConsensusModel (const PointCloudConstPtr &cloud, const std::vector<int> &indices) :
                               input_ (cloud),
                               indices_ (boost::make_shared <std::vector<int> > (indices)),
@@ -171,7 +170,7 @@ namespace pcl
         isSampleInlier (IndicesPtr &inliers_stencil, Samples &samples, unsigned int &i)
           {return ((*inliers_stencil)[samples[i]] != -1);};
 
-        /** \brief Recompute the model coefficients using the given inlier set
+        /* \brief Recompute the model coefficients using the given inlier set
           * and return them to the user. Pure virtual.
           *
           * @note: these are the coefficients of the model after refinement
@@ -187,12 +186,11 @@ namespace pcl
   //                                 const Eigen::VectorXf &model_coefficients,
   //                                 Eigen::VectorXf &optimized_coefficients) = 0;
 
-        /** \brief Compute all distances from the cloud data to a given model. Pure virtual.
-          * 
-          * \param model_coefficients the coefficients of a model that we need to
-          * compute distances to 
-          * \param distances the resultant estimated distances
-          */
+      /*  \brief Compute all distances from the cloud data to a given model. Pure virtual.
+        * \param model_coefficients the coefficients of a model that we need to
+        *   compute distances to 
+        * \param distances the resultant estimated distances
+        */
   //      virtual void 
   //      getDistancesToModel (const Eigen::VectorXf &model_coefficients, 
   //                           std::vector<float> &distances) = 0;
@@ -205,6 +203,7 @@ namespace pcl
           * \param threshold a maximum admissible distance threshold for
           * determining the inliers from the outliers
           * \param inliers the resultant model inliers
+          * \param inliers_stencil
           */
         virtual int
         selectWithinDistance (const Coefficients &model_coefficients, 
@@ -231,7 +230,7 @@ namespace pcl
         int
         deleteIndices (const Hypotheses &h, int idx, IndicesPtr &inliers, const IndicesPtr &inliers_delete);
 
-        /** \brief Create a new point cloud with inliers projected onto the model. Pure virtual.
+        /*  \brief Create a new point cloud with inliers projected onto the model. Pure virtual.
           * \param inliers the data inliers that we want to project on the model
           * \param model_coefficients the coefficients of a model
           * \param projected_points the resultant projected points
@@ -245,7 +244,7 @@ namespace pcl
   //                     PointCloud &projected_points, 
   //                     bool copy_data_fields = true) = 0;
 
-        /** \brief Verify whether a subset of indices verifies a given set of
+        /*  \brief Verify whether a subset of indices verifies a given set of
           * model coefficients. Pure virtual.
           *
           * \param indices the data indices that need to be tested against the model
@@ -268,15 +267,15 @@ namespace pcl
         inline PointCloudConstPtr 
         getInputCloud () const { return (input_); }
 
-        /** \brief Provide a pointer to the vector of indices that represents the input data.
-          * \param indices a pointer to the vector of indices that represents the input data.
-          */
+        /* \brief Provide a pointer to the vector of indices that represents the input data.
+         * \param indices a pointer to the vector of indices that represents the input data.
+         */
   //      inline void 
   //      setIndices (const IndicesPtr &indices) { indices_ = indices; }
 
-        /** \brief Provide the vector of indices that represents the input data.
-          * \param indices the vector of indices that represents the input data.
-          */
+        /* \brief Provide the vector of indices that represents the input data.
+         * \param indices the vector of indices that represents the input data.
+         */
   //      inline void 
   //      setIndices (std::vector<int> &indices) 
   //      { 
@@ -296,11 +295,11 @@ namespace pcl
           return (indices_);
         }
 
-        /** \brief Return an unique id for each type of model employed. */
+        /* \brief Return an unique id for each type of model employed. */
   //      virtual SacModel 
   //      getModelType () const = 0;
 
-        /** \brief Return the size of a sample from which a model is computed */
+        /* \brief Return the size of a sample from which a model is computed */
   //      inline unsigned int 
   //      getSampleSize () const { return SAC_SAMPLE_SIZE.at (getModelType ()); }
 
@@ -340,7 +339,7 @@ namespace pcl
 
 
       protected:
-        /** \brief Check whether a model is valid given the user constraints.
+        /*  \brief Check whether a model is valid given the user constraints.
           * \param model_coefficients the set of model coefficients
           */
   //      virtual inline bool
@@ -366,23 +365,23 @@ namespace pcl
         thrust::minstd_rand rngl_;
     };
 
-    /** \brief @b SampleConsensusModelFromNormals represents the base model class
+    /*  \brief @b SampleConsensusModelFromNormals represents the base model class
       * for models that require the use of surface normals for estimation.
       */
   //  template <typename PointT, typename PointNT>
   //  class SampleConsensusModelFromNormals
   //  {
   //    public:
-  //      typedef typename pcl::PointCloud<PointNT>::ConstPtr PointCloudNConstPtr;
-  //      typedef typename pcl::PointCloud<PointNT>::Ptr PointCloudNPtr;
+  //      using PointCloudNConstPtr = typename pcl::PointCloud<PointNT>::ConstPtr;
+  //      using PointCloudNPtr = typename pcl::PointCloud<PointNT>::Ptr;
   //
-  //      typedef boost::shared_ptr<SampleConsensusModelFromNormals> Ptr;
-  //      typedef boost::shared_ptr<const SampleConsensusModelFromNormals> ConstPtr;
+  //      using Ptr = boost::shared_ptr<SampleConsensusModelFromNormals>;
+  //      using ConstPtr = boost::shared_ptr<const SampleConsensusModelFromNormals>;
   //
-  //      /** \brief Empty constructor for base SampleConsensusModelFromNormals. */
+  //      /* \brief Empty constructor for base SampleConsensusModelFromNormals. */
   //      SampleConsensusModelFromNormals () : normal_distance_weight_ (0.0) {};
   //
-  //      /** \brief Set the normal angular distance weight.
+  //      /*  \brief Set the normal angular distance weight.
   //        * \param w the relative weight (between 0 and 1) to give to the angular
   //        * distance (0 to pi/2) between point normals and the plane normal.
   //        * (The Euclidean distance will have weight 1-w.)
@@ -390,11 +389,11 @@ namespace pcl
   //      inline void 
   //      setNormalDistanceWeight (float w) { normal_distance_weight_ = w; }
   //
-  //      /** \brief Get the normal angular distance weight. */
+  //      /* \brief Get the normal angular distance weight. */
   //      inline float 
   //      getNormalDistanceWeight () { return (normal_distance_weight_); }
   //
-  //      /** \brief Provide a pointer to the input dataset that contains the point
+  //      /* \brief Provide a pointer to the input dataset that contains the point
   //        * normals of the XYZ dataset.
   //        *
   //        * \param normals the const boost shared pointer to a PointCloud message
@@ -402,22 +401,20 @@ namespace pcl
   //      inline void 
   //      setInputNormals (const PointCloudNConstPtr &normals) { normals_ = normals; }
   //
-  //      /** \brief Get a pointer to the normals of the input XYZ point cloud dataset. */
+  //      /* \brief Get a pointer to the normals of the input XYZ point cloud dataset. */
   //      inline PointCloudNConstPtr 
   //      getInputNormals () { return (normals_); }
   //
   //    protected:
-  //      /** \brief The relative weight (between 0 and 1) to give to the angular
+  //      /* \brief The relative weight (between 0 and 1) to give to the angular
   //        * distance (0 to pi/2) between point normals and the plane normal. 
   //        */
   //      float normal_distance_weight_;
   //
-  //      /** \brief A pointer to the input dataset that contains the point normals
+  //      /* \brief A pointer to the input dataset that contains the point normals
   //        * of the XYZ dataset. 
   //        */
   //      PointCloudNConstPtr normals_;
   //  };
   } // namespace_
 } // namespace_
-
-#endif  //#ifndef PCL_CUDA_SAMPLE_CONSENSUS_MODEL_H_

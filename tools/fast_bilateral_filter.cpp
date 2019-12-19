@@ -93,7 +93,7 @@ compute (const pcl::PCLPointCloud2::ConstPtr &input, pcl::PCLPointCloud2 &output
   PointCloud<PointXYZ> xyz_filtered;
   fbf.filter (xyz_filtered);
 
-  print_highlight ("Filtered data in "); print_value ("%g", tt.toc ()); print_info (" ms for "); print_value ("%zu", xyz_filtered.size ()); print_info (" points.\n");
+  print_highlight ("Filtered data in "); print_value ("%g", tt.toc ()); print_info (" ms for "); print_value ("%lu", xyz_filtered.size ()); print_info (" points.\n");
 
   // Convert data back
   pcl::PCLPointCloud2 output_xyz;
@@ -110,7 +110,7 @@ saveCloud (const string &filename, const pcl::PCLPointCloud2 &output,
 }
 
 int
-batchProcess (const vector<string> &pcd_files, string &output_dir, float sigma_s, float sigma_r)
+batchProcess (const std::vector<string> &pcd_files, string &output_dir, float sigma_s, float sigma_r)
 {
 #if _OPENMP
 #pragma omp parallel for
@@ -131,7 +131,7 @@ batchProcess (const vector<string> &pcd_files, string &output_dir, float sigma_s
     // Prepare output file name
     string filename = pcd_files[i];
     boost::trim (filename);
-    vector<string> st;
+    std::vector<string> st;
     boost::split (st, filename, boost::is_any_of ("/\\"), boost::token_compress_on);
     
     // Save into the second file
@@ -178,7 +178,7 @@ main (int argc, char** argv)
   if (!batch_mode)
   {
     // Parse the command line arguments for .pcd files
-    vector<int> p_file_indices;
+    std::vector<int> p_file_indices;
     p_file_indices = parse_file_extension_argument (argc, argv, ".pcd");
     if (p_file_indices.size () != 2)
     {
@@ -205,9 +205,9 @@ main (int argc, char** argv)
   }
   else
   {
-    if (input_dir != "" && boost::filesystem::exists (input_dir))
+    if (!input_dir.empty() && boost::filesystem::exists (input_dir))
     {
-      vector<string> pcd_files;
+      std::vector<string> pcd_files;
       boost::filesystem::directory_iterator end_itr;
       for (boost::filesystem::directory_iterator itr (input_dir); itr != end_itr; ++itr)
       {

@@ -47,6 +47,7 @@
 #include <vector>
 #include <cstdio>
 #include <iostream>
+#include <random>
 using namespace std;
 
 #include <pcl/common/time.h>
@@ -55,8 +56,6 @@ using namespace std;
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
-using namespace pcl;
-
 #include <pcl/outofcore/outofcore.h>
 #include <pcl/outofcore/outofcore_impl.h>
 
@@ -64,9 +63,6 @@ using namespace pcl;
 
 using namespace pcl::outofcore;
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/normal_distribution.hpp>
 #include <boost/foreach.hpp>
 
 /** \brief Unit tests for UR out of core octree code which test public interface of OutofcoreOctreeBase 
@@ -74,9 +70,9 @@ using namespace pcl::outofcore;
 
 // For doing exhaustive checks this is set low remove those, and this can be
 // set much higher
-const static uint64_t numPts (10000);
+const static std::uint64_t numPts (10000);
 
-const static boost::uint32_t rngseed = 0xAAFF33DD;
+constexpr std::uint32_t rngseed = 0xAAFF33DD;
 
 const static boost::filesystem::path filename_otreeA = "treeA/tree_test.oct_idx";
 const static boost::filesystem::path filename_otreeB = "treeB/tree_test.oct_idx";
@@ -87,16 +83,16 @@ const static boost::filesystem::path filename_otreeB_LOD = "treeB_LOD/tree_test.
 const static  boost::filesystem::path outofcore_path ("point_cloud_octree/tree_test.oct_idx");
 
 
-typedef pcl::PointXYZ PointT;
+using PointT = pcl::PointXYZ;
 
 // UR Typedefs
-typedef OutofcoreOctreeBase<OutofcoreOctreeDiskContainer < PointT > , PointT > octree_disk;
-typedef OutofcoreOctreeBaseNode<OutofcoreOctreeDiskContainer < PointT > , PointT > octree_disk_node;
+using octree_disk = OutofcoreOctreeBase<OutofcoreOctreeDiskContainer < PointT > , PointT >;
+using octree_disk_node = OutofcoreOctreeBaseNode<OutofcoreOctreeDiskContainer < PointT > , PointT >;
 
-typedef OutofcoreOctreeBase<OutofcoreOctreeRamContainer< PointT> , PointT> octree_ram;
-typedef OutofcoreOctreeBaseNode<OutofcoreOctreeRamContainer<PointT> , PointT> octree_ram_node;
+using octree_ram = OutofcoreOctreeBase<OutofcoreOctreeRamContainer< PointT> , PointT>;
+using octree_ram_node = OutofcoreOctreeBaseNode<OutofcoreOctreeRamContainer<PointT> , PointT>;
 
-typedef std::vector<PointT, Eigen::aligned_allocator<PointT> > AlignedPointTVector;
+using AlignedPointTVector = std::vector<PointT, Eigen::aligned_allocator<PointT> >;
 
 AlignedPointTVector points;
 
@@ -105,10 +101,7 @@ AlignedPointTVector points;
 bool 
 compPt (const PointT &p1, const PointT &p2)
 {
-  if (p1.x != p2.x || p1.y != p2.y || p1.z != p2.z)
-    return false;
-  
-  return true;
+  return !(p1.x != p2.x || p1.y != p2.y || p1.z != p2.z);
 }
 
 TEST (PCL, Outofcore_Octree_Build)
@@ -127,13 +120,13 @@ TEST (PCL, Outofcore_Octree_Build)
   octree_disk treeB (4, min, max, filename_otreeB, "ECEF");
 
   // Equidistributed uniform pseudo-random number generator
-  boost::mt19937 rng(rngseed);
+  std::mt19937 rng (rngseed);
 
   // For testing sparse 
-  //boost::uniform_real<double> dist(0,1);
+  //std::uniform_real_distribution<double> dist(0.0, 1.0);
 
   // For testing less sparse
-  boost::normal_distribution<float> dist (0.5f, .1f);
+  std::normal_distribution<float> dist (0.5f, .1f);
 
   // Create a point
   PointT p;
@@ -147,7 +140,7 @@ TEST (PCL, Outofcore_Octree_Build)
   // p.triadID = 0;
 
   // Radomize it's position in space
-  for (size_t i = 0; i < numPts; i++)
+  for (std::size_t i = 0; i < numPts; i++)
   {
     p.x = dist (rng);
     p.y = dist (rng);
@@ -178,11 +171,11 @@ TEST (PCL, Outofcore_Octree_Build_LOD)
   octree_disk treeB (4, min, max, filename_otreeB_LOD, "ECEF");
 
   // Equidistributed uniform pseudo-random number generator
-  boost::mt19937 rng (rngseed);
+  std::mt19937 rng (rngseed);
   // For testing sparse
-  //boost::uniform_real<double> dist(0,1);
+  //std::uniform_real_distribution<double> dist(0.0, 1.0);
   // For testing less sparse
-  boost::normal_distribution<float> dist (0.5f, .1f);
+  std::normal_distribution<float> dist (0.5f, .1f);
 
   // Create a point
   PointT p;
@@ -197,7 +190,7 @@ TEST (PCL, Outofcore_Octree_Build_LOD)
   points.resize (numPts);
 
   // Radomize it's position in space
-  for (size_t i = 0; i < numPts; i++)
+  for (std::size_t i = 0; i < numPts; i++)
   {
     p.x = dist (rng);
     p.y = dist (rng);
@@ -250,8 +243,8 @@ TEST(PCL, Outofcore_Bounding_Box)
 void 
 point_test (octree_disk& t)
 {
-  boost::mt19937 rng (rngseed);
-  boost::uniform_real<float> dist(0,1);
+  std::mt19937 rng (rngseed);
+  std::uniform_real_distribution<float> dist(0.0, 1.0);
 
   Eigen::Vector3d query_box_min;
   Eigen::Vector3d qboxmax;
@@ -279,11 +272,11 @@ point_test (octree_disk& t)
     //query the list
     AlignedPointTVector pointsinregion;
 
-    for (AlignedPointTVector::iterator pointit = points.begin (); pointit != points.end (); ++pointit)
+    for (const auto &point : points)
     {
-      if ((query_box_min[0] <= pointit->x) && (pointit->x < qboxmax[0]) && (query_box_min[1] < pointit->y) && (pointit->y < qboxmax[1]) && (query_box_min[2] <= pointit->z) && (pointit->z < qboxmax[2]))
+      if ((query_box_min[0] <= point.x) && (point.x < qboxmax[0]) && (query_box_min[1] < point.y) && (point.y < qboxmax[1]) && (query_box_min[2] <= point.z) && (point.z < qboxmax[2]))
       {
-        pointsinregion.push_back (*pointit);
+        pointsinregion.push_back (point);
       }
     }
 
@@ -329,13 +322,13 @@ TEST (PCL, Outofcore_Ram_Tree)
 
   octree_ram t (min, max, .1, filename_otreeA, "ECEF");
 
-  boost::mt19937 rng (rngseed);
-  //boost::uniform_real<double> dist(0,1);//for testing sparse
-  boost::normal_distribution<float> dist (0.5f, .1f);//for testing less sparse
+  std::mt19937 rng (rngseed);
+  //std::uniform_real_distribution<double> dist(0.0, 1.0); //for testing sparse
+  std::normal_distribution<float> dist (0.5f, .1f); //for testing less sparse
   PointT p;
 
   points.resize (numPts);
-  for (size_t i = 0; i < numPts; i++)
+  for (std::size_t i = 0; i < numPts; i++)
   {
     p.x = dist(rng);
     p.y = dist(rng);
@@ -369,7 +362,7 @@ TEST (PCL, Outofcore_Ram_Tree)
 
     //query the list
     AlignedPointTVector pointsinregion;
-    BOOST_FOREACH(const PointT& p, points)
+    for (const PointT& p : points)
     {
       if ((qboxmin[0] <= p.x) && (p.x <= qboxmax[0]) && (qboxmin[1] <= p.y) && (p.y <= qboxmax[1]) && (qboxmin[2] <= p.z) && (p.z <= qboxmax[2]))
       {
@@ -406,12 +399,12 @@ class OutofcoreTest : public testing::Test
 
     OutofcoreTest () : smallest_voxel_dim () {}
 
-    virtual void SetUp ()
+    void SetUp () override
     {
       smallest_voxel_dim = 3.0f;
     }
 
-    virtual void TearDown ()
+    void TearDown () override
     {
 
     }
@@ -493,7 +486,6 @@ TEST_F (OutofcoreTest, Outofcore_ConstructorSafety)
 
   //(Case 4): Load existing tree from disk
   octree_disk octree_from_disk (filename_otreeB, true);
-  vector<uint64_t> numPoints = octree_from_disk.getNumPointsVector ();
   EXPECT_EQ (numPts , octree_from_disk.getNumPointsAtDepth (octree_from_disk.getDepth ())) << "Failure to count the number of points in a tree already existing on disk\n";
 }
 
@@ -523,14 +515,14 @@ TEST_F (OutofcoreTest, Outofcore_PointcloudConstructor)
   const Eigen::Vector3d max (1024, 1024, 1024);
 
   //create a point cloud
-  PointCloud<PointT>::Ptr test_cloud (new PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr test_cloud (new pcl::PointCloud<PointT> ());
   
   test_cloud->width = numPts;
   test_cloud->height = 1;
   test_cloud->reserve (numPts);
   
   //generate some random points
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 1024), 
                  static_cast<float> (i % 1024), 
@@ -557,7 +549,7 @@ TEST_F (OutofcoreTest, Outofcore_PointsOnBoundaries)
   const Eigen::Vector3d min (-1,-1,-1);
   const Eigen::Vector3d max (1,1,1);
   
-  PointCloud<PointT>::Ptr cloud (new PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr cloud (new pcl::PointCloud<PointT> ());
   cloud->width = 8;
   cloud->height =1;
   cloud->reserve (8);
@@ -604,8 +596,8 @@ TEST_F (OutofcoreTest, Outofcore_MultiplePointClouds)
   const Eigen::Vector3d max (1024,1024,1024);
   
   //create a point cloud
-  PointCloud<PointT>::Ptr test_cloud (new PointCloud<PointT> ());
-  PointCloud<PointT>::Ptr second_cloud (new PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr test_cloud (new pcl::PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr second_cloud (new pcl::PointCloud<PointT> ());
 
   test_cloud->width = numPts;
   test_cloud->height = 1;
@@ -616,7 +608,7 @@ TEST_F (OutofcoreTest, Outofcore_MultiplePointClouds)
   second_cloud->reserve (numPts);
   
   //generate some random points
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 1024), 
                  static_cast<float> (i % 1024), 
@@ -625,7 +617,7 @@ TEST_F (OutofcoreTest, Outofcore_MultiplePointClouds)
     test_cloud->points.push_back (tmp);
   }
 
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 1024), 
                  static_cast<float> (i % 1024), 
@@ -648,7 +640,7 @@ TEST_F (OutofcoreTest, Outofcore_MultiplePointClouds)
   pcl_cloud.buildLOD ();
   
   //check that there is at least one point in each LOD
-  for (size_t i=0; i<pcl_cloud.getDepth (); i++)
+  for (std::size_t i=0; i<pcl_cloud.getDepth (); i++)
     EXPECT_GE (pcl_cloud.getNumPointsAtDepth (i), 1) << "No points in the LOD indicates buildLOD failed\n";
 
   EXPECT_EQ (2*numPts, pcl_cloud.getNumPointsAtDepth (pcl_cloud.getDepth ())) << "Points in leaves were lost while building LOD!\n";
@@ -667,8 +659,8 @@ TEST_F (OutofcoreTest, Outofcore_PointCloudInput_LOD)
   const Eigen::Vector3d max (1024,1024,1024);
   
   //create a point cloud
-  PointCloud<PointT>::Ptr test_cloud (new PointCloud<PointT> ());
-  PointCloud<PointT>::Ptr second_cloud (new PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr test_cloud (new pcl::PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr second_cloud (new pcl::PointCloud<PointT> ());
 
   test_cloud->width = numPts;
   test_cloud->height = 1;
@@ -679,7 +671,7 @@ TEST_F (OutofcoreTest, Outofcore_PointCloudInput_LOD)
   second_cloud->reserve (numPts);
   
   //generate some random points
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 1024), 
                  static_cast<float> (i % 1024), 
@@ -688,7 +680,7 @@ TEST_F (OutofcoreTest, Outofcore_PointCloudInput_LOD)
     test_cloud->points.push_back (tmp);
   }
 
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 1024), 
                  static_cast<float> (i % 1024), 
@@ -713,17 +705,17 @@ TEST_F (OutofcoreTest, PointCloud2_Constructors)
   const Eigen::Vector3d min (-100.1, -100.1, -100.1);
   const Eigen::Vector3d max (100.1, 100.1, 100.1);
   
-  const boost::uint64_t depth = 2;
+  const std::uint64_t depth = 2;
   
   //create a point cloud
-  PointCloud<PointT>::Ptr test_cloud (new PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr test_cloud (new pcl::PointCloud<PointT> ());
 
   test_cloud->width = numPts;
   test_cloud->height = 1;
   test_cloud->reserve (numPts);
 
   //generate some random points
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 200) - 99 , 
                  static_cast<float> (i % 200) - 99, 
@@ -732,7 +724,7 @@ TEST_F (OutofcoreTest, PointCloud2_Constructors)
     test_cloud->points.push_back (tmp);
   }
 
-  boost::shared_ptr<pcl::PCLPointCloud2> point_cloud (new pcl::PCLPointCloud2 ());
+  pcl::PCLPointCloud2::Ptr point_cloud (new pcl::PCLPointCloud2);
   
   pcl::toPCLPointCloud2 (*test_cloud, *point_cloud);
 
@@ -754,23 +746,23 @@ TEST_F (OutofcoreTest, PointCloud2_Insertion)
   pcl::PointCloud<pcl::PointXYZ> point_cloud;
 
   point_cloud.points.reserve (numPts);
-  point_cloud.width = static_cast<uint32_t> (numPts);
+  point_cloud.width = static_cast<std::uint32_t> (numPts);
   point_cloud.height = 1;
 
-  for (size_t i=0; i < numPts; i++)
-    point_cloud.points.push_back (PointT (static_cast<float>(rand () % 10), static_cast<float>(rand () % 10), static_cast<float>(rand () % 10)));
+  for (std::size_t i=0; i < numPts; i++)
+    point_cloud.points.emplace_back(static_cast<float>(rand () % 10), static_cast<float>(rand () % 10), static_cast<float>(rand () % 10));
 
 
   pcl::PCLPointCloud2::Ptr input_cloud (new pcl::PCLPointCloud2 ());
 
-  toPCLPointCloud2<PointXYZ> (point_cloud, *input_cloud);
+  pcl::toPCLPointCloud2<pcl::PointXYZ> (point_cloud, *input_cloud);
   ASSERT_EQ (point_cloud.width*point_cloud.height, input_cloud->width*input_cloud->height);
 
   octree_disk octreeA (min, max, smallest_voxel_dim, filename_otreeA, "ECEF");
   octree_disk octreeB (1, min, max, filename_otreeB, "ECEF");
 
   //make sure the number of points successfully added are the same as how many we input
-  uint64_t points_in_input_cloud = input_cloud->width*input_cloud->height;
+  std::uint64_t points_in_input_cloud = input_cloud->width*input_cloud->height;
   EXPECT_EQ (octreeA.addPointCloud (input_cloud, false), points_in_input_cloud) << "Insertion failure. Number of points successfully added does not match size of input cloud\n";
   EXPECT_EQ (octreeB.addPointCloud (input_cloud, false), points_in_input_cloud) << "Insertion failure. Number of points successfully added does not match size of input cloud\n";
 }
@@ -785,8 +777,8 @@ TEST_F (OutofcoreTest, PointCloud2_MultiplePointCloud)
   const Eigen::Vector3d max (100.1, 100.1, 100.1);
 
   //create a point cloud
-  PointCloud<PointT>::Ptr first_cloud (new PointCloud<PointT> ());
-  PointCloud<PointT>::Ptr second_cloud (new PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr first_cloud (new pcl::PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr second_cloud (new pcl::PointCloud<PointT> ());
 
   first_cloud->width = numPts;
   first_cloud->height = 1;
@@ -797,7 +789,7 @@ TEST_F (OutofcoreTest, PointCloud2_MultiplePointCloud)
   second_cloud->reserve (numPts);
   
   //generate some random points
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 50), 
                 static_cast<float> (i % 50),
@@ -806,7 +798,7 @@ TEST_F (OutofcoreTest, PointCloud2_MultiplePointCloud)
     first_cloud->points.push_back (tmp);
   }
 
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 50), 
                  static_cast<float> (i % 50), 
@@ -818,8 +810,8 @@ TEST_F (OutofcoreTest, PointCloud2_MultiplePointCloud)
   pcl::PCLPointCloud2::Ptr first_cloud_ptr (new pcl::PCLPointCloud2 ());
   pcl::PCLPointCloud2::Ptr second_cloud_ptr (new pcl::PCLPointCloud2 ());
   
-  toPCLPointCloud2<PointT> (*first_cloud, *first_cloud_ptr);
-  toPCLPointCloud2<PointT> (*second_cloud, *second_cloud_ptr);
+  pcl::toPCLPointCloud2<PointT> (*first_cloud, *first_cloud_ptr);
+  pcl::toPCLPointCloud2<PointT> (*second_cloud, *second_cloud_ptr);
 
   //Create an outofcore tree which just concatenates the two clouds into a single PCD in the root node. Check that the number of points is correct.
   octree_disk shallow_outofcore (0/*depth*/, min, max, filename_otreeB, "ECEF");
@@ -830,8 +822,8 @@ TEST_F (OutofcoreTest, PointCloud2_MultiplePointCloud)
   pcl::PCLPointCloud2::Ptr result (new pcl::PCLPointCloud2 ());
   shallow_outofcore.queryBBIncludes (min, max, 0, result);
   
-  size_t num_points_queried = result->width*result->height;
-  size_t num_points_inserted = first_cloud->width*first_cloud->height + second_cloud->width*second_cloud->height;
+  std::size_t num_points_queried = result->width*result->height;
+  std::size_t num_points_inserted = first_cloud->width*first_cloud->height + second_cloud->width*second_cloud->height;
 
   EXPECT_EQ (num_points_inserted, num_points_queried) << "If num_points_inserted > num_points_on_disk, then points were dropped on insertion of multiple clouds in the outofcore octree";
 }
@@ -844,17 +836,17 @@ TEST_F (OutofcoreTest, PointCloud2_QueryBoundingBox)
   const Eigen::Vector3d min (-100.1, -100.1, -100.1);
   const Eigen::Vector3d max (100.1, 100.1, 100.1);
   
-  const boost::uint64_t depth = 2;
+  const std::uint64_t depth = 2;
 
   //create a point cloud
-  PointCloud<PointT>::Ptr test_cloud (new PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr test_cloud (new pcl::PointCloud<PointT> ());
 
   test_cloud->width = numPts;
   test_cloud->height = 1;
   test_cloud->reserve (numPts);
 
   //generate some random points
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 50) - 50 , 
                  static_cast<float> (i % 50) - 50, 
@@ -870,7 +862,7 @@ TEST_F (OutofcoreTest, PointCloud2_QueryBoundingBox)
   octree_disk octreeA (depth, min, max, filename_otreeA, "ECEF");
   octree_disk octreeB (depth, min, max, filename_otreeB, "ECEF");
 
-  uint64_t points_added = octreeA.addPointCloud (dst_blob, false);
+  std::uint64_t points_added = octreeA.addPointCloud (dst_blob, false);
   EXPECT_EQ (points_added, dst_blob->width*dst_blob->height);
   
   pcl::PCLPointCloud2::Ptr dst_blob2 (new pcl::PCLPointCloud2 ());
@@ -896,17 +888,17 @@ TEST_F (OutofcoreTest, PointCloud2_Query)
   const Eigen::Vector3d min (-100.1, -100.1, -100.1);
   const Eigen::Vector3d max (100.1, 100.1, 100.1);
   
-  const boost::uint64_t depth = 2;
+  const std::uint64_t depth = 2;
   
   //create a point cloud
-  PointCloud<PointT>::Ptr test_cloud (new PointCloud<PointT> ());
+  pcl::PointCloud<PointT>::Ptr test_cloud (new pcl::PointCloud<PointT> ());
 
   test_cloud->width = numPts;
   test_cloud->height = 1;
   test_cloud->reserve (numPts);
 
   //generate some random points
-  for (size_t i=0; i < numPts; i++)
+  for (std::size_t i=0; i < numPts; i++)
   {
     PointT tmp (static_cast<float> (i % 50) - 50 , 
                  static_cast<float> (i % 50) - 50, 
@@ -922,8 +914,8 @@ TEST_F (OutofcoreTest, PointCloud2_Query)
   octree_disk octreeA (depth, min, max, filename_otreeA, "ECEF");
   octree_disk octreeB (depth, min, max, filename_otreeB, "ECEF");
 
-  uint64_t points_added = octreeA.addPointCloud (dst_blob, false);
-  uint64_t LOD_points_added = octreeB.addPointCloud_and_genLOD (dst_blob);
+  std::uint64_t points_added = octreeA.addPointCloud (dst_blob, false);
+  std::uint64_t LOD_points_added = octreeB.addPointCloud_and_genLOD (dst_blob);
 
   ASSERT_EQ (points_added, dst_blob->width*dst_blob->height) << "Number of points returned by addPointCloud does not match the number of poitns in the input point cloud\n";
   ASSERT_EQ (LOD_points_added, dst_blob->width*dst_blob->height) << "Number of points returned by addPointCloud_and_genLOD does not match the number of points in the input point cloud\n";
@@ -935,9 +927,9 @@ TEST_F (OutofcoreTest, PointCloud2_Query)
   
   EXPECT_EQ (test_cloud->width*test_cloud->height, query_result_a->width*query_result_a->height) << "PCLPointCloud2 Query number of points returned failed\n";
 
-  uint64_t total_octreeB_LOD_query = 0;
+  std::uint64_t total_octreeB_LOD_query = 0;
   
-  for (boost::uint64_t i=0; i <= octreeB.getDepth (); i++)
+  for (std::uint64_t i=0; i <= octreeB.getDepth (); i++)
   {
     octreeB.queryBBIncludes (min, max, i, query_result_b);
     total_octreeB_LOD_query += query_result_b->width*query_result_b->height;

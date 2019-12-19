@@ -37,8 +37,7 @@
  *
  */
 
-#ifndef PCL_FILTERS_CONVOLUTION_H_
-#define PCL_FILTERS_CONVOLUTION_H_
+#pragma once
 
 #include <pcl/common/eigen.h>
 #include <pcl/common/point_operators.h>
@@ -65,8 +64,8 @@ namespace pcl
       * policies:
       * - Ignoring: elements at special locations are filled with zero
       * (default behaviour)
-      * - Mirroring: the missing rows or columns are obtained throug mirroring
-      * - Duplicating: the missing rows or columns are obtained throug
+      * - Mirroring: the missing rows or columns are obtained through mirroring
+      * - Duplicating: the missing rows or columns are obtained through
       * duplicating
       *
       * \author Nizar Sallem
@@ -77,12 +76,12 @@ namespace pcl
     class Convolution
     {
       public:
-        typedef typename pcl::PointCloud<PointIn> PointCloudIn;
-        typedef typename PointCloudIn::Ptr PointCloudInPtr;
-        typedef typename PointCloudIn::ConstPtr PointCloudInConstPtr;
-        typedef typename pcl::PointCloud<PointOut> PointCloudOut;
-        typedef boost::shared_ptr< Convolution<PointIn, PointOut> > Ptr;
-        typedef boost::shared_ptr< const Convolution<PointIn, PointOut> > ConstPtr;
+        using PointCloudIn = pcl::PointCloud<PointIn>;
+        using PointCloudInPtr = typename PointCloudIn::Ptr;
+        using PointCloudInConstPtr = typename PointCloudIn::ConstPtr;
+        using PointCloudOut = pcl::PointCloud<PointOut>;
+        using Ptr = boost::shared_ptr< Convolution<PointIn, PointOut> >;
+        using ConstPtr = boost::shared_ptr< const Convolution<PointIn, PointOut> >;
 
 
         /// The borders policy available
@@ -117,7 +116,7 @@ namespace pcl
           * In 3D the next point in (u,v) coordinate can be really far so a distance
           * threshold is used to keep us from ghost points.
           * The value you set here is strongly related to the sensor. A good value for
-          * kinect data is 0.001 \default is std::numeric<float>::infinity ()
+          * kinect data is 0.001. Default is std::numeric<float>::infinity ()
           * \param[in] threshold maximum allowed distance between 2 juxtaposed points
           */
         inline void
@@ -131,7 +130,6 @@ namespace pcl
         inline void
         setNumberOfThreads (unsigned int nr_threads = 0) { threads_ = nr_threads; }
         /** Convolve a float image rows by a given kernel.
-          * \param[in] kernel convolution kernel
           * \param[out] output the convolved cloud
           * \note if output doesn't fit in input i.e. output.rows () < input.rows () or
           * output.cols () < input.cols () then output is resized to input sizes.
@@ -139,7 +137,6 @@ namespace pcl
         inline void
         convolveRows (PointCloudOut& output);
         /** Convolve a float image columns by a given kernel.
-          * \param[in] kernel convolution kernel
           * \param[out] output the convolved image
           * \note if output doesn't fit in input i.e. output.rows () < input.rows () or
           * output.cols () < input.cols () then output is resized to input sizes.
@@ -184,7 +181,7 @@ namespace pcl
         void
         convolve_cols_duplicate (PointCloudOut& output);
         /** init compute is an internal method called before computation
-          * \param[in] kernel convolution kernel to be used
+          * \param[in] output
           * \throw pcl::InitFailedException
           */
         void
@@ -237,5 +234,3 @@ namespace pcl
 }
 
 #include <pcl/filters/impl/convolution.hpp>
-
-#endif
